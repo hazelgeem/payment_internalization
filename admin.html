@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>글로벌번장 어드민 - 쿠폰 관리</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; }
+
+  /* Layout */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #1a1a2e; color: #fff; padding: 0; flex-shrink: 0; }
+  .sidebar-header { padding: 20px 16px; font-size: 15px; font-weight: 700; border-bottom: 1px solid #2a2a4a; }
+  .sidebar-header span { color: #7c7cf7; }
+  .nav-group { padding: 12px 0; }
+  .nav-group-title { padding: 8px 16px; font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 1px; }
+  .nav-item { padding: 10px 16px 10px 24px; cursor: pointer; font-size: 13px; color: #aaa; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+  .nav-item:hover { background: #2a2a4a; color: #fff; }
+  .nav-item.active { background: #2a2a4a; color: #7c7cf7; border-left: 3px solid #7c7cf7; padding-left: 21px; }
+  .nav-item .badge { background: #7c7cf7; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
+
+  .main { flex: 1; display: flex; flex-direction: column; }
+
+  /* Top bar */
+  .topbar { background: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e0e0e0; }
+  .breadcrumb { font-size: 13px; color: #888; }
+  .breadcrumb span { color: #333; font-weight: 500; }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  .topbar-actions .user { font-size: 13px; color: #555; }
+
+  /* Tabs */
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 24px; }
+  .tab { padding: 14px 20px; cursor: pointer; font-size: 13px; color: #888; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .tab:hover { color: #333; }
+  .tab.active { color: #7c7cf7; border-bottom-color: #7c7cf7; font-weight: 600; }
+
+  .content { flex: 1; padding: 24px; overflow-y: auto; }
+
+  /* Page: Coupon List */
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 700; }
+  .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; transition: all 0.15s; }
+  .btn-primary { background: #7c7cf7; color: #fff; }
+  .btn-primary:hover { background: #6b6be0; }
+  .btn-secondary { background: #fff; color: #333; border: 1px solid #ddd; }
+  .btn-secondary:hover { background: #f5f5f5; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-danger { background: #ff4757; color: #fff; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Toggle switch */
+  .toggle { position: relative; display: inline-block; width: 40px; height: 22px; vertical-align: middle; margin-right: 4px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 22px; transition: 0.2s; }
+  .toggle-slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: #7c7cf7; }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* Table */
+  .table-wrapper { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .table-toolbar { padding: 16px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #f0f0f0; }
+  .search-input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 250px; }
+  .filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: #fff; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #fafafa; padding: 12px 16px; text-align: left; font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #eee; white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; font-size: 13px; white-space: nowrap; }
+  tr:hover td { background: #fafafe; }
+  .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .status-active { background: #e8f5e9; color: #2e7d32; }
+  .status-inactive { background: #f5f5f5; color: #999; }
+  .status-expired { background: #fff3e0; color: #e65100; }
+  .link-copy { color: #7c7cf7; cursor: pointer; font-size: 12px; text-decoration: underline; }
+  .link-copy:hover { color: #6b6be0; }
+
+  /* Create Form */
+  .form-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  .form-card-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+  .form-group { margin-bottom: 20px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+  .form-label .required { color: #ff4757; margin-left: 2px; }
+  .form-label .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
+  .form-label .tag-new { background: #e8f5e9; color: #2e7d32; }
+  .form-label .tag-changed { background: #fff3e0; color: #e65100; }
+  .form-label .tag-discuss { background: #fff9c4; color: #f57f17; }
+  .form-hint { font-size: 12px; color: #888; margin-top: 4px; }
+  .form-error { font-size: 12px; color: #ff4757; margin-top: 4px; display: none; }
+  .form-error.show { display: block; }
+
+  .input { padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 100%; transition: border-color 0.15s; }
+  .input:focus { outline: none; border-color: #7c7cf7; box-shadow: 0 0 0 3px rgba(124,124,247,0.1); }
+  .input-sm { width: 200px; }
+  .input-md { width: 350px; }
+  .input-with-unit { display: flex; align-items: center; gap: 8px; }
+  .input-unit { font-size: 13px; color: #888; font-weight: 500; white-space: nowrap; }
+
+  select.input { appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center; padding-right: 32px; }
+
+  .checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; }
+  .checkbox-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .checkbox-item input[type="checkbox"] { accent-color: #7c7cf7; width: 16px; height: 16px; }
+
+  .tag-input-area { border: 1px solid #ddd; border-radius: 6px; padding: 8px; min-height: 42px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tag-input-area:focus-within { border-color: #7c7cf7; box-shadow: 0 0 0 3px rgba(124,124,247,0.1); }
+  .tag { display: inline-flex; align-items: center; gap: 4px; background: #f0f0ff; color: #5c5cb8; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+  .tag .remove { cursor: pointer; font-size: 14px; color: #999; }
+  .tag .remove:hover { color: #ff4757; }
+  .tag-input { border: none; outline: none; font-size: 13px; flex: 1; min-width: 120px; padding: 2px; }
+
+  .date-range { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .date-range .separator { color: #888; font-size: 13px; }
+  .kst-display { font-size: 12px; color: #7c7cf7; margin-top: 4px; }
+
+  .form-row { display: flex; gap: 24px; }
+  .form-row .form-group { flex: 1; }
+
+  .conditional-section { margin-left: 24px; padding-left: 16px; border-left: 3px solid #e0e0ff; }
+
+  .form-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #f0f0f0; margin-top: 24px; }
+
+  /* Detail view */
+  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .detail-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .meta-item { font-size: 13px; }
+  .meta-label { color: #888; font-size: 12px; }
+  .meta-value { font-weight: 500; margin-top: 2px; }
+
+  /* View switching */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Tooltip */
+  .tooltip-trigger { position: relative; cursor: help; }
+  .tooltip-trigger::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .tooltip-trigger:hover::after { opacity: 1; }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .form-row { flex-direction: column; gap: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span>번개장터</span> 어드민
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">글로벌</div>
+      <div class="nav-item">공통</div>
+      <div class="nav-item" style="font-weight:600; color:#ddd;">
+        글로벌번장
+        <span class="badge">NEW</span>
+      </div>
+      <div class="nav-item active" style="padding-left:40px;">쿠폰 관리</div>
+      <div class="nav-item" style="padding-left:40px;">상품 관리</div>
+      <div class="nav-item" style="padding-left:40px;">주문 관리</div>
+      <div class="nav-item" style="padding-left:40px;">회원 관리</div>
+      <div class="nav-item" style="padding-left:40px;">정산 관리</div>
+      <div class="nav-item">해외역직구(아웃바운드)</div>
+      <div class="nav-item">해외직구(인바운드)</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb">글로벌번장 &gt; 쿠폰 관리 &gt; <span id="breadcrumb-page">쿠폰 목록</span></div>
+      <div class="topbar-actions">
+        <span class="user">Hazel Kim</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- VIEW: Coupon List -->
+      <div id="view-list" class="view active">
+        <div class="page-header">
+          <h1 class="page-title">쿠폰 조회</h1>
+          <button class="btn btn-primary" onclick="showView('create')">쿠폰 만들기</button>
+        </div>
+
+        <div class="table-wrapper">
+          <!-- Search filters -->
+          <div class="table-toolbar" style="flex-wrap:wrap; gap:12px 16px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; color:#555; white-space:nowrap;">상태 필터</span>
+              <select class="filter-select">
+                <option>전체</option>
+                <option>활성화</option>
+                <option>비활성화</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="text" class="search-input" placeholder="쿠폰 ID" style="width:120px;">
+              <span style="color:#aaa;">🔍</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="text" class="search-input" placeholder="정책명" style="width:140px;">
+              <span style="color:#aaa;">🔍</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="text" class="search-input" placeholder="생성자" style="width:140px;">
+              <span style="color:#aaa;">🔍</span>
+            </div>
+          </div>
+          <div class="table-toolbar" style="border-bottom:1px solid #eee;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; color:#555; white-space:nowrap;">등록 일시</span>
+              <input type="datetime-local" class="input" style="width:190px; padding:6px 10px; font-size:12px;">
+              <span style="color:#888;">→</span>
+              <input type="datetime-local" class="input" style="width:190px; padding:6px 10px; font-size:12px;">
+            </div>
+          </div>
+
+          <!-- Pagination info -->
+          <div style="padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f0f0f0;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; color:#555;">총 <strong>4개</strong></span>
+              <div style="display:flex; gap:2px; margin-left:12px;">
+                <span style="color:#aaa; cursor:pointer;">&lt;</span>
+                <span style="background:#7c7cf7; color:#fff; padding:2px 8px; border-radius:4px; font-size:12px;">1</span>
+                <span style="color:#aaa; cursor:pointer;">&gt;</span>
+              </div>
+            </div>
+            <select class="filter-select" style="font-size:12px; padding:4px 8px;">
+              <option>20 / 페이지</option>
+              <option>50 / 페이지</option>
+              <option>100 / 페이지</option>
+            </select>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>정책명</th>
+                <th>쿠폰명</th>
+                <th>공통 쿠폰 코드</th>
+                <th>할인 금액</th>
+                <th>총 발급 현황</th>
+                <th>등록일</th>
+                <th>쿠폰 발급기간</th>
+                <th>쿠폰 사용기간</th>
+                <th>생성자 / 마지막 수정자</th>
+                <th>활성화 상태</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>8</td>
+                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_welcome_2025</a></td>
+                <td>Welcome $5 OFF</td>
+                <td>
+                  <span style="color:#555">WELCOME5</span><br>
+                  <span class="link-copy" onclick="copyLink('WELCOME5')">발급 링크 복사</span>
+                </td>
+                <td>$5.00</td>
+                <td style="font-size:13px; font-weight:500;">1,204 <span style="color:#aaa;">/</span> <span style="color:#888;">50,000</span></td>
+                <td>2025.04.01 09:00</td>
+                <td style="font-size:12px;">2025.04.01 00:00<br>~ 2025.12.31 23:59</td>
+                <td style="font-size:12px;">2025.04.01 00:00<br>~ 2026.01.31 23:59</td>
+                <td style="font-size:12px;">Hazel / Hazel</td>
+                <td>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                  <span style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
+                </td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_spring_promo</a></td>
+                <td>Spring 10% OFF</td>
+                <td>
+                  <span style="color:#555">SPRING10</span><br>
+                  <span class="link-copy" onclick="copyLink('SPRING10')">발급 링크 복사</span>
+                </td>
+                <td>10%</td>
+                <td style="font-size:13px; font-weight:500;">3,782 <span style="color:#aaa;">/</span> <span style="color:#888;">10,000</span></td>
+                <td>2025.03.20 14:00</td>
+                <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.04.30 23:59</td>
+                <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.05.31 23:59</td>
+                <td style="font-size:12px;">Hazel / Jayden</td>
+                <td>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                  <span style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
+                </td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_launch_flat</a></td>
+                <td>Launch $10 OFF</td>
+                <td>
+                  <span style="color:#555">LAUNCH10</span><br>
+                  <span class="link-copy" onclick="copyLink('LAUNCH10')">발급 링크 복사</span>
+                </td>
+                <td>$10.00</td>
+                <td style="font-size:13px; font-weight:500;"><span style="color:#e65100;">5,000</span> <span style="color:#aaa;">/</span> <span style="color:#888;">5,000</span></td>
+                <td>2025.03.01 10:00</td>
+                <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.03.31 23:59</td>
+                <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.04.30 23:59</td>
+                <td style="font-size:12px;">Jayden / Jayden</td>
+                <td>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+                  <span style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
+                </td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_vip_test</a></td>
+                <td>VIP $20 OFF</td>
+                <td><span style="color:#ccc">-</span></td>
+                <td>$20.00</td>
+                <td style="font-size:13px; font-weight:500;">0 <span style="color:#aaa;">/</span> <span style="color:#888;">1,000</span></td>
+                <td>2025.02.01 15:30</td>
+                <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.02.28 23:59</td>
+                <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.03.31 23:59</td>
+                <td style="font-size:12px;">Hazel / Hazel</td>
+                <td>
+                  <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+                  <span style="font-size:11px; color:#999; font-weight:600;">OFF</span>
+                </td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm">수정하기</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW: Create Coupon -->
+      <div id="view-create" class="view">
+        <div class="page-header">
+          <h1 class="page-title">쿠폰 만들기</h1>
+        </div>
+
+        <!-- Basic Info -->
+        <div class="form-card">
+          <div class="form-card-title">기본 정보</div>
+
+          <div class="form-group">
+            <label class="form-label">정책명 <span class="required">*</span></label>
+            <input type="text" class="input input-md" placeholder="예: gb_welcome_2025">
+            <div class="form-hint">내부 관리용 정책명입니다.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              공통 쿠폰 코드
+            </label>
+            <input type="text" class="input input-md" placeholder="예: GDpromotion2025" maxlength="25">
+            <div class="form-hint">유저에게 공통으로 지급하기 위한 시크릿 코드로, 쿠폰 생성 후 시크릿 코드를 기반으로 쿠폰 발급 링크가 생성됩니다.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">쿠폰명 <span class="required">*</span></label>
+            <input type="text" class="input input-md" placeholder="예: Welcome $5 OFF" maxlength="25">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">쿠폰유형 <span class="required">*</span></label>
+              <select class="input input-sm" id="coupon-type" onchange="toggleAutoSection()">
+                <option value="">선택하세요</option>
+                <option value="NORMAL">기본 쿠폰</option>
+                <option value="AUTO">자동 쿠폰</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="auto-criteria-section" style="display:none">
+              <label class="form-label">
+                자동 쿠폰 발급 기준 <span class="required">*</span>
+              </label>
+              <select class="input input-sm">
+                <option value="">선택하세요</option>
+                <option value="SIGNUP">회원가입 시 발급</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Issuance Condition -->
+        <div class="form-card">
+          <div class="form-card-title">발급 조건</div>
+
+          <div class="form-group">
+            <label class="form-label">발급 조건</label>
+            <div class="form-hint" style="margin-bottom:8px;">쿠폰 적용 대상을 설정합니다. 미선택 시 전체 상품 대상.</div>
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+              <label class="checkbox-item"><input type="radio" name="issuance-cond" value="" checked onchange="toggleIssuanceCond(this.value)"> 전체 (조건 없음)</label>
+              <label class="checkbox-item"><input type="radio" name="issuance-cond" value="STORE" onchange="toggleIssuanceCond(this.value)"> 상점</label>
+              <label class="checkbox-item"><input type="radio" name="issuance-cond" value="CATEGORY" onchange="toggleIssuanceCond(this.value)"> 카테고리</label>
+              <label class="checkbox-item"><input type="radio" name="issuance-cond" value="BRAND" onchange="toggleIssuanceCond(this.value)"> 브랜드</label>
+              <label class="checkbox-item"><input type="radio" name="issuance-cond" value="PID" onchange="toggleIssuanceCond(this.value)"> 상품 PID</label>
+            </div>
+          </div>
+
+          <div id="cond-store" class="conditional-section" style="display:none">
+            <div class="form-group">
+              <label class="form-label">상점 (UID) <span class="required">*</span></label>
+              <div class="tag-input-area">
+                <div class="tag">123124123 (상점명) <span class="remove">&times;</span></div>
+                <input type="text" class="tag-input" placeholder="UID 입력 후 Enter">
+              </div>
+              <div class="form-hint">UID 입력 시 유효성 확인 및 상점명 노출</div>
+            </div>
+          </div>
+
+          <div id="cond-category" class="conditional-section" style="display:none">
+            <div class="form-group">
+              <label class="form-label">카테고리 (ID) <span class="required">*</span></label>
+              <div class="tag-input-area">
+                <input type="text" class="tag-input" placeholder="카테고리 ID 입력 후 Enter">
+              </div>
+              <div class="form-hint">카테고리 ID 입력 시 유효성 확인 및 카테고리명 노출</div>
+            </div>
+          </div>
+
+          <div id="cond-brand" class="conditional-section" style="display:none">
+            <div class="form-group">
+              <label class="form-label">브랜드 (ID) <span class="required">*</span></label>
+              <div class="tag-input-area">
+                <input type="text" class="tag-input" placeholder="브랜드 ID 입력 후 Enter">
+              </div>
+              <div class="form-hint">브랜드 ID 입력 시 유효성 확인 및 브랜드명 노출</div>
+            </div>
+          </div>
+
+          <div id="cond-pid" class="conditional-section" style="display:none">
+            <div class="form-group">
+              <label class="form-label">상품 PID <span class="required">*</span></label>
+              <div class="tag-input-area">
+                <input type="text" class="tag-input" placeholder="PID 입력 후 Enter">
+              </div>
+              <div class="form-hint">PID 입력 시 유효성 확인 및 상품명 노출</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Discount -->
+        <div class="form-card">
+          <div class="form-card-title">할인 설정</div>
+
+          <div class="form-group">
+            <label class="form-label">
+              쿠폰 발급 기준 통화 <span class="required">*</span>
+            </label>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" checked> USD ($)</label>
+            </div>
+            <div class="form-hint">현재는 USD만 선택 가능합니다.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              할인기준 <span class="required">*</span>
+            </label>
+            <select class="input input-sm" id="discount-type" onchange="toggleDiscountFields()">
+              <option value="">선택하세요</option>
+              <option value="FIXED">정액할인</option>
+              <option value="PERCENT">정률할인</option>
+            </select>
+          </div>
+
+          <div id="discount-percent-section" style="display:none" class="conditional-section">
+            <div class="form-group">
+              <label class="form-label">할인율 <span class="required">*</span></label>
+              <div class="input-with-unit">
+                <input type="text" class="input input-sm" placeholder="0" style="width:120px" inputmode="numeric">
+                <span class="input-unit">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="discount-fixed-section" style="display:none" class="conditional-section">
+            <div class="form-group">
+              <label class="form-label">
+                할인금액 <span class="required">*</span>              </label>
+              <div class="input-with-unit">
+                <span class="input-unit">$</span>
+                <input type="text" class="input" placeholder="0.00" style="width:150px" inputmode="decimal">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              최소상품금액 <span class="required">*</span>
+            </label>
+            <div class="input-with-unit">
+              <span class="input-unit">$</span>
+              <input type="text" class="input" placeholder="0.00" inputmode="decimal" style="width:180px">
+            </div>
+          </div>
+        </div>
+
+        <!-- Period -->
+        <div class="form-card">
+          <div class="form-card-title">기간 설정</div>
+
+          <div class="form-group">
+            <label class="form-label">
+              쿠폰 발급기간 (UTC) <span class="required">*</span>
+            </label>
+            <div class="date-range">
+              <input type="text" class="input" style="width:220px" id="issue-start" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('issue')">
+              <span class="separator">~</span>
+              <input type="text" class="input" style="width:220px" id="issue-end" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('issue')">
+            </div>
+            <div class="kst-display" id="issue-kst">KST: 시간을 입력하면 KST 기준 시간이 표시됩니다.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              쿠폰 사용기한 (UTC) <span class="required">*</span>
+            </label>
+            <div class="date-range">
+              <input type="text" class="input" style="width:220px" id="valid-start" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('valid')">
+              <span class="separator">~</span>
+              <input type="text" class="input" style="width:220px" id="valid-end" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('valid')">
+            </div>
+            <div class="kst-display" id="valid-kst">KST: 시간을 입력하면 KST 기준 시간이 표시됩니다.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">발급일 기준 사용기간 만료조건</label>
+            <div class="input-with-unit">
+              <input type="text" class="input" placeholder="0" inputmode="numeric" style="width:100px">
+              <span class="input-unit">일</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Limits -->
+        <div class="form-card">
+          <div class="form-card-title">발급 제한</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">인당 발급 가능 횟수 <span class="required">*</span></label>
+              <div class="input-with-unit">
+                <input type="text" class="input" value="1" inputmode="numeric" style="width:100px">
+                <span class="input-unit">회</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">총 발급 가능 개수 <span class="required">*</span></label>
+              <div class="input-with-unit">
+                <input type="text" class="input" value="10000" inputmode="numeric" style="width:180px">
+                <span class="input-unit">회</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Display -->
+        <div class="form-card">
+          <div class="form-card-title">노출 및 상태</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">상품상세/리스트 쿠폰 노출 여부 <span class="required">*</span></label>
+              <select class="input input-sm">
+                <option value="true">노출</option>
+                <option value="false">미노출</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">활성화 상태 <span class="required">*</span></label>
+              <select class="input input-sm">
+                <option value="USABLE">활성화</option>
+                <option value="UNUSABLE">비활성화</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">지급사유 / 메모</label>
+            <textarea class="input" rows="3" placeholder="내부 참고용 메모를 입력하세요."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="showView('list')">취소</button>
+          <button class="btn btn-primary" onclick="showView('list')">쿠폰 만들기</button>
+        </div>
+      </div>
+
+      <!-- VIEW: Detail -->
+      <div id="view-detail" class="view">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Welcome $5 OFF</h1>
+            <div style="margin-top:4px; color:#888; font-size:13px;">정책명: gb_welcome_2025</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" onclick="showView('list')">목록으로</button>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div class="form-card-title">쿠폰 정보</div>
+          <div class="detail-meta">
+            <div class="meta-item">
+              <div class="meta-label">쿠폰유형</div>
+              <div class="meta-value">자동 쿠폰 (회원가입 시 발급)</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">상태</div>
+              <div class="meta-value"><span class="status-badge status-active">활성화</span></div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">할인</div>
+              <div class="meta-value">$5.00 OFF (정액할인)</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">최소 주문 금액</div>
+              <div class="meta-value">$20.00</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">발급기간 (UTC)</div>
+              <div class="meta-value">2025-04-01T00:00 ~ 2025-12-31T23:59</div>
+              <div class="kst-display">KST: 2025-04-01 09:00 ~ 2026-01-01 08:59</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">사용기한 (UTC)</div>
+              <div class="meta-value">2025-04-01T00:00 ~ 2026-01-31T23:59</div>
+              <div class="kst-display">KST: 2025-04-01 09:00 ~ 2026-02-01 08:59</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">인당 발급 횟수</div>
+              <div class="meta-value">1회</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">총 발급 현황</div>
+              <div class="meta-value">1,204 / 50,000</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">공통 쿠폰 코드</div>
+              <div class="meta-value">
+                WELCOME5
+                <span class="link-copy" onclick="copyLink('WELCOME5')" style="margin-left:8px;">발급 링크 복사</span>
+              </div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">발급 조건</div>
+              <div class="meta-value">전체 (조건 없음)</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">PDP/리스트 노출</div>
+              <div class="meta-value">노출</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">지급사유</div>
+              <div class="meta-value">글로벌번장 론칭 웰컴 쿠폰</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showView(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+
+  const titles = { list: '쿠폰 목록', create: '쿠폰 만들기', detail: '쿠폰 상세' };
+  document.getElementById('breadcrumb-page').textContent = titles[view] || '';
+}
+
+function toggleAutoSection() {
+  const type = document.getElementById('coupon-type').value;
+  document.getElementById('auto-criteria-section').style.display = type === 'AUTO' ? '' : 'none';
+}
+
+function toggleDiscountFields() {
+  const type = document.getElementById('discount-type').value;
+  document.getElementById('discount-fixed-section').style.display = type === 'FIXED' ? '' : 'none';
+  document.getElementById('discount-percent-section').style.display = type === 'PERCENT' ? '' : 'none';
+}
+
+function formatDateTime(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  let hh = d.getHours();
+  const min = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  hh = hh % 12 || 12;
+  return yyyy + '/' + mm + '/' + dd + ', ' + String(hh).padStart(2, '0') + ':' + min + ' ' + ampm;
+}
+
+function updateKST(prefix) {
+  const start = document.getElementById(prefix + '-start').value;
+  const end = document.getElementById(prefix + '-end').value;
+  const el = document.getElementById(prefix + '-kst');
+
+  if (start || end) {
+    const formatKST = (utcStr) => {
+      if (!utcStr) return '—';
+      const d = new Date(utcStr + 'Z');
+      d.setHours(d.getHours() + 9);
+      return formatDateTime(d);
+    };
+    el.textContent = 'KST: ' + formatKST(start) + ' ~ ' + formatKST(end);
+  }
+}
+
+function toggleIssuanceCond(value) {
+  ['store', 'category', 'brand', 'pid'].forEach(id => {
+    document.getElementById('cond-' + id).style.display = 'none';
+  });
+  if (value) {
+    document.getElementById('cond-' + value.toLowerCase()).style.display = '';
+  }
+}
+
+function copyLink(code) {
+  const url = 'https://globalbunjang.com/coupons?code=' + code;
+  navigator.clipboard.writeText(url).then(() => {
+    alert('발급 링크가 복사되었습니다.\n' + url);
+  }).catch(() => {
+    prompt('발급 링크:', url);
+  });
+}
+</script>
+
+</body>
+</html>

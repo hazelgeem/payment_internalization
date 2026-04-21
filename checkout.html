@@ -1,0 +1,2930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Bunjang — Checkout Flow Prototype</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f0f0; color: #222; font-size: 14px; }
+
+  /* Phone frame */
+  .phone-frame { width: 375px; min-height: 100vh; margin: 0 auto; background: #fff; position: relative; overflow-x: hidden; }
+  body { padding-right: 210px; }
+
+  /* Screen management */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Header */
+  .header { position: sticky; top: 0; z-index: 100; background: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
+  .header-back { font-size: 20px; cursor: pointer; color: #222; background: none; border: none; padding: 4px; }
+  .header-title { font-size: 16px; font-weight: 600; }
+  .header-icons { display: flex; gap: 16px; }
+  .header-icons button { background: none; border: none; font-size: 18px; cursor: pointer; color: #222; }
+
+  /* Tab bar */
+  .screen-tabs { display: flex; background: #fff; border-bottom: 2px solid #eee; position: sticky; top: 49px; z-index: 99; }
+  .screen-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 12px; color: #999; cursor: pointer; position: relative; font-weight: 500; }
+  .screen-tab.active { color: #222; font-weight: 700; }
+  .screen-tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: #222; }
+  .screen-tab.completed { color: #4caf50; }
+  .screen-tab.completed::after { content: '✓'; margin-left: 4px; }
+
+  /* Content area */
+  .content { padding: 0 0 140px 0; }
+
+  /* Section */
+  .section { background: #fff; margin-bottom: 8px; }
+  .section-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .section-title { font-size: 15px; font-weight: 700; }
+  .section-toggle { font-size: 18px; color: #999; transition: transform 0.2s; }
+  .section-body { padding: 0 16px 16px; }
+
+  /* Cart items */
+  .cart-select-all { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
+  .cart-item { padding: 16px; display: flex; gap: 12px; border-bottom: 1px solid #f5f5f5; position: relative; }
+  .cart-item-check { margin-top: 4px; }
+  .cart-item-check input[type="checkbox"] { width: 20px; height: 20px; accent-color: #e74c3c; }
+  .cart-item-img { width: 80px; height: 80px; border-radius: 8px; background: #f0f0f0; object-fit: cover; flex-shrink: 0; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-size: 13px; color: #555; margin-bottom: 4px; line-height: 1.4; }
+  .cart-item-price { font-size: 16px; font-weight: 700; }
+  .cart-item-original { font-size: 12px; color: #999; text-decoration: line-through; margin-left: 6px; }
+  .cart-item-remove { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 18px; color: #ccc; cursor: pointer; }
+  .cart-item-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #fff3e0; color: #e65100; font-weight: 600; margin-bottom: 4px; }
+  .cart-summary { padding: 16px; border-top: 1px solid #eee; }
+  .cart-summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+  .cart-summary-row.discount { color: #e74c3c; }
+  .cart-summary-row.total { font-size: 15px; font-weight: 700; border-top: 1px solid #eee; padding-top: 8px; margin-top: 4px; }
+
+  /* Order summary item (checkout) */
+  .order-item { padding: 14px 0; display: flex; gap: 12px; border-bottom: 1px solid #f5f5f5; }
+  .order-item:last-child { border-bottom: none; }
+  .order-item-img { width: 64px; height: 64px; border-radius: 8px; background: #f0f0f0; flex-shrink: 0; }
+  .order-item-info { flex: 1; }
+  .order-item-name { font-size: 13px; color: #555; margin-bottom: 2px; }
+  .order-item-qty { display: none; }
+  .order-item-price { font-size: 14px; font-weight: 600; text-align: right; white-space: nowrap; }
+  .order-item-request { margin-top: 10px; }
+  .order-item-request textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 12px; resize: none; height: 50px; color: #999; }
+
+  /* Shipping */
+  .shipping-option { padding: 14px 0; display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid #f5f5f5; }
+  .shipping-option:last-child { border-bottom: none; }
+  .shipping-radio { margin-top: 2px; accent-color: #222; }
+  .shipping-details { flex: 1; }
+  .shipping-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .shipping-logo { height: 16px; }
+  .shipping-desc { font-size: 12px; color: #888; margin-top: 2px; }
+  .shipping-info { margin-top: 12px; padding: 12px; background: #f8f8f8; border-radius: 8px; }
+  .shipping-info p { font-size: 12px; color: #666; margin-bottom: 6px; line-height: 1.5; }
+  .shipping-info p:last-child { margin-bottom: 0; }
+  .shipping-fee-note { display: flex; align-items: center; gap: 6px; padding: 10px 12px; background: #e3f2fd; border-radius: 8px; margin-top: 10px; font-size: 12px; color: #1565c0; }
+
+  /* Coupon */
+  .coupon-area { display: flex; gap: 8px; margin-bottom: 12px; }
+  .coupon-input { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+  .coupon-apply { background: #222; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .coupon-list { margin-top: 8px; }
+  .coupon-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8f8f8; border-radius: 8px; margin-bottom: 6px; }
+  .coupon-item-name { font-size: 13px; }
+  .coupon-item-value { font-size: 13px; font-weight: 600; color: #e74c3c; }
+  .coupon-download { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px dashed #ccc; border-radius: 8px; cursor: pointer; margin-top: 8px; }
+  .coupon-download-text { font-size: 13px; color: #666; }
+
+  /* Payment methods */
+  .payment-option { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; gap: 10px; }
+  .payment-option:last-child { border-bottom: none; }
+  .payment-radio { accent-color: #222; }
+  .payment-name { flex: 1; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .payment-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #e8f5e9; color: #2e7d32; font-weight: 600; }
+  .payment-icons { display: flex; gap: 4px; align-items: center; }
+  .payment-icon { height: 20px; padding: 2px 6px; border: 1px solid #eee; border-radius: 4px; font-size: 10px; font-weight: 600; display: flex; align-items: center; background: #fafafa; }
+  .billing-check { padding: 12px 0; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; }
+  .billing-check input { accent-color: #222; }
+
+  /* Price details */
+  .price-box { background: #fafafa; border-radius: 10px; padding: 16px; }
+  .price-group-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #222; }
+  .price-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #555; }
+  .price-row.discount { color: #e74c3c; }
+  .price-row .info-icon { font-size: 11px; color: #999; cursor: pointer; margin-left: 4px; position: relative; }
+  .info-tooltip { position: fixed; background: #222; color: #fff; font-size: 12px; line-height: 1.5; padding: 10px 14px; border-radius: 8px; max-width: 240px; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.2); pointer-events: none; }
+  .info-tooltip::after { content: ''; position: absolute; bottom: -5px; left: 16px; width: 10px; height: 10px; background: #222; transform: rotate(45deg); }
+  .price-divider { border: none; border-top: 1px solid #eee; margin: 12px 0; }
+  .price-group-intl { margin-top: 4px; }
+  .price-row.muted { color: #bbb; }
+  .price-intl-note { font-size: 11px; color: #1565c0; margin-top: 8px; display: flex; align-items: flex-start; gap: 4px; line-height: 1.4; }
+  .price-total { display: flex; justify-content: space-between; font-size: 17px; font-weight: 800; margin-top: 12px; padding-top: 12px; border-top: 2px solid #222; }
+  .price-total .amount { color: #e74c3c; }
+
+  /* Terms */
+  .terms { padding: 12px 16px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; }
+  .terms input { accent-color: #222; }
+  .terms a { color: #222; text-decoration: underline; margin-left: auto; }
+
+  /* Bottom bar */
+  .bottom-bar { position: fixed; bottom: 0; left: calc(50% - 105px); transform: translateX(-50%); width: 375px; background: #fff; padding: 12px 16px; border-top: 1px solid #eee; z-index: 200; }
+  .bottom-btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; text-align: center; }
+  .bottom-btn.primary { background: #222; color: #fff; }
+  .bottom-btn.primary:hover { background: #333; }
+  .bottom-btn.disabled { background: #ddd; color: #999; cursor: not-allowed; }
+  .bottom-note { text-align: center; font-size: 11px; color: #999; margin-top: 6px; }
+  .bottom-price-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .bottom-price-label { font-size: 13px; color: #666; }
+  .bottom-price-amount { font-size: 18px; font-weight: 800; }
+  .bottom-handing-free { text-align: center; font-size: 12px; color: #e74c3c; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+  /* Order complete */
+  .complete-icon { text-align: center; padding: 40px 0 20px; }
+  .complete-icon .check { width: 64px; height: 64px; border-radius: 50%; background: #e8f5e9; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; color: #4caf50; }
+  .complete-title { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .complete-subtitle { text-align: center; font-size: 13px; color: #888; margin-bottom: 24px; }
+  .complete-order-id { text-align: center; font-size: 12px; color: #999; margin-bottom: 24px; }
+  .complete-order-id span { font-weight: 600; color: #222; }
+
+  /* Order status tracking */
+  .status-tracker { padding: 0 20px; margin-bottom: 24px; }
+  .status-step { display: flex; gap: 14px; position: relative; padding-bottom: 24px; }
+  .status-step:last-child { padding-bottom: 0; }
+  .status-step::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: #eee; }
+  .status-step:last-child::before { display: none; }
+  .status-step.done::before { background: #4caf50; }
+  .status-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ddd; background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 1; }
+  .status-step.done .status-dot { border-color: #4caf50; background: #4caf50; color: #fff; }
+  .status-step.current .status-dot { border-color: #2196f3; background: #2196f3; color: #fff; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(33,150,243,0.3); } 50% { box-shadow: 0 0 0 8px rgba(33,150,243,0); } }
+  .status-info { flex: 1; }
+  .status-label { font-size: 13px; font-weight: 600; }
+  .status-desc { font-size: 11px; color: #999; margin-top: 2px; }
+  .status-time { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+  /* Item status in order detail */
+  .order-detail-item { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }
+  .order-detail-item-row { display: flex; gap: 12px; align-items: center; }
+  .order-detail-item-status { margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+  .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+  .status-badge.ordering { background: #e3f2fd; color: #1565c0; }
+  .status-badge.processing { background: #fff3e0; color: #e65100; }
+  .status-badge.confirmed { background: #e8f5e9; color: #2e7d32; }
+  .status-badge.shipping { background: #e3f2fd; color: #1565c0; }
+  .status-badge.settled { background: #f3e5f5; color: #7b1fa2; }
+
+  /* Action buttons */
+  .action-btns { display: flex; gap: 8px; padding: 16px; }
+  .action-btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
+  .action-btn.outline { background: #fff; border: 1px solid #ddd; color: #555; }
+  .action-btn.filled { background: #222; border: 1px solid #222; color: #fff; }
+
+  /* Notification banner */
+  .notification { padding: 10px 16px; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .notification.info { background: #e3f2fd; color: #1565c0; }
+  .notification.warning { background: #fff3e0; color: #e65100; }
+  .notification.success { background: #e8f5e9; color: #2e7d32; }
+
+  /* Prototype navigation */
+  .proto-nav { position: fixed; top: 0; left: 0; right: 0; background: #1a1a2e; color: #fff; padding: 8px 16px; display: flex; align-items: center; gap: 8px; z-index: 999; font-size: 12px; flex-wrap: wrap; }
+  .proto-nav-title { font-weight: 700; font-size: 13px; margin-right: 8px; line-height: 1.3; }
+  .proto-nav-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .proto-nav-btn:hover { background: rgba(255,255,255,0.25); }
+  .proto-nav-btn.active { background: #7c7cf7; }
+  .phone-frame { margin-top: 40px; } /* updated dynamically by adjustFrameTop() */
+
+  /* Right sidebar */
+  .proto-sidebar { position: fixed; top: 0; right: 0; bottom: 0; width: 210px; background: #1a1a2e; z-index: 998; padding-top: 60px; overflow-y: auto; border-left: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-panel { display: none; padding: 20px 16px; }
+  .sidebar-panel.active { display: block; }
+  .sidebar-section { margin-bottom: 22px; }
+  .sidebar-section-title { font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .sidebar-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sidebar-chip { background: rgba(255,255,255,0.08); border: none; color: #aaa; padding: 6px 11px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; text-align:left; width:100%; }
+  .sidebar-chip:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .sidebar-chip.active { background: #7c7cf7; color: #fff; }
+  .sidebar-chip.warning { }
+  .sidebar-chip.warning.active { background: #e65100; }
+  .sidebar-hint { font-size: 11px; color: #555; margin-top: 10px; line-height: 1.5; }
+  .sidebar-hint code { background: rgba(255,255,255,0.1); color: #c5c5ff; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; }
+
+  /* Skeleton for images */
+  /* Per-item coupon */
+  .item-coupon-area { padding: 8px 12px; border-top: 1px solid #f0f0f0; }
+  .item-coupon-row { display: flex; justify-content: space-between; align-items: center; }
+  .item-coupon-label { font-size: 13px; color: #555; }
+  .item-coupon-select { font-size: 12px; color: #1565c0; background: none; border: 1px solid #bbdefb; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+  .item-coupon-select:hover { background: #e3f2fd; }
+  .item-coupon-applied { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 6px 10px; background: #fff3e0; border-radius: 6px; }
+  .item-coupon-name { font-size: 12px; color: #e65100; font-weight: 600; flex: 1; }
+  .item-coupon-value { font-size: 12px; color: #e74c3c; font-weight: 700; }
+  .item-coupon-remove { background: none; border: none; font-size: 14px; color: #999; cursor: pointer; padding: 0 2px; }
+
+  /* Coupon bottom sheet */
+  .coupon-sheet-overlay { position: fixed; top: 0; left: 0; right: 210px; bottom: 0; background: rgba(0,0,0,0.4); z-index: 500; display: flex; align-items: flex-end; justify-content: center; }
+  .coupon-sheet-overlay.hidden { display: none; }
+  .coupon-sheet { width: 375px; background: #fff; border-radius: 20px 20px 0 0; padding: 0 0 32px; max-height: 88vh; display: flex; flex-direction: column; animation: slideUp 0.25s ease; }
+  .coupon-sheet-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
+  .coupon-sheet-header { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+  .coupon-sheet-title { font-size: 16px; font-weight: 700; }
+  .coupon-sheet-close { background: #f0f0f0; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 15px; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .coupon-sheet-body { overflow-y: auto; padding: 16px 20px; flex: 1; }
+  .coupon-code-row { display: flex; gap: 8px; margin-bottom: 6px; }
+  .coupon-code-input { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; }
+  .coupon-code-input:focus { border-color: #222; }
+  .coupon-code-input.error { border-color: #e74c3c; }
+  .coupon-code-btn { background: #222; color: #fff; border: none; border-radius: 8px; padding: 11px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .coupon-code-error { font-size: 12px; color: #e74c3c; margin-bottom: 16px; padding-left: 2px; min-height: 18px; }
+  .coupon-code-error:empty { margin-bottom: 10px; }
+  .coupon-section-label { font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+  /* Coupon card — ticket style */
+  .coupon-card { border: 1.5px solid #eee; border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; transition: border-color 0.15s; }
+  .coupon-card.selected { border-color: #222; }
+  .coupon-card.disabled { opacity: 0.45; cursor: not-allowed; }
+  .coupon-card-body { display: flex; align-items: stretch; }
+  .coupon-card-left { width: 76px; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 8px; flex-shrink: 0; }
+  .coupon-card.selected .coupon-card-left { background: #111; }
+  .coupon-card.disabled .coupon-card-left { background: #bbb; }
+  .coupon-card-amount-val { font-size: 20px; font-weight: 900; color: #fff; line-height: 1; }
+  .coupon-card-amount-unit { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.7); margin-top: 2px; text-transform: uppercase; }
+  .coupon-card-right { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+  .coupon-card-name { font-size: 13px; font-weight: 700; color: #222; }
+  .coupon-card-min { font-size: 11px; color: #999; }
+  .coupon-card-remaining { font-size: 11px; color: #e74c3c; font-weight: 600; }
+  .coupon-card-radio-wrap { display: flex; align-items: center; padding-right: 14px; }
+  .coupon-card-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #ddd; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .coupon-card.selected .coupon-card-radio { border-color: #222; background: #222; }
+  .coupon-card.selected .coupon-card-radio::after { content: ''; width: 7px; height: 7px; background: #fff; border-radius: 50%; display: block; }
+  .coupon-card-footer { padding: 8px 14px; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+  .coupon-card-expiry { font-size: 11px; color: #bbb; }
+  .coupon-card-reason { font-size: 11px; color: #f57c00; background: #fff3e0; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+
+  .coupon-sheet-footer { padding: 12px 20px 0; flex-shrink: 0; border-top: 1px solid #f0f0f0; }
+  .coupon-apply-btn { width: 100%; padding: 15px; background: #222; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .coupon-apply-btn:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+
+  /* My Orders */
+  .dk-connected-bar { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; font-size: 13px; color: #2e7d32; }
+  .dk-connected-dot { width: 18px; height: 18px; border-radius: 50%; background: #4caf50; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
+  .order-card { margin: 0 16px 12px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; }
+  .order-card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; font-size: 12px; color: #999; border-bottom: 1px solid #f0f0f0; }
+  .order-card-header .arrow { font-size: 16px; color: #ccc; cursor: pointer; }
+  .order-card-item { display: flex; gap: 12px; padding: 14px 16px; }
+  .order-card-img { width: 72px; height: 72px; border-radius: 8px; background: #e0e0e0; flex-shrink: 0; }
+  .order-card-info { flex: 1; }
+  .order-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .order-card-price { font-size: 15px; font-weight: 700; }
+  .order-card-price.canceled { text-decoration: line-through; color: #999; }
+  .order-card-status { font-size: 12px; font-weight: 600; }
+  .order-card-status.canceled { color: #999; }
+  .order-card-status.shipping { color: #1565c0; }
+  .order-card-status.confirmed { color: #2e7d32; }
+  .order-card-status.payment-needed { color: #e65100; }
+  .order-card-status.warehouse { color: #6a1b9a; }
+  .order-card-name { font-size: 13px; color: #555; line-height: 1.4; }
+  .order-card-name.canceled { text-decoration: line-through; color: #bbb; }
+  .order-card-footer { padding: 0 16px 14px; }
+  .order-card-btn { width: 100%; padding: 12px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
+  .order-card-btn.outline { background: #fff; color: #555; border: 1px solid #ddd; }
+
+  /* Order item card */
+  .order-item-card { background: #f9f9f9; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .order-item-card .order-item { padding: 0; border-bottom: none; }
+  .order-item-card .order-item-img { width: 56px; height: 56px; }
+  .order-item-shipping { display: flex; justify-content: space-between; font-size: 12px; color: #888; padding: 6px 0 4px; margin-top: 4px; border-top: 1px solid #eee; }
+  .order-item-card .add-request-area { padding: 4px 0 0; }
+
+  /* Add Request */
+  .add-request-area { padding: 0 0 8px; }
+  .add-request-btn { display: block; width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; color: #555; cursor: pointer; text-align: center; font-weight: 500; }
+  .add-request-btn:hover { background: #f8f8f8; }
+  .request-panel { padding: 12px 0 4px; }
+  .request-textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 12px; resize: none; height: 60px; font-family: inherit; }
+  .request-textarea:focus { outline: none; border-color: #999; }
+  .request-upload { display: flex; gap: 8px; flex-wrap: wrap; }
+  .upload-box { width: 64px; height: 64px; border: 1px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fafafa; flex-shrink: 0; }
+  .upload-box:hover { background: #f0f0f0; border-color: #aaa; }
+  .upload-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; position: relative; display: inline-block; }
+  .upload-thumb img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; display: block; }
+  .upload-thumb-remove { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #333; color: #fff; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .upload-icon { font-size: 24px; color: #bbb; }
+  .request-save { display: block; width: 100%; margin-top: 10px; padding: 8px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .request-saved { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 10px 12px; background: #f8f8f8; border-radius: 8px; margin-bottom: 8px; }
+  .request-saved-text { font-size: 12px; color: #444; flex: 1; line-height: 1.5; }
+  .request-saved-edit { flex-shrink: 0; font-size: 12px; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+
+  /* SSO Bottom Sheet */
+  .bottomsheet-overlay { position: fixed; top: 0; left: 0; right: 210px; bottom: 0; background: rgba(0,0,0,0.4); z-index: 500; display: flex; align-items: flex-end; justify-content: center; }
+  .bottomsheet-overlay.hidden { display: none; }
+  .bottomsheet { width: 375px; background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 32px; position: relative; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .bottomsheet-close { position: absolute; top: 16px; right: 16px; background: #f0f0f0; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .bottomsheet-close:hover { background: #e0e0e0; }
+  .bottomsheet-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; line-height: 1.4; }
+  .bottomsheet-desc { font-size: 13px; color: #888; text-align: center; margin-bottom: 24px; line-height: 1.5; }
+  .bottomsheet-logos { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; }
+  .bottomsheet-logo { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; }
+  .bottomsheet-logo.bunjang { color: #222; }
+  .bottomsheet-logo.dk { color: #555; }
+  .bottomsheet-arrows { font-size: 18px; color: #bbb; }
+  .bottomsheet-share { font-size: 12px; color: #999; text-align: center; margin-bottom: 20px; }
+  .bottomsheet-share span { color: #555; font-weight: 500; }
+  .bottomsheet-cta { width: 100%; padding: 16px; background: #222; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .bottomsheet-cta:hover { background: #333; }
+  .bottomsheet-dismiss { display: block; width: 100%; text-align: center; margin-top: 14px; font-size: 13px; color: #bbb; background: none; border: none; cursor: pointer; }
+  .bottomsheet-dismiss:hover { color: #999; }
+
+  /* Quick Pay */
+  .quick-pay-section { padding: 16px 16px 0; }
+  .quick-pay-label { font-size: 11px; color: #999; text-align: center; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .quick-pay-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
+  .quick-pay-btn { flex: 1; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border: none; }
+  .quick-pay-btn.apple { background: #000; color: #fff; }
+  .quick-pay-btn.google { background: #fff; color: #333; border: 1px solid #ddd; }
+  .quick-pay-divider { text-align: center; font-size: 12px; color: #bbb; position: relative; margin-bottom: 4px; }
+  .quick-pay-divider::before, .quick-pay-divider::after { content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: #eee; }
+  .quick-pay-divider::before { left: 0; }
+  .quick-pay-divider::after { right: 0; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 210px; bottom: 0; background: rgba(0,0,0,0.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 0 28px; }
+  .modal-overlay.hidden { display: none; }
+  .modal { width: 100%; background: #fff; border-radius: 16px; padding: 24px 20px 20px; }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .modal-body { font-size: 13px; color: #555; margin-bottom: 16px; line-height: 1.6; }
+  .modal-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8f8f8; border-radius: 8px; margin-bottom: 8px; }
+  .modal-item-img { width: 44px; height: 44px; border-radius: 6px; background: #e0e0e0; flex-shrink: 0; }
+  .modal-item-name { font-size: 12px; color: #555; flex: 1; line-height: 1.4; }
+  .modal-item-price { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .modal-sub { font-size: 13px; color: #555; margin: 10px 0 16px; }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-btn { flex: 1; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
+  .modal-btn.primary { background: #222; color: #fff; border: none; }
+  .modal-btn.secondary { background: #fff; color: #555; border: 1px solid #ddd; }
+
+  /* Toast */
+  .toast { position: fixed; top: 116px; left: calc(50% - 105px); transform: translateX(-50%); background: rgba(30,30,30,0.92); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 600; width: 330px; text-align: center; line-height: 1.5; display: none; }
+  .toast.visible { display: block; }
+
+  /* Trust badge */
+  .trust-row { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: #aaa; margin-bottom: 6px; }
+  .trust-logos { display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 10px; }
+  .trust-logo { font-size: 9px; font-weight: 700; padding: 2px 5px; border: 1px solid #ddd; border-radius: 3px; color: #777; }
+
+  .img-placeholder { background: linear-gradient(135deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%); background-size: 200% 200%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .img-placeholder.hat { background: #d0d0d0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpath d='m21 15-5-5L5 21'/%3E%3C/svg%3E") center no-repeat; animation: none; }
+</style>
+</head>
+<body>
+
+<!-- Prototype Navigation -->
+<div class="proto-nav">
+  <span class="proto-nav-title">GB Checkout Flow (TO-BE)</span>
+  <button class="proto-nav-btn active" onclick="showScreen('cart')">Cart</button>
+  <button class="proto-nav-btn" onclick="showScreen('checkout')">Checkout</button>
+  <button class="proto-nav-btn" onclick="showScreen('processing')">Processing</button>
+  <button class="proto-nav-btn" onclick="showScreen('order-placed')">Order Placed</button>
+  <button class="proto-nav-btn" onclick="showScreen('complete-success')">Complete (All)</button>
+  <button class="proto-nav-btn" onclick="showScreen('complete')">Complete (Partial)</button>
+  <button class="proto-nav-btn" onclick="showScreen('order-detail')">Order Detail</button>
+  <button class="proto-nav-btn" onclick="showScreen('payment-fail')">Payment Fail</button>
+  <button class="proto-nav-btn" onclick="showScreen('my-orders')">My Orders</button>
+  <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">SSO Redirect</button>
+  <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
+  <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
+</div>
+
+<!-- Right Sidebar -->
+<div class="proto-sidebar">
+
+  <!-- Checkout panel -->
+  <div id="sidebar-checkout" class="sidebar-panel active">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Scenarios</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip" onclick="triggerScenario('fx')">FX Rate Change</button>
+        <button class="sidebar-chip" onclick="triggerScenario('price')">Price Change</button>
+        <button class="sidebar-chip" onclick="triggerScenario('soldout-partial')">Partial Soldout</button>
+        <button class="sidebar-chip" onclick="triggerScenario('soldout-all')">All Soldout</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Shipping Agent</div>
+      <div class="sidebar-chips">
+        <button id="sb-agent-connected" class="sidebar-chip" onclick="setSidebarAgent(true)">Connected</button>
+        <button id="sb-agent-disconnected" class="sidebar-chip active warning" onclick="setSidebarAgent(false)">Disconnected</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Coupon Code Error</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip active" id="sb-coupon-invalid" onclick="setSidebarCouponError('invalid')">Not valid</button>
+        <button class="sidebar-chip" id="sb-coupon-expired" onclick="setSidebarCouponError('expired')">Expired</button>
+        <button class="sidebar-chip" id="sb-coupon-duplicate" onclick="setSidebarCouponError('duplicate')">Already claimed</button>
+        <button class="sidebar-chip" id="sb-coupon-sold-out" onclick="setSidebarCouponError('sold-out')">Fully redeemed</button>
+      </div>
+      <div class="sidebar-hint">Valid test code: <code>GDpromotion</code><br>Any other input triggers the error selected above.</div>
+    </div>
+  </div>
+
+  <!-- Payment Fail panel -->
+  <div id="sidebar-payment-fail" class="sidebar-panel">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Error Type</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip active" id="sb-err-card-info" onclick="setSidebarError('card-info')">Card Info Error</button>
+        <button class="sidebar-chip" id="sb-err-limit" onclick="setSidebarError('limit')">Limit / Insufficient Funds</button>
+        <button class="sidebar-chip" id="sb-err-issuer" onclick="setSidebarError('issuer')">Card Issuer Declined</button>
+        <button class="sidebar-chip" id="sb-err-generic" onclick="setSidebarError('generic')">Temporary Error</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty panel for other screens -->
+  <div id="sidebar-default" class="sidebar-panel">
+    <div style="font-size:11px;color:#444;padding:4px 0;">No controls for this screen.</div>
+  </div>
+
+</div>
+
+<div class="phone-frame">
+
+<!-- ============================================ -->
+<!-- SCREEN 1: CART -->
+<!-- ============================================ -->
+<div id="screen-cart" class="screen active">
+  <div class="header">
+    <button class="header-back">‹</button>
+    <span class="header-title">Cart</span>
+    <div class="header-icons">
+      <button>⌂</button>
+      <button>☰</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="section">
+      <div class="cart-select-all">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+          <input type="checkbox" checked style="accent-color:#e74c3c;width:18px;height:18px;">
+          Select all (2/3)
+        </label>
+        <button style="background:none;border:none;font-size:13px;color:#666;cursor:pointer;text-decoration:underline;">Remove</button>
+      </div>
+
+      <div class="cart-item">
+        <div class="cart-item-check"><input type="checkbox" checked></div>
+        <div class="cart-item-img img-placeholder hat"></div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+          <div class="cart-item-price">USD 4.08</div>
+        </div>
+        <button class="cart-item-remove">×</button>
+      </div>
+
+      <div class="cart-item">
+        <div class="cart-item-check"><input type="checkbox" checked></div>
+        <div class="cart-item-img img-placeholder hat"></div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+          <div class="cart-item-price">USD 34.62</div>
+        </div>
+        <button class="cart-item-remove">×</button>
+      </div>
+
+      <div class="cart-item" style="opacity:0.5;">
+        <div class="cart-item-check"><input type="checkbox" disabled></div>
+        <div class="cart-item-img img-placeholder hat" style="position:relative;">
+        </div>
+        <div class="cart-item-info">
+          <div class="cart-item-badge">Reserved</div>
+          <div class="cart-item-name">Nct Dream Haechan Glitch Mode Photocard</div>
+          <div class="cart-item-price" style="color:#999;">USD 2.31</div>
+        </div>
+        <button class="cart-item-remove">×</button>
+      </div>
+
+      <div class="cart-summary">
+        <div class="cart-summary-row"><span>Item(2)</span><span>USD 38.70</span></div>
+        <div class="cart-summary-row total"><span>Subtotal</span><span>USD 38.70</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bottom-handing-free">🎉 Handling fee FREE now!</div>
+    <button class="bottom-btn primary" onclick="showScreen('checkout')">Buy Now</button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 2: CHECKOUT -->
+<!-- ============================================ -->
+<div id="screen-checkout" class="screen">
+
+  <!-- Shipping Calculator Bottom Sheet -->
+  <div id="shipping-calc-sheet" class="coupon-sheet-overlay hidden">
+    <div class="coupon-sheet" style="max-height:92vh;">
+      <div class="coupon-sheet-handle"></div>
+      <div class="coupon-sheet-header">
+        <div>
+          <div class="coupon-sheet-title">Shipping Fee Estimator</div>
+          <div style="font-size:12px;color:#999;margin-top:2px;">Compare Paysable &amp; Kfriday rates at once</div>
+        </div>
+        <button class="coupon-sheet-close" onclick="closeShippingCalc()">×</button>
+      </div>
+      <div class="coupon-sheet-body">
+
+        <!-- Country -->
+        <div style="margin-bottom:14px;">
+          <label style="font-size:13px;font-weight:600;color:#333;display:block;margin-bottom:7px;">Destination Country</label>
+          <select id="calc-country" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;background:#fff;outline:none;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path d=%22M1 1l5 5 5-5%22 stroke=%22%23999%22 stroke-width=%221.5%22 fill=%22none%22/></svg>');background-repeat:no-repeat;background-position:right 14px center;">
+            <option value="">Select Country</option>
+            <option value="US">United States</option>
+            <option value="UK">United Kingdom</option>
+            <option value="AU">Australia</option>
+            <option value="CA">Canada</option>
+            <option value="JP">Japan</option>
+            <option value="SG">Singapore</option>
+            <option value="FR">France</option>
+            <option value="DE">Germany</option>
+            <option value="PH">Philippines</option>
+            <option value="MY">Malaysia</option>
+            <option value="TH">Thailand</option>
+            <option value="TW">Taiwan</option>
+          </select>
+        </div>
+
+        <!-- Weight -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+            <label style="font-size:13px;font-weight:600;color:#333;">Weight</label>
+            <div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;font-size:12px;">
+              <button id="unit-weight-kg" onclick="setWeightUnit('kg')" style="padding:4px 12px;border:none;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;">kg</button>
+              <button id="unit-weight-lbs" onclick="setWeightUnit('lbs')" style="padding:4px 12px;border:none;background:#222;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">lbs</button>
+            </div>
+          </div>
+          <input id="calc-weight" type="number" min="0" step="0.1" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;outline:none;background:#fafafa;">
+        </div>
+
+        <!-- Dimensions -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+            <label style="font-size:13px;font-weight:600;color:#333;">Package Size</label>
+            <div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+              <button id="unit-dim-cm" onclick="setDimUnit('cm')" style="padding:4px 12px;border:none;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;">cm</button>
+              <button id="unit-dim-in" onclick="setDimUnit('in')" style="padding:4px 12px;border:none;background:#222;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">in</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;text-align:center;">
+              <div style="font-size:11px;color:#888;margin-bottom:5px;">Width</div>
+              <input id="calc-width" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div style="font-size:11px;color:#888;margin-bottom:5px;">Length</div>
+              <input id="calc-length" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
+            </div>
+            <div style="flex:1;text-align:center;">
+              <div style="font-size:11px;color:#888;margin-bottom:5px;">Height</div>
+              <input id="calc-height" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison results -->
+        <div id="calc-compare-result" style="display:none;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Estimated Shipping Fee</div>
+          <div style="display:flex;gap:10px;margin-bottom:10px;">
+            <!-- Paysable -->
+            <div id="calc-paysable-card" onclick="selectCalcProxy('paysable')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
+              <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:8px;">Paysable</div>
+              <div id="calc-paysable-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;"></div>
+              <div id="calc-paysable-detail" style="font-size:10px;color:#aaa;line-height:1.5;"></div>
+            </div>
+            <!-- Kfriday -->
+            <div id="calc-kfriday-card" onclick="selectCalcProxy('kfriday')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
+              <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:8px;">Kfriday</div>
+              <div id="calc-kfriday-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;"></div>
+              <div id="calc-kfriday-detail" style="font-size:10px;color:#aaa;line-height:1.5;"></div>
+            </div>
+          </div>
+          <!-- Delivered Korea -->
+          <div style="border:1px solid #eee;border-radius:12px;padding:14px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+              <div style="width:32px;height:32px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;flex-shrink:0;">D</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:2px;">Delivered Korea</div>
+                <div style="font-size:11px;color:#999;line-height:1.4;">Check the rate on DK's website</div>
+              </div>
+            </div>
+            <a href="https://www.deliveredkorea.com" target="_blank" onclick="event.stopPropagation()" style="flex-shrink:0;font-size:12px;font-weight:600;color:#e65100;background:#fff;border:1.5px solid #e65100;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;">Visit site ↗</a>
+          </div>
+          <div style="font-size:11px;color:#aaa;margin-top:10px;line-height:1.6;">* Estimates only. Final fee calculated at the warehouse. Processing fees not included.</div>
+        </div>
+
+      </div>
+      <div class="coupon-sheet-footer">
+        <button id="calc-cta-btn" class="coupon-apply-btn" onclick="calcCtaAction()">Calculate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coupon Selection Bottom Sheet -->
+  <div id="coupon-sheet" class="coupon-sheet-overlay hidden">
+    <div class="coupon-sheet">
+      <div class="coupon-sheet-handle"></div>
+      <div class="coupon-sheet-header">
+        <span class="coupon-sheet-title">Select Coupon</span>
+        <button class="coupon-sheet-close" onclick="closeCouponSheet()">×</button>
+      </div>
+      <div class="coupon-sheet-body">
+
+        <!-- Coupon code entry -->
+        <div class="coupon-code-row">
+          <input class="coupon-code-input" id="coupon-code-input" type="text" placeholder="Enter coupon code">
+          <button class="coupon-code-btn" onclick="applyCouponCode()">Apply</button>
+        </div>
+        <input type="hidden" id="coupon-error-select" value="invalid">
+        <div class="coupon-code-error" id="coupon-code-error"></div>
+
+        <!-- No coupon option -->
+        <div id="coupon-card-0" onclick="selectCoupon(0)" style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;cursor:pointer;margin-bottom:4px;">
+          <span style="font-size:13px;color:#999;">Don't use a coupon</span>
+          <div class="coupon-card-radio" id="coupon-radio-0"></div>
+        </div>
+
+        <!-- Available coupons -->
+        <div class="coupon-section-label" id="coupon-available-label" style="margin-top:16px;">Available (2)</div>
+
+        <!-- Card 1: Fixed discount -->
+        <div class="coupon-card" id="coupon-card-1" onclick="selectCoupon(1)">
+          <div class="coupon-card-body">
+            <div class="coupon-card-left">
+              <div class="coupon-card-amount-val">$3</div>
+              <div class="coupon-card-amount-unit">OFF</div>
+            </div>
+            <div class="coupon-card-right">
+              <div class="coupon-card-name">Welcome Coupon</div>
+              <div class="coupon-card-min">No minimum purchase</div>
+              <div class="coupon-card-remaining">14 days left</div>
+            </div>
+            <div class="coupon-card-radio-wrap">
+              <div class="coupon-card-radio" id="coupon-radio-1"></div>
+            </div>
+          </div>
+          <div class="coupon-card-footer">
+            <span class="coupon-card-expiry">Valid until Apr 30, 2026</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Fixed discount -->
+        <div class="coupon-card" id="coupon-card-2" onclick="selectCoupon(2)">
+          <div class="coupon-card-body">
+            <div class="coupon-card-left">
+              <div class="coupon-card-amount-val">$7</div>
+              <div class="coupon-card-amount-unit">OFF</div>
+            </div>
+            <div class="coupon-card-right">
+              <div class="coupon-card-name">Welcome Coupon</div>
+              <div class="coupon-card-min">No minimum purchase</div>
+              <div class="coupon-card-remaining">14 days left</div>
+            </div>
+            <div class="coupon-card-radio-wrap">
+              <div class="coupon-card-radio" id="coupon-radio-2"></div>
+            </div>
+          </div>
+          <div class="coupon-card-footer">
+            <span class="coupon-card-expiry">Valid until Apr 30, 2026</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Downloaded via code (hidden until redeemed) -->
+        <div class="coupon-card" id="coupon-card-3" onclick="selectCoupon(3)" style="display:none;">
+          <div class="coupon-card-body">
+            <div class="coupon-card-left">
+              <div class="coupon-card-amount-val">$5</div>
+              <div class="coupon-card-amount-unit">OFF</div>
+            </div>
+            <div class="coupon-card-right">
+              <div class="coupon-card-name">GDpromotion Coupon</div>
+              <div class="coupon-card-min">No minimum purchase</div>
+              <div class="coupon-card-remaining">30 days left</div>
+            </div>
+            <div class="coupon-card-radio-wrap">
+              <div class="coupon-card-radio" id="coupon-radio-3"></div>
+            </div>
+          </div>
+          <div class="coupon-card-footer">
+            <span class="coupon-card-expiry">Valid until May 17, 2026</span>
+          </div>
+        </div>
+
+        <!-- Not applicable coupons -->
+        <div class="coupon-section-label" style="margin-top:20px;">Not Applicable (2)</div>
+
+        <!-- Disabled: % discount, below minimum -->
+        <div class="coupon-card disabled">
+          <div class="coupon-card-body">
+            <div class="coupon-card-left">
+              <div class="coupon-card-amount-val">10%</div>
+              <div class="coupon-card-amount-unit">OFF</div>
+            </div>
+            <div class="coupon-card-right">
+              <div class="coupon-card-name">B2C Partner Coupon</div>
+              <div class="coupon-card-min">Min. $50.00</div>
+              <div class="coupon-card-remaining" style="color:#bbb;">3 days left</div>
+            </div>
+            <div class="coupon-card-radio-wrap">
+              <div class="coupon-card-radio"></div>
+            </div>
+          </div>
+          <div class="coupon-card-footer">
+            <span class="coupon-card-expiry">Valid until Apr 19, 2026</span>
+            <span class="coupon-card-reason">Below minimum</span>
+          </div>
+        </div>
+
+        <!-- Disabled: already applied to another item -->
+        <div class="coupon-card disabled">
+          <div class="coupon-card-body">
+            <div class="coupon-card-left">
+              <div class="coupon-card-amount-val">$2</div>
+              <div class="coupon-card-amount-unit">OFF</div>
+            </div>
+            <div class="coupon-card-right">
+              <div class="coupon-card-name">Domestic Shipping Discount</div>
+              <div class="coupon-card-min">Min. $30.00</div>
+              <div class="coupon-card-remaining" style="color:#bbb;">45 days left</div>
+            </div>
+            <div class="coupon-card-radio-wrap">
+              <div class="coupon-card-radio"></div>
+            </div>
+          </div>
+          <div class="coupon-card-footer">
+            <span class="coupon-card-expiry">Valid until May 31, 2026</span>
+            <span class="coupon-card-reason">Used on another item</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="coupon-sheet-footer">
+        <button class="coupon-apply-btn" id="coupon-apply-btn" onclick="confirmCouponSelection()" disabled>Select a coupon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: FX Change Toast (JS-driven) -->
+  <div id="toast-fx" class="toast">Exchange rate has been updated. Prices shown reflect the latest exchange rate.</div>
+
+  <!-- Modal: Price Change -->
+  <div id="modal-price-change" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-title">Price has been updated</div>
+      <div class="modal-body">The seller has changed the price of one or more items. You can check the updated prices below.</div>
+      <div class="modal-btns">
+        <button class="modal-btn primary" onclick="closeModal('modal-price-change')">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Sold Out (Partial) -->
+  <div id="modal-soldout-partial" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-title">Some items are unavailable</div>
+      <div class="modal-body">The following item is currently unavailable and will be removed from your order.</div>
+      <div class="modal-item">
+        <div class="modal-item-img"></div>
+        <div class="modal-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee</div>
+        <div class="modal-item-price">USD 4.08</div>
+      </div>
+      <div class="modal-sub">You can still order the remaining 1 item.</div>
+      <div class="modal-btns">
+        <button class="modal-btn secondary" onclick="closeModal('modal-soldout-partial')">No</button>
+        <button class="modal-btn primary" onclick="closeModal('modal-soldout-partial')">Yes, continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Sold Out (All) -->
+  <div id="modal-soldout-all" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-title">Items unavailable</div>
+      <div class="modal-body">These items are currently unavailable.</div>
+      <div class="modal-item">
+        <div class="modal-item-img"></div>
+        <div class="modal-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee</div>
+        <div class="modal-item-price">USD 4.08</div>
+      </div>
+      <div class="modal-item">
+        <div class="modal-item-img"></div>
+        <div class="modal-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+        <div class="modal-item-price">USD 34.62</div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn primary" onclick="closeModal('modal-soldout-all');showScreen('cart')">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="header">
+    <button class="header-back" onclick="showScreen('cart')">‹</button>
+    <span class="header-title">Check Out</span>
+    <span></span>
+  </div>
+
+  <div class="content">
+
+    <!-- Order Summary -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Order Summary (2)</span>
+        <span class="section-toggle">^</span>
+      </div>
+      <div class="section-body">
+        <div class="order-item-card">
+          <div class="order-item">
+            <div class="order-item-img img-placeholder hat"></div>
+            <div class="order-item-info">
+              <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+              <div class="order-item-qty">Qty: 1</div>
+            </div>
+            <div class="order-item-price">USD 4.08</div>
+          </div>
+          <div class="item-coupon-area" id="coupon-area-item1">
+            <div class="item-coupon-row">
+              <span class="item-coupon-label">🎫 Coupon</span>
+              <button class="item-coupon-select" onclick="openCouponSheet('item1', [1,2], 4.08)">Select Coupon ›</button>
+            </div>
+            <div class="item-coupon-applied" style="display:none;">
+              <span class="item-coupon-name"></span>
+              <span class="item-coupon-value"></span>
+              <button class="item-coupon-remove" onclick="removeCoupon('item1')">✕</button>
+            </div>
+          </div>
+          <div class="order-item-shipping">
+            <span>Domestic Shipping</span><span>USD 2.50</span>
+          </div>
+          <div class="add-request-area">
+            <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
+            <div class="request-saved" style="display:none;">
+              <span class="request-saved-text"></span>
+              <button class="request-saved-edit" onclick="
+                const area = this.closest('.add-request-area');
+                area.querySelector('.request-saved').style.display='none';
+                area.querySelector('.request-panel').style.display='block';
+              ">Edit</button>
+            </div>
+            <div class="request-panel" style="display:none;">
+              <div style="font-size:12px;color:#888;margin-bottom:6px;">Message to Seller</div>
+              <textarea class="request-textarea" placeholder="e.g. Could you provide additional photos?"></textarea>
+              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images</div>
+              <div class="request-upload" data-max="5">
+                <div class="upload-box upload-add-btn" onclick="triggerImageUpload(this)">
+                  <span class="upload-icon" style="font-size:20px;color:#bbb;">+</span>
+                  <input type="file" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
+                </div>
+              </div>
+              <button class="request-save" onclick="saveRequest(this)">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-item-card">
+          <div class="order-item">
+            <div class="order-item-img img-placeholder hat"></div>
+            <div class="order-item-info">
+              <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+              <div class="order-item-qty">Qty: 1</div>
+            </div>
+            <div class="order-item-price">USD 34.62</div>
+          </div>
+          <div class="item-coupon-area" id="coupon-area-item2">
+            <div class="item-coupon-row">
+              <span class="item-coupon-label">🎫 Coupon</span>
+              <button class="item-coupon-select" onclick="openCouponSheet('item2', [1,2], 34.62)">Select Coupon ›</button>
+            </div>
+            <div class="item-coupon-applied" style="display:none;">
+              <span class="item-coupon-name"></span>
+              <span class="item-coupon-value"></span>
+              <button class="item-coupon-remove" onclick="removeCoupon('item2')">✕</button>
+            </div>
+          </div>
+          <div class="order-item-shipping">
+            <span>Domestic Shipping</span><span>USD 2.50</span>
+          </div>
+          <div class="add-request-area">
+            <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
+            <div class="request-saved" style="display:none;">
+              <span class="request-saved-text"></span>
+              <button class="request-saved-edit" onclick="
+                const area = this.closest('.add-request-area');
+                area.querySelector('.request-saved').style.display='none';
+                area.querySelector('.request-panel').style.display='block';
+              ">Edit</button>
+            </div>
+            <div class="request-panel" style="display:none;">
+              <div style="font-size:12px;color:#888;margin-bottom:6px;">Message to Seller</div>
+              <textarea class="request-textarea" placeholder="e.g. Could you provide additional photos?"></textarea>
+              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images</div>
+              <div class="request-upload" data-max="5">
+                <div class="upload-box upload-add-btn" onclick="triggerImageUpload(this)">
+                  <span class="upload-icon" style="font-size:20px;color:#bbb;">+</span>
+                  <input type="file" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
+                </div>
+              </div>
+              <button class="request-save" onclick="saveRequest(this)">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Method -->
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <span class="section-title">Shipping Agent</span>
+          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">Receives your items in Korea, communicates with sellers, and ships internationally on your behalf.</div>
+        </div>
+        <span class="section-toggle">^</span>
+      </div>
+      <div class="section-body">
+        <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
+          <span style="font-size:14px;flex-shrink:0;">🔴</span>
+          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this shipping option.</span>
+        </div>
+        <div id="proxy-section-container"></div>
+        <div class="shipping-fee-note" style="justify-content:space-between;">
+          <span>ℹ️ International shipping fee will be paid on the shipping agent's website after items arrive at the warehouse</span>
+          <button onclick="openShippingCalc()" style="font-size:12px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;margin-left:12px;">Estimate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Payment</span>
+        <span class="section-toggle">^</span>
+      </div>
+      <div class="section-body" style="padding-bottom:8px;">
+
+        <!-- Quick Pay -->
+        <div class="quick-pay-section" style="padding:0 0 4px;">
+          <div class="quick-pay-buttons">
+            <button id="qp-apple-btn" class="quick-pay-btn apple" onclick="selectQuickPayMethod('apple')" style="background:#fff;color:#222;border:1px solid #ddd;font-size:13px;padding:10px;">Apple Pay</button>
+            <button id="qp-google-btn" class="quick-pay-btn google" onclick="selectQuickPayMethod('google')" style="font-size:13px;padding:10px;"><span style="color:#4285f4;font-weight:800;">G</span> Pay</button>
+          </div>
+          <div class="quick-pay-divider">or pay with</div>
+        </div>
+
+        <label class="payment-option">
+          <input type="radio" name="payment" class="payment-radio" checked onchange="onPaymentMethodChange('card')">
+          <span class="payment-name">Credit Card</span>
+          <div class="payment-icons">
+            <span class="payment-icon">VISA</span>
+            <span class="payment-icon">MC</span>
+            <span class="payment-icon">AMEX</span>
+          </div>
+        </label>
+
+        <label class="payment-option" style="align-items:flex-start;padding:14px 0;">
+          <input type="radio" name="payment" class="payment-radio" style="margin-top:3px;" onchange="onPaymentMethodChange('paypal')">
+          <div style="flex:1;">
+            <span class="payment-name">PayPal</span>
+            <div style="font-size:11px;color:#e07b00;margin-top:3px;font-weight:500;">
+              +5% payment processing fee applies
+              <button onclick="event.preventDefault();togglePaypalFeeInfo()" style="background:none;border:1px solid #e07b00;color:#e07b00;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;cursor:pointer;padding:0;line-height:1;vertical-align:middle;margin-left:4px;">?</button>
+            </div>
+            <div id="paypal-fee-info" style="display:none;margin-top:8px;background:#fff8f0;border:1px solid #f5c07a;border-radius:8px;padding:10px 12px;font-size:11px;color:#7a5000;line-height:1.6;">
+              PayPal charges merchants a payment processing fee, which we pass through directly. This 5% fee applies only when paying with PayPal — use a card to avoid it.
+            </div>
+          </div>
+          <div class="payment-icons">
+            <span class="payment-icon" style="color:#003087;font-weight:800;">Pay<span style="color:#0070ba;">Pal</span></span>
+          </div>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" name="payment" class="payment-radio" onchange="onPaymentMethodChange('alipay')">
+          <span class="payment-name">Alipay+</span>
+          <div class="payment-icons">
+            <span class="payment-icon" style="color:#1677ff;">Alipay</span>
+          </div>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" name="payment" class="payment-radio" onchange="onPaymentMethodChange('wechat')">
+          <span class="payment-name">WeChat Pay</span>
+          <div class="payment-icons">
+            <span class="payment-icon" style="color:#07c160;">WeChat</span>
+          </div>
+        </label>
+
+      </div>
+    </div>
+
+    <!-- Price Details -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Price Details</span>
+        <span class="section-toggle">^</span>
+      </div>
+      <div class="section-body">
+        <div class="price-box">
+          <div class="price-group-title">Product Purchase</div>
+          <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
+          <div id="checkout-coupon-row" class="price-row discount" style="display:none;"><span id="checkout-coupon-label">Coupon</span><span id="checkout-coupon-amount"></span></div>
+          <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+          <div class="price-row" id="paypal-fee-row" style="display:none;color:#e07b00;">
+            <span>PayPal Fee (5%)</span>
+            <span id="paypal-fee-amount"></span>
+          </div>
+
+          <hr class="price-divider">
+
+          <div class="price-group-title price-group-intl">International Shipping</div>
+          <div class="price-row muted"><span>Handling Fee <span class="info-icon" onclick="showTooltip(event, 'handling-fee')">ⓘ</span></span><span>Added later</span></div>
+          <div class="price-row muted"><span>International Shipping <span class="info-icon" onclick="showTooltip(event, 'intl-shipping')">ⓘ</span></span><span>Calculated later</span></div>
+          <div class="price-row muted"><span>Tax &amp; Duties <span class="info-icon" onclick="showTooltip(event, 'tax-duties')">ⓘ</span></span><span>Calculated later</span></div>
+
+          <div class="price-intl-note" style="justify-content:space-between;align-items:center;">
+            <span>ℹ️ International shipping fee will be calculated after items arrive in Korea.</span>
+            <button onclick="openShippingCalc()" style="font-size:11px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;margin-left:10px;flex-shrink:0;">Estimate</button>
+          </div>
+
+          <div class="price-total">
+            <span>Total <span class="info-icon" style="font-size:12px;" onclick="showTooltip(event, 'total')">ⓘ</span></span>
+            <span class="amount" id="checkout-total-amount">USD 36.70</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms -->
+    <div class="terms">
+      <input type="checkbox" checked>
+      <span>Agree to all terms and conditions</span>
+      <a href="#" onclick="event.preventDefault();document.getElementById('terms-sheet').classList.remove('hidden');">See all</a>
+    </div>
+
+    <!-- Terms Bottom Sheet -->
+    <div id="terms-sheet" class="coupon-sheet-overlay hidden">
+      <div class="coupon-sheet" style="max-height:85vh;">
+        <div class="coupon-sheet-handle"></div>
+        <div class="coupon-sheet-header">
+          <span class="coupon-sheet-title">Terms & Conditions</span>
+          <button class="coupon-sheet-close" onclick="document.getElementById('terms-sheet').classList.add('hidden')">×</button>
+        </div>
+        <div class="coupon-sheet-body" style="font-size:13px;color:#444;line-height:1.8;">
+
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">1. Order & Payment</div>
+          <p style="margin-bottom:14px;color:#666;">By placing an order on Global Bunjang, you agree to purchase the item at the listed price in USD. All payments are processed securely. Prices are subject to exchange rate fluctuations and may vary slightly at the time of settlement.</p>
+
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Shipping Agent</div>
+          <p style="margin-bottom:14px;color:#666;">Your selected shipping agent acts on your behalf to receive items in Korea and ship them internationally. International shipping fees are calculated separately and paid directly on the shipping agent's website after items arrive at their warehouse.</p>
+
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">3. Customs & Duties</div>
+          <p style="margin-bottom:14px;color:#666;">Import taxes, customs duties, and any related fees are the sole responsibility of the recipient. Global Bunjang is not liable for delays or additional costs incurred due to customs procedures in the destination country.</p>
+
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">4. Order Cancellation</div>
+          <p style="margin-bottom:14px;color:#666;">Orders may not be cancelled once the seller has confirmed the transaction. If cancellation is required prior to seller confirmation, please contact support promptly. Refund eligibility depends on the status of the order at the time of the request.</p>
+
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">5. Returns & Refunds</div>
+          <p style="margin-bottom:14px;color:#666;">As a secondhand marketplace, all sales are generally final. Returns are accepted only in cases where the item received significantly differs from the listing description. Claims must be submitted within 3 days of delivery.</p>
+
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">6. Personal Information</div>
+          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the shipping agent solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
+
+          <div style="font-size:12px;color:#bbb;margin-top:8px;">Last updated: April 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="trust-row">🔒 Secure Checkout</div>
+    <div class="trust-logos">
+      <span class="trust-logo">VISA</span>
+      <span class="trust-logo">MC</span>
+      <span class="trust-logo" style="color:#003087;">PayPal</span>
+      <span class="trust-logo"> Pay</span>
+      <span class="trust-logo" style="color:#4285f4;">G Pay</span>
+    </div>
+    <button id="checkout-place-order-btn" class="bottom-btn primary" onclick="goToSSORedirect()">USD 43.70 — Place Order</button>
+    <div class="bottom-note">ⓘ Customs & duties are paid by the recipient.</div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ============================================ -->
+<!-- SCREEN: QUICK PAY (Apple/Google Pay)        -->
+<!-- ============================================ -->
+<div id="screen-pg-quickpay" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <span class="header-title" id="quickpay-header-title">Apple Pay</span>
+    <span></span>
+  </div>
+  <div class="screen-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px 24px;gap:0;">
+
+    <!-- Payment sheet card -->
+    <div style="width:100%;background:#fff;border-radius:20px;box-shadow:0 4px 32px rgba(0,0,0,0.12);overflow:hidden;margin-bottom:28px;">
+      <!-- Header band -->
+      <div id="quickpay-band" style="background:#000;padding:20px 24px 16px;">
+        <div id="quickpay-method-label" style="font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;">Apple Pay</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);">Secure payment via Global Bunjang</div>
+      </div>
+      <!-- Order summary -->
+      <div style="padding:20px 24px;">
+        <div style="font-size:13px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Order Summary</div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Subtotal</span><span>USD 38.70</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:8px;"><span>Coupon Discount</span><span>- USD 7.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:#222;border-top:1px solid #f0f0f0;padding-top:14px;"><span>Total</span><span>USD 36.70</span></div>
+      </div>
+      <!-- Biometric auth mock -->
+      <div style="padding:0 24px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div id="quickpay-auth-icon" style="font-size:48px;margin-bottom:4px;"></div>
+        <div id="quickpay-auth-hint" style="font-size:13px;color:#888;">Double-click side button to pay</div>
+      </div>
+    </div>
+
+    <!-- [Demo] Pay button -->
+    <button id="quickpay-pay-btn" onclick="simulateQuickPay()" style="width:100%;padding:17px;border-radius:14px;border:none;font-size:16px;font-weight:700;color:#fff;background:#000;cursor:pointer;">[Demo] Pay USD 36.70</button>
+    <button onclick="showScreen('checkout')" style="margin-top:14px;background:none;border:none;font-size:14px;color:#888;cursor:pointer;">Cancel</button>
+  </div>
+</div>
+
+<!-- SCREEN: SSO REDIRECT (DK Login)            -->
+<!-- ============================================ -->
+<div id="screen-sso-redirect" class="screen">
+  <div class="header">
+    <button class="header-back" id="sso-back-btn" onclick="showScreen('checkout')">‹</button>
+    <span class="header-title" id="sso-header-title">Log in to Delivered Korea</span>
+    <span></span>
+  </div>
+
+  <!-- Terms Bottom Sheet -->
+  <div id="sso-terms-sheet" class="coupon-sheet-overlay hidden">
+    <div class="coupon-sheet">
+      <div class="coupon-sheet-handle"></div>
+      <div class="coupon-sheet-header">
+        <span class="coupon-sheet-title">Sign Up to Delivered Korea</span>
+        <button class="coupon-sheet-close" onclick="closeSSOTermsSheet()">×</button>
+      </div>
+      <div class="coupon-sheet-body">
+        <label style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+          <input type="checkbox" id="terms-all" onchange="toggleAllTerms(this)" style="width:18px;height:18px;accent-color:#222;flex-shrink:0;">
+          <span style="font-size:14px;font-weight:700;">Agree to all</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <input type="checkbox" class="term-required" onchange="syncTermsAll()" style="width:18px;height:18px;accent-color:#222;flex-shrink:0;">
+          <span style="flex:1;font-size:13px;color:#555;line-height:1.5;"><span style="color:#e74c3c;font-size:11px;font-weight:600;">[Required]</span> I agree to the privacy Policy.</span>
+          <span style="font-size:12px;color:#999;text-decoration:underline;white-space:nowrap;">View</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <input type="checkbox" class="term-required" onchange="syncTermsAll()" style="width:18px;height:18px;accent-color:#222;flex-shrink:0;">
+          <span style="flex:1;font-size:13px;color:#555;line-height:1.5;"><span style="color:#e74c3c;font-size:11px;font-weight:600;">[Required]</span> I agree to the terms of service.</span>
+          <span style="font-size:12px;color:#999;text-decoration:underline;white-space:nowrap;">View</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:14px 0;cursor:pointer;">
+          <input type="checkbox" class="term-optional" onchange="syncTermsAll()" style="width:18px;height:18px;accent-color:#222;flex-shrink:0;">
+          <span style="font-size:13px;color:#555;line-height:1.5;"><span style="color:#999;font-size:11px;font-weight:600;">[Optional]</span> I agree to receive marketing information</span>
+        </label>
+      </div>
+      <div class="coupon-sheet-footer">
+        <button id="sso-terms-btn" class="coupon-apply-btn" disabled onclick="submitSSOTerms()">Sign Up</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" style="padding:24px 20px 100px;">
+
+    <!-- ── STEP: TABS (initial) ── -->
+    <div id="sso-step-tabs">
+      <div style="background:#f8f8f8;border-radius:12px;padding:14px 16px;margin-bottom:24px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">📦</span>
+        <div id="sso-proxy-blurb" style="font-size:12px;color:#666;line-height:1.5;">Delivered Korea handles international shipping. Link your account to continue.</div>
+      </div>
+      <div style="display:flex;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:24px;">
+        <button id="tab-new" onclick="switchSSOTab('new')" style="flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#222;">New to DK</button>
+        <button id="tab-existing" onclick="switchSSOTab('existing')" style="flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#999;">Already have DK account</button>
+      </div>
+      <div id="sso-tab-new">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Create a DK account instantly</div>
+          <div style="font-size:13px;color:#888;line-height:1.5;">Sign up using your Bunjang account. No extra info needed.</div>
+        </div>
+        <button onclick="goToSSOStep('create')" style="width:100%;padding:16px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">Sign up & Continue ↗</button>
+      </div>
+      <div id="sso-tab-existing" style="display:none;">
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;font-weight:500;">Email</label>
+          <input id="sso-email-input" type="email" placeholder="Enter your DK account email" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;outline:none;">
+        </div>
+        <div style="margin-bottom:24px;">
+          <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;font-weight:500;">Password</label>
+          <input type="password" placeholder="Password" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;outline:none;">
+        </div>
+        <button onclick="goToSSOStep('confirm')" style="width:100%;padding:16px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px;">Log in & Link Account</button>
+        <div style="font-size:12px;color:#bbb;text-align:center;">Your Bunjang account will be linked for faster checkout next time.</div>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: CONSENT ── -->
+    <div id="sso-step-consent" style="display:none;">
+      <!-- Branding + required notice -->
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
+          <span style="font-size:15px;font-weight:800;letter-spacing:-0.5px;">⚡BUNJANG</span>
+          <span style="font-size:16px;color:#bbb;">⇄</span>
+          <span id="sso-consent-proxy-brand" style="font-size:14px;font-weight:800;color:#e65100;">Delivered Korea</span>
+        </div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px;line-height:1.3;">Link your account to continue</div>
+        <div id="sso-consent-blurb" style="font-size:13px;color:#888;line-height:1.5;">Delivered Korea handles international shipping for your Bunjang Global order.</div>
+      </div>
+      <!-- Required notice -->
+      <div style="display:flex;align-items:center;gap:8px;background:#fff3e0;border-radius:8px;padding:10px 14px;margin-bottom:20px;">
+        <span style="font-size:14px;flex-shrink:0;">⚠️</span>
+        <span id="sso-consent-required-notice" style="font-size:12px;color:#e65100;line-height:1.5;">Account linking is required to complete payment with Delivered Korea.</span>
+      </div>
+      <div id="sso-consent-title" style="font-size:15px;font-weight:700;margin-bottom:12px;color:#222;">Information to be shared</div>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;background:#f8f8f8;border-radius:10px;margin-bottom:10px;">
+        <input type="checkbox" id="consent-check-1" onchange="updateConsentBtn()" style="width:18px;height:18px;accent-color:#222;margin-top:2px;flex-shrink:0;">
+        <div>
+          <div id="sso-consent-dir-1" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:11px;font-weight:700;background:#222;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Bunjang Global</span>
+            <span style="font-size:10px;color:#ccc;">▶</span>
+            <span id="sso-consent-dir-1-to" style="font-size:11px;font-weight:700;background:#555;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Delivered Korea</span>
+          </div>
+          <div id="sso-consent-label-1" style="font-size:12px;color:#888;line-height:1.5;">I consent to Bunjang Global sharing my <strong style="color:#444;">Email</strong> and <strong style="color:#444;">Username</strong> with Delivered Korea.</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;background:#f8f8f8;border-radius:10px;margin-bottom:28px;">
+        <input type="checkbox" id="consent-check-2" onchange="updateConsentBtn()" style="width:18px;height:18px;accent-color:#222;margin-top:2px;flex-shrink:0;">
+        <div>
+          <div id="sso-consent-dir-2" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span id="sso-consent-dir-2-from" style="font-size:11px;font-weight:700;background:#555;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Delivered Korea</span>
+            <span style="font-size:10px;color:#ccc;">▶</span>
+            <span style="font-size:11px;font-weight:700;background:#222;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Bunjang Global</span>
+          </div>
+          <div id="sso-consent-label-2" style="font-size:12px;color:#888;line-height:1.5;">I consent to Delivered Korea sharing my <strong style="color:#444;">Account ID</strong> with Bunjang Global.</div>
+        </div>
+      </label>
+      <button id="consent-btn" disabled onclick="goToSSOStep('tabs')" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Continue</button>
+    </div>
+
+    <!-- ── STEP 2: CREATE ACCOUNT ── -->
+    <div id="sso-step-create" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+        <span style="font-size:11px;font-weight:700;background:#4caf50;color:#fff;padding:3px 10px;border-radius:4px;">STEP 1 ✓</span>
+        <div style="flex:1;height:1px;background:#222;"></div>
+        <span style="font-size:11px;font-weight:700;background:#222;color:#fff;padding:3px 10px;border-radius:4px;">STEP 2</span>
+      </div>
+      <div id="sso-create-title" style="font-size:20px;font-weight:700;margin-bottom:6px;line-height:1.3;">Create a Delivered Korea account</div>
+      <div id="sso-create-sub" style="font-size:13px;color:#888;margin-bottom:24px;line-height:1.5;">We'll create a Delivered Korea account using your Bunjang Global account.</div>
+      <div style="border:1.5px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">⚡</div>
+        <div>
+          <div style="font-size:11px;color:#999;margin-bottom:2px;">Bunjang Global account</div>
+          <div style="font-size:14px;font-weight:600;">nancy.lee@bunjang.co.kr</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:20px;color:#bbb;padding:4px 0;">↓</div>
+      <div style="border:1.5px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:28px;display:flex;align-items:center;gap:12px;">
+        <div id="sso-create-proxy-icon" style="width:36px;height:36px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:800;flex-shrink:0;">D</div>
+        <div>
+          <div id="sso-create-proxy-label" style="font-size:11px;color:#999;margin-bottom:2px;">Delivered Korea account</div>
+          <div style="font-size:14px;font-weight:600;color:#999;">New account</div>
+        </div>
+      </div>
+      <button onclick="openSSOTermsSheet()" style="width:100%;padding:16px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;">Continue</button>
+      <div style="text-align:center;">
+        <button onclick="switchSSOTab('existing');goToSSOStep('tabs');" style="font-size:13px;color:#888;background:none;border:none;cursor:pointer;text-decoration:underline;">Already have a Delivered Korea account?</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: CONFIRM ACCOUNT ── -->
+    <div id="sso-step-confirm" style="display:none;">
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px;line-height:1.3;">Confirm your account</div>
+      <div id="sso-confirm-sub" style="font-size:13px;color:#888;margin-bottom:28px;line-height:1.5;">We'll link your Bunjang Global account with your Delivered Korea account.</div>
+      <div style="border:1.5px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;flex-shrink:0;">B</div>
+        <div>
+          <div style="font-size:11px;color:#999;margin-bottom:2px;">Bunjang Global account</div>
+          <div style="font-size:14px;font-weight:600;">nancy.lee@bunjang.co.kr</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:20px;color:#bbb;padding:4px 0;">↓</div>
+      <div style="border:1.5px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:32px;display:flex;align-items:center;gap:12px;">
+        <div id="sso-confirm-proxy-icon" style="width:36px;height:36px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:800;flex-shrink:0;">D</div>
+        <div>
+          <div id="sso-confirm-proxy-label" style="font-size:11px;color:#999;margin-bottom:2px;">Delivered Korea account</div>
+          <div style="font-size:14px;font-weight:600;">nancy.lee@bunjang.co.kr</div>
+        </div>
+      </div>
+      <button onclick="goToSSOStep('success')" style="width:100%;padding:16px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">Continue</button>
+    </div>
+
+    <!-- ── STEP 4: SUCCESS ── -->
+    <div id="sso-step-success" style="display:none;text-align:center;padding-top:40px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#e3f2fd;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#1565c0;margin-bottom:24px;">✓</div>
+      <div style="font-size:22px;font-weight:700;margin-bottom:12px;line-height:1.3;">Accounts linked<br>successfully</div>
+      <div id="sso-success-sub" style="font-size:13px;color:#888;line-height:1.7;margin-bottom:40px;">You're all set. Use your Bunjang Global account to sign in to Delivered Korea — no separate login needed.</div>
+      <button onclick="completeSSOAndProceed()" style="width:100%;padding:16px;background:#222;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">Done</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 3a: PG MODULE — CARD (KRW) -->
+<!-- ============================================ -->
+<div id="screen-pg-card" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <span class="header-title">Credit Card Payment</span>
+    <span></span>
+  </div>
+  <div class="content" style="padding:24px 16px;">
+
+    <div style="background:#f8f8f8;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="font-size:12px;color:#888;margin-bottom:4px;">Amount to pay</div>
+      <div style="font-size:22px;font-weight:700;">₩ 53,215</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px;">≈ USD 36.70 · Converted at today's rate</div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:#888;margin-bottom:6px;">Card Number</div>
+      <input type="text" placeholder="0000  0000  0000  0000" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:15px;letter-spacing:2px;">
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <div style="flex:1;">
+        <div style="font-size:12px;color:#888;margin-bottom:6px;">Expiry</div>
+        <input type="text" placeholder="MM / YY" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;">
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:12px;color:#888;margin-bottom:6px;">CVV</div>
+        <input type="text" placeholder="•••" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;">
+      </div>
+    </div>
+    <div style="margin-bottom:24px;">
+      <div style="font-size:12px;color:#888;margin-bottom:6px;">Cardholder Name</div>
+      <input type="text" placeholder="Name on card" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;">
+    </div>
+
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#aaa;margin-bottom:24px;">
+      <span>🔒</span><span>Secured by Hecto Financial · Powered by PortOne</span>
+    </div>
+
+    <button class="bottom-btn primary" onclick="showScreen('processing')" style="margin-top:4px;">Pay ₩ 53,215</button>
+    <div style="text-align:center;font-size:11px;color:#bbb;margin-top:10px;">[Demo] This simulates the PG payment window</div>
+  </div>
+</div>
+
+<!-- SCREEN 3b: PG MODULE — PAYPAL (USD) -->
+<!-- ============================================ -->
+<div id="screen-pg-paypal" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <span class="header-title">PayPal Checkout</span>
+    <span></span>
+  </div>
+  <div class="content" style="padding:24px 16px;">
+
+    <div style="background:#f8f8f8;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <div style="font-size:12px;color:#888;margin-bottom:4px;">Amount to pay</div>
+      <div style="font-size:22px;font-weight:700;">USD 36.70</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px;">Charged in USD via PayPal</div>
+    </div>
+
+    <div style="background:#fff;border:2px solid #0070ba;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
+      <div style="font-size:22px;font-weight:800;color:#003087;letter-spacing:-0.5px;">Pay<span style="color:#0070ba;">Pal</span></div>
+      <div style="font-size:13px;color:#555;margin:12px 0 16px;">Log in to your PayPal account to complete payment</div>
+      <input type="email" placeholder="PayPal email" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:14px;margin-bottom:10px;">
+      <input type="password" placeholder="Password" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:11px;font-size:14px;margin-bottom:16px;">
+      <button onclick="showScreen('processing')" style="width:100%;padding:13px;background:#0070ba;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;">Log In & Pay USD 36.70</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#aaa;margin-bottom:8px;">
+      <span>🔒</span><span>Secured by PayPal · Powered by PortOne</span>
+    </div>
+    <div style="text-align:center;font-size:11px;color:#bbb;margin-top:10px;">[Demo] This simulates the PayPal payment window</div>
+  </div>
+</div>
+
+<!-- SCREEN 3: PAYMENT PROCESSING -->
+<!-- ============================================ -->
+<div id="screen-processing" class="screen">
+  <div class="header">
+    <span></span>
+    <span class="header-title">Processing Payment</span>
+    <span></span>
+  </div>
+
+  <div class="content" style="padding:60px 24px;text-align:center;">
+    <div style="margin-bottom:32px;">
+      <div style="width:80px;height:80px;border-radius:50%;border:3px solid #eee;border-top-color:#222;display:inline-block;animation:spin 1s linear infinite;"></div>
+      <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Processing your payment...</div>
+    <div style="font-size:13px;color:#888;margin-bottom:40px;">Please do not close this page</div>
+
+    <div style="text-align:left;max-width:280px;margin:0 auto;">
+      <div class="status-tracker">
+        <div class="status-step done">
+          <div class="status-dot">✓</div>
+          <div class="status-info">
+            <div class="status-label">Payment authorized</div>
+            <div class="status-desc">Your card has been verified</div>
+          </div>
+        </div>
+        <div class="status-step current">
+          <div class="status-dot">⋯</div>
+          <div class="status-info">
+            <div class="status-label">Creating order...</div>
+            <div class="status-desc">Placing order on Korean Bunjang</div>
+          </div>
+        </div>
+        <div class="status-step">
+          <div class="status-dot"></div>
+          <div class="status-info">
+            <div class="status-label" style="color:#bbb;">Confirming payment</div>
+            <div class="status-desc">Finalizing your purchase</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;">
+      <button class="bottom-btn primary" onclick="showScreen('order-placed')" style="width:auto;padding:12px 32px;font-size:14px;border-radius:8px;">[Demo] Payment Success →</button>
+      <button onclick="showScreen('payment-fail')" style="width:auto;padding:12px 32px;font-size:14px;border-radius:8px;background:#fff;color:#c62828;border:1px solid #c62828;cursor:pointer;font-weight:600;margin-top:8px;">[Demo] Skip to Failure →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN: ORDER PLACED (Async — items Ordering) -->
+<!-- ============================================ -->
+<div id="screen-order-placed" class="screen">
+  <div class="header">
+    <span></span>
+    <span class="header-title">Order Placed</span>
+    <div class="header-icons"><button>⌂</button></div>
+  </div>
+
+  <div class="content">
+
+    <!-- Success icon -->
+    <div class="complete-icon">
+      <div class="check" style="background:#e3f2fd;color:#1565c0;font-size:32px;">✓</div>
+    </div>
+    <div class="complete-title">Payment Successful!</div>
+    <div class="complete-subtitle">Your order is being placed with the seller</div>
+    <div class="complete-order-id">Order ID: <span>GB-20260407-002</span></div>
+
+    <!-- Info banner -->
+    <div class="notification info" style="margin:0 16px 16px;border-radius:8px;">
+      ℹ️ Items are being ordered on Korean Bunjang. We'll notify you once confirmed.
+    </div>
+
+    <!-- Items -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Items (2)</span>
+      </div>
+
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+          </div>
+          <div class="order-item-price">USD 4.08</div>
+        </div>
+        <div class="order-detail-item-status">
+          <span class="status-badge ordering">Order Placed</span>
+        </div>
+      </div>
+
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+          </div>
+          <div class="order-item-price">USD 34.62</div>
+        </div>
+        <div class="order-detail-item-status">
+          <span class="status-badge ordering">Order Placed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment summary -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Payment Summary</span></div>
+      <div class="section-body">
+        <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
+        <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
+        <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <hr class="price-divider">
+        <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
+        <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
+      </div>
+    </div>
+
+    <div class="action-btns" style="flex-direction:column;">
+      <div style="display:flex;gap:8px;">
+        <button class="action-btn filled" onclick="showScreen('complete-success')" style="font-size:12px;">[Demo] All Confirmed →</button>
+        <button class="action-btn outline" onclick="showScreen('complete')" style="font-size:12px;color:#e65100;border-color:#e65100;">[Demo] Partial Cancel →</button>
+      </div>
+      <button class="action-btn outline" onclick="showScreen('cart')">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 4a: ORDER COMPLETE (All Success) -->
+<!-- ============================================ -->
+<div id="screen-complete-success" class="screen">
+  <div class="header">
+    <span></span>
+    <span class="header-title">Order Summary</span>
+    <div class="header-icons"><button>⌂</button></div>
+  </div>
+  <div class="content">
+    <div class="complete-icon">
+      <div class="check">✓</div>
+    </div>
+    <div class="complete-title">Order Confirmed!</div>
+    <div class="complete-subtitle">All items have been successfully ordered</div>
+    <div class="complete-order-id">Order ID: <span>GB-20260407-002</span></div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title">Items (2)</span></div>
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+          </div>
+          <div class="order-item-price">USD 4.08</div>
+        </div>
+        <div class="order-detail-item-status">
+          <span class="status-badge processing">Order Placed</span>
+        </div>
+      </div>
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+          </div>
+          <div class="order-item-price">USD 34.62</div>
+        </div>
+        <div class="order-detail-item-status">
+          <span class="status-badge processing">Order Placed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title">Payment Summary</span></div>
+      <div class="section-body">
+        <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
+        <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
+        <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <hr class="price-divider">
+        <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
+        <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title">What's Next?</span></div>
+      <div class="section-body">
+        <div style="font-size:12px;color:#666;line-height:1.8;">
+          <p>1. Korean seller ships items to DK warehouse</p>
+          <p>2. DK inspects items and confirms order (구매확정)</p>
+          <p>3. DK ships items to your international address</p>
+          <p>4. International shipping fee is charged separately on DK's website</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-btns">
+      <button class="action-btn outline" onclick="showScreen('cart')">Continue Shopping</button>
+      <button class="action-btn filled" onclick="showScreen('order-detail')">View Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 4: ORDER COMPLETE (Partial Cancel) -->
+<!-- ============================================ -->
+<div id="screen-complete" class="screen">
+  <div class="header">
+    <span></span>
+    <span class="header-title">Order Summary</span>
+    <div class="header-icons"><button>⌂</button></div>
+  </div>
+
+  <div class="content">
+
+    <!-- Partial result icon -->
+    <div class="complete-icon">
+      <div class="check" style="background:#e3f2fd;color:#1565c0;font-size:32px;">✓</div>
+    </div>
+    <div class="complete-title">Payment Successful!</div>
+    <div class="complete-subtitle">1 item was confirmed · 1 item was canceled</div>
+    <div class="complete-order-id">Order ID: <span>GB-20260326-001</span></div>
+
+    <!-- Soldout notice -->
+    <div class="notification warning" style="margin:0 16px 16px;border-radius:8px;">
+      ⚠️ One item became unavailable during checkout. A refund for that item has been issued to your original payment method.
+    </div>
+
+    <!-- Order items -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Items (2)</span>
+      </div>
+
+      <!-- Confirmed item -->
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+          </div>
+          <div class="order-item-price">USD 4.08</div>
+        </div>
+        <div class="order-detail-item-status">
+          <span class="status-badge processing">Order Placed</span>
+        </div>
+      </div>
+
+      <!-- Canceled item -->
+      <div class="order-detail-item" style="opacity:0.6;">
+        <div class="order-detail-item-row">
+          <div style="position:relative;flex-shrink:0;">
+            <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;filter:grayscale(1);"></div>
+          </div>
+          <div class="order-item-info">
+            <div class="order-item-name" style="text-decoration:line-through;color:#aaa;">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+          </div>
+          <div class="order-item-price" style="color:#aaa;text-decoration:line-through;">USD 34.62</div>
+        </div>
+        <div class="order-detail-item-status">
+          <span class="status-badge" style="background:#fce4ec;color:#c62828;">Canceled · Sold Out</span>
+          <span style="font-size:11px;color:#e65100;margin-left:6px;">Refund: USD 27.62</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment summary -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Payment Summary</span></div>
+      <div class="section-body">
+        <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
+        <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
+        <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <hr class="price-divider">
+        <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
+        <hr class="price-divider">
+        <div class="price-row" style="color:#c62828;"><span>Refund (Sold Out)</span><span>- USD 27.62</span></div>
+        <div class="price-row" style="font-weight:700;font-size:15px;"><span>Final Amount</span><span>USD 9.08</span></div>
+        <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
+        <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#e65100;">
+          ⏱ Refund of USD 27.62 will be returned to your card within 3–5 business days.
+        </div>
+      </div>
+    </div>
+
+    <!-- Next steps -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">What's Next?</span></div>
+      <div class="section-body">
+        <div style="font-size:12px;color:#666;line-height:1.8;">
+          <p>1. Korean seller ships confirmed items to DK warehouse</p>
+          <p>2. DK inspects items and confirms order (구매확정)</p>
+          <p>3. DK ships items to your international address</p>
+          <p>4. International shipping fee is charged separately on DK's website</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-btns">
+      <button class="action-btn outline" onclick="showScreen('cart')">Continue Shopping</button>
+      <button class="action-btn filled" onclick="showScreen('order-detail')">View Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN: PAYMENT FAILURE -->
+<!-- ============================================ -->
+<div id="screen-payment-fail" class="screen">
+  <div class="header">
+    <span></span>
+    <span class="header-title">Payment Failed</span>
+    <span></span>
+  </div>
+
+
+  <div class="content" style="padding:48px 24px;text-align:center;">
+    <div style="margin-bottom:24px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#fce4ec;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#c62828;">✕</div>
+    </div>
+
+    <div style="font-size:20px;font-weight:700;margin-bottom:8px;color:#c62828;">Payment Failed</div>
+    <div style="font-size:14px;color:#666;margin-bottom:28px;line-height:1.6;">No charges have been made to your account.</div>
+
+    <!-- Error message card -->
+    <div style="text-align:left;margin:0 auto 28px;">
+      <div id="error-card" style="background:#fff5f5;border:1px solid #fcc;border-radius:12px;padding:18px 20px;">
+        <div id="error-msg" style="font-size:14px;color:#333;line-height:1.6;font-weight:500;">Your card limit or balance is insufficient.<br>Please use a different payment method.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="action-btn filled" onclick="showScreen('checkout')" style="width:100%;">Try Again</button>
+      <button class="action-btn outline" onclick="showScreen('cart')" style="width:100%;">Back to Cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 5: ORDER DETAIL (tracking) -->
+<!-- ============================================ -->
+<div id="screen-order-detail" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="showScreen('complete')">‹</button>
+    <span class="header-title">Order Detail</span>
+    <span></span>
+  </div>
+
+  <div class="content">
+    <div style="padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:12px;color:#999;">Order ID</span>
+        <span style="font-size:12px;font-weight:600;">GB-20260326-001</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#999;">Ordered at</span>
+        <span style="font-size:12px;">2026-03-26 14:32 KST</span>
+      </div>
+    </div>
+
+    <!-- Per-item status (item-level tracking) -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Items (2)</span></div>
+
+      <!-- Item 1: Shipped to Korea Warehouse -->
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;">USD 4.08</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="status-tracker">
+            <div class="status-step done">
+              <div class="status-dot">✓</div>
+              <div class="status-info">
+                <div class="status-label">Order Placed</div>
+                <div class="status-time">2026-03-26 14:32</div>
+              </div>
+            </div>
+            <div class="status-step current">
+              <div class="status-dot">⋯</div>
+              <div class="status-info">
+                <div class="status-label">Shipped to Korea Warehouse</div>
+                <div class="status-desc">Tracking: 6909012345678</div>
+              </div>
+            </div>
+            <div class="status-step">
+              <div class="status-dot"></div>
+              <div class="status-info">
+                <div class="status-label" style="color:#bbb;">Arrived at Korea Warehouse</div>
+              </div>
+            </div>
+            <div class="status-step">
+              <div class="status-dot"></div>
+              <div class="status-info">
+                <div class="status-label" style="color:#bbb;">Handed to Delivery Partner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 2: Arrived at Korea Warehouse -->
+      <div class="order-detail-item">
+        <div class="order-detail-item-row">
+          <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
+          <div class="order-item-info">
+            <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;">USD 34.62</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="status-tracker">
+            <div class="status-step done">
+              <div class="status-dot">✓</div>
+              <div class="status-info">
+                <div class="status-label">Order Placed</div>
+                <div class="status-time">2026-03-26 14:32</div>
+              </div>
+            </div>
+            <div class="status-step done">
+              <div class="status-dot">✓</div>
+              <div class="status-info">
+                <div class="status-label">Shipped to Korea Warehouse</div>
+                <div class="status-time">2026-03-28 09:15</div>
+              </div>
+            </div>
+            <div class="status-step current">
+              <div class="status-dot">⋯</div>
+              <div class="status-info">
+                <div class="status-label">Arrived at Korea Warehouse</div>
+                <div class="status-desc">2026-03-30</div>
+              </div>
+            </div>
+            <div class="status-step">
+              <div class="status-dot"></div>
+              <div class="status-info">
+                <div class="status-label" style="color:#bbb;">Handed to Delivery Partner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment info -->
+    <div class="section">
+      <div class="section-header"><span class="section-title">Payment Info</span></div>
+      <div class="section-body">
+        <div class="price-row"><span style="color:#999;">Method</span><span>Credit Card (VISA ****1234)</span></div>
+        <div class="price-row"><span style="color:#999;">PG</span><span>Hecto (Adyen)</span></div>
+        <div class="price-row"><span style="color:#999;">Total Paid</span><span style="font-weight:700;">USD 36.70</span></div>
+        <div class="price-row"><span style="color:#999;">FX Rate</span><span>1 USD = 1,450.20 KRW</span></div>
+        <div class="price-row"><span style="color:#999;">Status</span><span style="color:#4caf50;font-weight:600;">Captured</span></div>
+      </div>
+    </div>
+
+    <!-- Settlement info (internal/PM view) -->
+    <div class="section" style="border:1px dashed #ccc;margin:8px 16px;border-radius:8px;">
+      <div class="section-header">
+        <span class="section-title" style="font-size:13px;color:#888;">🔒 Internal: Settlement Tracking</span>
+      </div>
+      <div class="section-body">
+        <div class="price-row" style="font-size:12px;"><span style="color:#999;">DK Points Spent</span><span>₩52,000 + ₩7,000 (배송)</span></div>
+        <div class="price-row" style="font-size:12px;"><span style="color:#999;">Settlement Due</span><span>구매확정 + 7일</span></div>
+        <div class="price-row" style="font-size:12px;"><span style="color:#999;">Settlement Status</span><span style="color:#e65100;">Pending</span></div>
+      </div>
+    </div>
+
+    <div class="action-btns" style="margin-top:8px;">
+      <button class="action-btn outline">Contact Support</button>
+      <button class="action-btn outline" style="color:#e74c3c;border-color:#e74c3c;">Request Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MY ORDERS ==================== -->
+<div id="screen-my-orders" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="showScreen('cart')">←</button>
+    <span class="header-title">Orders</span>
+    <div class="header-icons">
+      <button>🛒</button>
+      <button>☰</button>
+    </div>
+  </div>
+
+  <div class="dk-connected-bar">
+    <span class="dk-connected-dot">✓</span>
+    Your DK account is connected
+  </div>
+
+  <div class="content" style="padding-top:8px;">
+
+    <!-- Order 1: Completed -->
+    <div class="order-card">
+      <div class="order-card-header">
+        <span>2026-03-25 14:32 (KST)</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="order-card-item">
+        <div class="order-card-img" style="background:#f5e6d0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;text-align:center;padding:4px;">NCT Wish</div>
+        <div class="order-card-info">
+          <div class="order-card-top">
+            <span class="order-card-price">USD 4.08</span>
+            <span class="order-card-status confirmed">Completed</span>
+          </div>
+          <div class="order-card-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+        </div>
+      </div>
+      <div class="order-card-item" style="border-top:1px solid #f5f5f5;">
+        <div class="order-card-img" style="background:#e8f0e8;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;text-align:center;padding:4px;">Day6</div>
+        <div class="order-card-info">
+          <div class="order-card-top">
+            <span class="order-card-price">USD 34.62</span>
+            <span class="order-card-status confirmed">Completed</span>
+          </div>
+          <div class="order-card-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+        </div>
+      </div>
+      <div class="order-card-footer">
+        <button class="order-card-btn outline" onclick="showScreen('order-detail')">View Details</button>
+      </div>
+    </div>
+
+    <!-- Order 2: Shipping -->
+    <div class="order-card">
+      <div class="order-card-header">
+        <span>2026-03-22 09:17 (KST)</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="order-card-item">
+        <div class="order-card-img" style="background:#e0e8f5;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;text-align:center;padding:4px;">BTS</div>
+        <div class="order-card-info">
+          <div class="order-card-top">
+            <span class="order-card-price">USD 22.50</span>
+            <span class="order-card-status shipping">Shipping</span>
+          </div>
+          <div class="order-card-name">BTS Jimin Face Album Photocard Set</div>
+        </div>
+      </div>
+      <div class="order-card-footer">
+        <button class="order-card-btn outline" onclick="showScreen('order-detail')">Track Shipment</button>
+      </div>
+    </div>
+
+    <!-- Order 3: Mixed — Canceled + Payment Needed -->
+    <div class="order-card">
+      <div class="order-card-header">
+        <span>2026-03-18 22:09 (KST)</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="order-card-item">
+        <div class="order-card-img" style="background:#f0e0e0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;text-align:center;padding:4px;">iPhone</div>
+        <div class="order-card-info">
+          <div class="order-card-top">
+            <span class="order-card-price canceled">USD 103.00</span>
+            <span class="order-card-status canceled">Canceled</span>
+          </div>
+          <div class="order-card-name canceled">iPhone 14 Pro Case MagSafe Clear</div>
+        </div>
+      </div>
+      <div class="order-card-item" style="border-top:1px solid #f5f5f5;">
+        <div class="order-card-img" style="background:#fff3e0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;text-align:center;padding:4px;">Galaxy</div>
+        <div class="order-card-info">
+          <div class="order-card-top">
+            <span class="order-card-price">USD 50.00</span>
+            <span class="order-card-status payment-needed">Payment Needed</span>
+          </div>
+          <div class="order-card-name">Samsung Galaxy Buds2 Pro Charging Case</div>
+        </div>
+      </div>
+      <div class="order-card-footer">
+        <button class="order-card-btn" onclick="showScreen('checkout')">Pay Now</button>
+      </div>
+    </div>
+
+    <!-- Order 4: Warehouse Received -->
+    <div class="order-card">
+      <div class="order-card-header">
+        <span>2026-03-15 11:45 (KST)</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="order-card-item">
+        <div class="order-card-img" style="background:#e8e0f0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;text-align:center;padding:4px;">Stray Kids</div>
+        <div class="order-card-info">
+          <div class="order-card-top">
+            <span class="order-card-price">USD 18.30</span>
+            <span class="order-card-status warehouse">At Warehouse</span>
+          </div>
+          <div class="order-card-name">Stray Kids SKZOO Plush Keyring Leebit</div>
+        </div>
+      </div>
+      <div class="order-card-footer">
+        <button class="order-card-btn outline" onclick="showScreen('order-detail')">View Details</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /phone-frame -->
+
+<script>
+// ─── Coupon ──────────────────────────────────────
+const couponData = {
+  0: { name: 'No coupon',          value: '',            amount: '',    numAmount: 0 },
+  1: { name: 'Welcome Coupon',      value: '- USD 3.00', amount: '-$3', numAmount: 3 },
+  2: { name: 'Welcome Coupon',      value: '- USD 7.00', amount: '-$7', numAmount: 7 },
+  3: { name: 'GDpromotion Coupon',  value: '- USD 5.00', amount: '-$5', numAmount: 5 }
+};
+const COUPON_MIN_PAYMENT = 1.00; // PRD 1.4: product price - coupon discount ≥ $1.00
+
+// State
+let _couponTargetItem = null;
+let _couponTargetPrice = 0;
+let _couponAvailable = [];
+let _couponSelected = null;       // null = nothing selected yet (first open); 0 = "no coupon" explicitly
+const _appliedCoupons = {};
+let _downloadedCoupons = [1, 2];  // coupon ids user currently owns
+
+function openCouponSheet(itemId, availableIds, itemPrice) {
+  _couponTargetItem = itemId;
+  _couponTargetPrice = itemPrice || 0;
+  _couponAvailable = availableIds;
+
+  // If already applied, pre-select that coupon; else pre-select "No coupon"
+  _couponSelected = (_appliedCoupons[itemId] !== undefined) ? _appliedCoupons[itemId] : 0;
+
+  refreshCouponCards();
+  updateCouponApplyBtn();
+  document.getElementById('coupon-code-input').value = '';
+  document.getElementById('coupon-sheet').classList.remove('hidden');
+}
+
+function refreshCouponCards() {
+  // Sync "no coupon" radio dot
+  const noRadio = document.getElementById('coupon-radio-0');
+  if (noRadio) {
+    if (_couponSelected === 0) {
+      noRadio.style.borderColor = '#222'; noRadio.style.background = '#222';
+      noRadio.innerHTML = '<span style="width:7px;height:7px;background:#fff;border-radius:50%;display:block;"></span>';
+    } else {
+      noRadio.style.borderColor = '#ddd'; noRadio.style.background = '';
+      noRadio.innerHTML = '';
+    }
+  }
+
+  // Coupons used by OTHER items in this order
+  const usedByOthers = Object.entries(_appliedCoupons)
+    .filter(([item]) => item !== _couponTargetItem)
+    .map(([, id]) => id);
+
+  let availableCount = 0;
+  [1, 2, 3].forEach(id => {
+    const card = document.getElementById('coupon-card-' + id);
+    if (!card) return;
+    const owned = _downloadedCoupons.includes(id);
+    if (!owned) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    card.classList.toggle('selected', _couponSelected === id);
+
+    const usedElsewhere = usedByOthers.includes(id);
+    const coupon = couponData[id];
+    const belowMin = _couponTargetPrice > 0 && (_couponTargetPrice - coupon.numAmount) < COUPON_MIN_PAYMENT;
+
+    const footer = card.querySelector('.coupon-card-footer');
+    let reasonEl = footer ? footer.querySelector('.coupon-card-reason') : null;
+
+    if (usedElsewhere || belowMin) {
+      card.classList.add('disabled');
+      card.onclick = null;
+      if (footer) {
+        if (!reasonEl) { reasonEl = document.createElement('span'); reasonEl.className = 'coupon-card-reason'; footer.appendChild(reasonEl); }
+        reasonEl.textContent = usedElsewhere ? 'Used on another item' : 'Item price too low';
+      }
+    } else {
+      availableCount++;
+      card.classList.remove('disabled');
+      card.onclick = () => selectCoupon(id);
+      if (reasonEl && (reasonEl.textContent === 'Used on another item' || reasonEl.textContent === 'Item price too low')) {
+        reasonEl.remove();
+      }
+    }
+  });
+
+  const label = document.getElementById('coupon-available-label');
+  if (label) label.textContent = `Available (${availableCount})`;
+}
+
+// Radio behaviour: selecting same option again keeps it selected (standard radio)
+function selectCoupon(id) {
+  if (id !== 0 && !_downloadedCoupons.includes(id)) return;
+  _couponSelected = id;
+  refreshCouponCards();
+  updateCouponApplyBtn();
+}
+
+function updateCouponApplyBtn() {
+  const btn = document.getElementById('coupon-apply-btn');
+  btn.textContent = (_couponSelected === 0) ? 'Confirm (No coupon)' : 'Apply Coupon';
+  btn.disabled = false;
+}
+
+function confirmCouponSelection() {
+  if (_couponSelected === null || !_couponTargetItem) return;
+  const area = document.getElementById('coupon-area-' + _couponTargetItem);
+  if (_couponSelected === 0) {
+    // "No coupon" — clear any applied coupon
+    area.querySelector('.item-coupon-applied').style.display = 'none';
+    area.querySelector('.item-coupon-select').style.display = 'inline-block';
+    delete _appliedCoupons[_couponTargetItem];
+  } else {
+    const coupon = couponData[_couponSelected];
+    area.querySelector('.item-coupon-name').textContent = coupon.name;
+    area.querySelector('.item-coupon-value').textContent = coupon.value;
+    area.querySelector('.item-coupon-applied').style.display = 'flex';
+    area.querySelector('.item-coupon-select').style.display = 'none';
+    _appliedCoupons[_couponTargetItem] = _couponSelected;
+  }
+  closeCouponSheet();
+  recalcTotal();
+}
+
+function removeCoupon(itemId) {
+  const area = document.getElementById('coupon-area-' + itemId);
+  area.querySelector('.item-coupon-applied').style.display = 'none';
+  area.querySelector('.item-coupon-select').style.display = 'inline-block';
+  delete _appliedCoupons[itemId];
+  recalcTotal();
+}
+
+// ─── Info Tooltips ───────────────────────────────
+const TOOLTIP_TEXT = {
+  'handling-fee':  'A service fee charged by your shipping agent for receiving, inspecting, and preparing your items at the Korean warehouse.',
+  'intl-shipping': 'The cost to ship your package from Korea to your destination. Calculated based on weight and dimensions after items arrive at the warehouse.',
+  'tax-duties':    'Import taxes and customs duties imposed by your country. These are the recipient\'s responsibility and are not included in the order total.',
+  'total':         'This total covers the item price and domestic shipping only. International shipping, handling fees, and customs duties are billed separately by your shipping agent.'
+};
+let _tooltipEl = null;
+
+function showTooltip(e, key) {
+  e.stopPropagation();
+  removeTooltip();
+  const tip = document.createElement('div');
+  tip.className = 'info-tooltip';
+  tip.textContent = TOOLTIP_TEXT[key];
+  document.body.appendChild(tip);
+  const rect = e.target.getBoundingClientRect();
+  tip.style.left = Math.min(rect.left, window.innerWidth - 470) + 'px';
+  tip.style.top = (rect.top - tip.offsetHeight - 12) + 'px';
+  _tooltipEl = tip;
+  setTimeout(() => document.addEventListener('click', removeTooltip, { once: true }), 0);
+}
+
+function removeTooltip() {
+  if (_tooltipEl) { _tooltipEl.remove(); _tooltipEl = null; }
+}
+
+function recalcTotal() {
+  const totalDiscount = Object.values(_appliedCoupons).reduce((sum, id) => sum + (couponData[id]?.numAmount || 0), 0);
+  const couponRow = document.getElementById('checkout-coupon-row');
+  if (totalDiscount > 0) {
+    document.getElementById('checkout-coupon-label').textContent = `Coupon`;
+    document.getElementById('checkout-coupon-amount').textContent = `- USD ${totalDiscount.toFixed(2)}`;
+    couponRow.style.display = 'flex';
+  } else {
+    couponRow.style.display = 'none';
+  }
+  const currentMethod = document.querySelector('input[name="payment"]:checked')?.value || '';
+  const base = BASE_TOTAL - totalDiscount;
+  const fee = currentMethod === 'paypal' ? base * 0.05 : 0;
+  const total = base + fee;
+  const totalStr = `USD ${total.toFixed(2)}`;
+  document.getElementById('checkout-total-amount').textContent = totalStr;
+  // price-details-header-amount removed
+  if (document.getElementById('paypal-fee-amount') && currentMethod === 'paypal') {
+    document.getElementById('paypal-fee-amount').textContent = `+ USD ${fee.toFixed(2)}`;
+  }
+  const btn = document.getElementById('checkout-place-order-btn');
+  if (btn && currentMethod !== 'apple' && currentMethod !== 'google') {
+    btn.textContent = `${totalStr} — Place Order`;
+  }
+}
+
+function closeCouponSheet() {
+  document.getElementById('coupon-sheet').classList.add('hidden');
+  _couponTargetItem = null;
+  _couponSelected = null;
+}
+
+// ─── Coupon sheet toast (small, inside sheet) ─────
+function showSheetToast(msg, type) {
+  // type: 'error' | 'success'
+  let t = document.getElementById('coupon-sheet-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'coupon-sheet-toast';
+    t.style.cssText = 'position:absolute;bottom:90px;left:20px;right:20px;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;text-align:center;z-index:600;transition:opacity 0.25s;';
+    const sheet = document.querySelector('.coupon-sheet-overlay:not(.hidden) .coupon-sheet');
+    sheet.style.position = 'relative';
+    sheet.appendChild(t);
+  }
+  t.style.background = type === 'success' ? '#1b5e20' : '#b71c1c';
+  t.style.color = '#fff';
+  t.style.opacity = '1';
+  t.textContent = msg;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
+const couponCodeErrors = {
+  'invalid':   'This coupon code is not valid.',
+  'expired':   'This coupon has expired.',
+  'duplicate': 'You already claimed this coupon.',
+  'sold-out':  'Coupon has been fully redeemed.'
+};
+const VALID_CODE = 'GDpromotion';
+
+function applyCouponCode() {
+  const input = document.getElementById('coupon-code-input');
+  const code = input.value.trim();
+  if (!code) return;
+
+  if (code === VALID_CODE) {
+    if (!_downloadedCoupons.includes(3)) _downloadedCoupons.push(3);
+    // Check min payment policy before applying
+    const belowMin = _couponTargetPrice > 0 && (_couponTargetPrice - couponData[3].numAmount) < COUPON_MIN_PAYMENT;
+    if (belowMin) {
+      input.value = '';
+      const minAfter = (COUPON_MIN_PAYMENT).toFixed(2);
+      showSheetToast(`Coupon added to wallet, but can't apply here — item price after discount must be at least $${minAfter}.`, 'error');
+      if (!_downloadedCoupons.includes(3)) _downloadedCoupons.push(3);
+      refreshCouponCards();
+      updateCouponApplyBtn();
+      return;
+    }
+    _couponSelected = 3;
+    input.value = '';
+    confirmCouponSelection();
+    showGlobalToast('🎉 Coupon downloaded! "$5 OFF" has been applied.');
+  } else {
+    const errorType = document.getElementById('coupon-error-select').value;
+    input.value = '';
+    showSheetToast(couponCodeErrors[errorType], 'error');
+  }
+}
+
+function showGlobalToast(msg) {
+  const t = document.getElementById('toast-fx');
+  const gt = document.createElement('div');
+  gt.style.cssText = 'position:fixed;bottom:100px;left:calc(50% - 105px);transform:translateX(-50%);background:rgba(30,30,30,0.92);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:700;width:330px;text-align:center;line-height:1.5;';
+  gt.textContent = msg;
+  document.body.appendChild(gt);
+  setTimeout(() => gt.remove(), 2800);
+}
+
+// ─── Modal / Toast ───────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function showFxToast() {
+  const t = document.getElementById('toast-fx');
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 3500);
+}
+
+function triggerScenario(type) {
+  // Ensure checkout screen is active
+  showScreen('checkout', false);
+  setTimeout(() => {
+    if (type === 'fx') showFxToast();
+    else if (type === 'price') document.getElementById('modal-price-change').classList.remove('hidden');
+    else if (type === 'soldout-partial') document.getElementById('modal-soldout-partial').classList.remove('hidden');
+    else if (type === 'soldout-all') document.getElementById('modal-soldout-all').classList.remove('hidden');
+  }, 100);
+}
+
+// ─── Proxy Data & State ──────────────────────────
+const proxyData = {
+  dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',  calcType: 'external' },
+  paysable: { name: 'Paysable',        icon: 'P', color: '#1565c0', price: 25.00, rating: 4.9, reviews: 588, days: '7–10',  badge: null,     calcType: 'modal' },
+  kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,     calcType: 'modal' },
+};
+const proxyOrder = ['dk', 'paysable', 'kfriday'];
+
+let _selectedProxy = 'dk';
+let _proxyConnected = { dk: false, paysable: false, kfriday: false };
+let _dkConnected = false;
+
+function renderProxySection() {
+  const container = document.getElementById('proxy-section-container');
+  if (!container) return;
+  const sel = _selectedProxy;
+  const s = proxyData[sel];
+  const connected = _proxyConnected[sel];
+  const badgeHTML = connected
+    ? `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:#2e7d32;background:#e8f5e9;white-space:nowrap;">Connected</span>`
+    : `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:#c62828;background:#fce4ec;white-space:nowrap;">Not Connected</span>`;
+  const calcLabel = s.calcType === 'external' ? `Check on ${s.name} →` : `Check shipping fee →`;
+  const calcOnclick = s.calcType === 'external'
+    ? `window.open('https://www.delivered.co.kr/en/calculator', '_blank')`
+    : `openShippingCalc('${sel}')`;
+
+  // All options as radio list — order fixed, selected one highlighted
+  let html = '';
+  proxyOrder.forEach(id => {
+    const p = proxyData[id];
+    const isSelected = id === sel;
+    const pConnected = _proxyConnected[id];
+    const pBadge = p.badge ? `<span style="font-size:10px;font-weight:700;background:#222;color:#fff;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle;">BEST</span>` : '';
+    const connDot = pConnected
+      ? `<span style="color:#2e7d32;font-size:11px;">● Connected</span>`
+      : isSelected
+        ? `<span style="color:#e53935;font-size:11px;">● Not connected &nbsp;·&nbsp; <span style="font-weight:600;">Required</span></span>`
+        : `<span style="color:#bbb;font-size:11px;">● Not connected</span>`;
+    const radioDot = `<div style="width:18px;height:18px;border-radius:50%;border:2px solid ${isSelected ? '#222' : '#ccc'};background:${isSelected ? '#222' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${isSelected ? '<div style="width:7px;height:7px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
+
+    const pCalcLabel = p.calcType === 'external' ? `Check on ${p.name} →` : `Compare shipping fees →`;
+    const pCalcOnclick = p.calcType === 'external'
+      ? `window.open('https://www.delivered.co.kr/en/calculator', '_blank')`
+      : `openShippingCalc()`;
+
+    html += `
+    <div onclick="selectProxy('${id}')" style="border:${isSelected ? '1.5px solid #222' : '1px solid #eee'};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;background:${isSelected ? '#fafafa' : '#fff'};">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        ${radioDot}
+        <div style="flex:1;min-width:0;">
+          <span style="font-size:14px;font-weight:700;color:#222;">${p.name}</span>
+          <div style="font-size:11px;color:#999;margin-top:5px;">⭐ ${p.rating} &nbsp;·&nbsp; ✈ ${p.days} days${p.badge ? `&nbsp;·&nbsp;<span style="font-size:10px;font-weight:700;background:#222;color:#fff;padding:1px 5px;border-radius:3px;">BEST</span>` : ''}</div>
+          <div style="margin-top:4px;">${connDot}</div>
+          ${isSelected && !pConnected ? `
+          <div style="border-top:1px solid #f0f0f0;margin-top:12px;padding-top:10px;">
+            <button onclick="event.stopPropagation();startSSOConnect()" style="font-size:12px;color:#222;background:none;border:none;cursor:pointer;padding:0;font-weight:600;text-decoration:underline;">Connect account →</button>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function selectProxy(id) {
+  _selectedProxy = id;
+  _dkConnected = _proxyConnected[id];
+  renderProxySection();
+  updateProxyToggleBtn();
+}
+
+function toggleDKConnection() {
+  _proxyConnected[_selectedProxy] = !_proxyConnected[_selectedProxy];
+  _dkConnected = _proxyConnected[_selectedProxy];
+  renderProxySection();
+  updateProxyToggleBtn();
+}
+
+function updateDKConnectionUI() {
+  _dkConnected = _proxyConnected[_selectedProxy];
+  renderProxySection();
+  updateProxyToggleBtn();
+}
+
+function updateProxyToggleBtn() {
+  const btn = document.getElementById('dk-toggle-btn');
+  if (!btn) return;
+  const connected = _proxyConnected[_selectedProxy];
+  btn.textContent = connected ? 'Agent: Connected' : 'Agent: Disconnected';
+  btn.style.background = connected ? 'rgba(76,175,80,0.25)' : 'rgba(255,100,100,0.25)';
+}
+
+// ─── Shipping Calculator ──────────────────────────
+// Base rates per country (USD), per kg rate, and volumetric divisor
+const calcConfig = {
+  paysable: {
+    hasZipCity: true,
+    baseRates: { US:11, UK:14, AU:17, CA:13, JP:9,  SG:10, FR:15, DE:15, PH:13, MY:10, TH:11, TW:9  },
+    perKg: 5.5,
+    volDivisor: 5000,
+    minFee: 8,
+    disclaimers: [
+      'Some areas in the Philippines are NOT available for international shipment.',
+      'Some couriers may be unable to deliver depending on their circumstances.',
+      'The estimated amount does not include processing fees.'
+    ]
+  },
+  kfriday: {
+    hasZipCity: false,
+    baseRates: { US:12, UK:15, AU:18, CA:14, JP:10, SG:11, FR:16, DE:16, PH:14, MY:11, TH:12, TW:10 },
+    perKg: 6,
+    volDivisor: 6000,
+    minFee: 9,
+    disclaimers: [
+      'The estimated amount is based on actual or volumetric weight, whichever is greater.',
+      'Final shipping fee may vary based on actual measurements at the warehouse.',
+      'Processing fees are not included in this estimate.'
+    ]
+  }
+};
+
+let _weightUnit = 'kg';
+let _dimUnit = 'cm';
+
+function setWeightUnit(unit) {
+  _weightUnit = unit;
+  document.getElementById('unit-weight-kg').style.background = unit === 'kg' ? '#222' : '#fff';
+  document.getElementById('unit-weight-kg').style.color = unit === 'kg' ? '#fff' : '#888';
+  document.getElementById('unit-weight-lbs').style.background = unit === 'lbs' ? '#222' : '#fff';
+  document.getElementById('unit-weight-lbs').style.color = unit === 'lbs' ? '#fff' : '#888';
+}
+
+function setDimUnit(unit) {
+  _dimUnit = unit;
+  document.getElementById('unit-dim-cm').style.background = unit === 'cm' ? '#222' : '#fff';
+  document.getElementById('unit-dim-cm').style.color = unit === 'cm' ? '#fff' : '#888';
+  document.getElementById('unit-dim-in').style.background = unit === 'in' ? '#222' : '#fff';
+  document.getElementById('unit-dim-in').style.color = unit === 'in' ? '#fff' : '#888';
+}
+
+let _calcSelectedProxy = null;
+
+function openShippingCalc() {
+  ['calc-weight','calc-width','calc-length','calc-height'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('calc-country').value = '';
+  document.getElementById('calc-compare-result').style.display = 'none';
+  _calcSelectedProxy = null;
+  document.getElementById('calc-cta-btn').textContent = 'Calculate';
+  setWeightUnit('lbs');
+  setDimUnit('in');
+  document.getElementById('shipping-calc-sheet').classList.remove('hidden');
+}
+
+function selectCalcProxy(id) {
+  _calcSelectedProxy = id;
+  const proxyNames = { paysable: 'Paysable', kfriday: 'Kfriday' };
+  // Update card borders
+  document.getElementById('calc-paysable-card').style.border = id === 'paysable' ? '2px solid #1565c0' : '1.5px solid #eee';
+  document.getElementById('calc-kfriday-card').style.border = id === 'kfriday' ? '2px solid #6a1b9a' : '1.5px solid #eee';
+  // Update CTA
+  document.getElementById('calc-cta-btn').textContent = `Select ${proxyNames[id]}`;
+}
+
+function calcCtaAction() {
+  if (!_calcSelectedProxy) {
+    runShippingCalc();
+  } else {
+    selectProxy(_calcSelectedProxy);
+    closeShippingCalc();
+  }
+}
+
+function closeShippingCalc() {
+  document.getElementById('shipping-calc-sheet').classList.add('hidden');
+}
+
+function calcFee(cfg, country, weight, w, l, h) {
+  const volWeight = (w * l * h) / cfg.volDivisor;
+  const chargeableWeight = Math.max(weight, volWeight);
+  const base = cfg.baseRates[country] || 14;
+  const fee = Math.max(cfg.minFee, base + chargeableWeight * cfg.perKg);
+  const usedVol = volWeight > weight && volWeight > 0;
+  const detail = usedVol
+    ? `Vol. weight: ${volWeight.toFixed(2)} kg (${w}×${l}×${h} ÷ ${cfg.volDivisor})`
+    : `Actual weight: ${chargeableWeight.toFixed(2)} kg`;
+  return { fee: fee.toFixed(2), detail };
+}
+
+function runShippingCalc() {
+  const country = document.getElementById('calc-country').value;
+  const rawWeight = parseFloat(document.getElementById('calc-weight').value) || 0;
+  const rawW = parseFloat(document.getElementById('calc-width').value) || 0;
+  const rawL = parseFloat(document.getElementById('calc-length').value) || 0;
+  const rawH = parseFloat(document.getElementById('calc-height').value) || 0;
+
+  if (!country) { showGlobalToast('Please select a destination country.'); return; }
+  if (rawWeight <= 0 && (rawW <= 0 || rawL <= 0 || rawH <= 0)) { showGlobalToast('Please enter weight or dimensions.'); return; }
+
+  // Convert to kg / cm for calculation
+  const weight = _weightUnit === 'lbs' ? rawWeight * 0.453592 : rawWeight;
+  const w = _dimUnit === 'in' ? rawW * 2.54 : rawW;
+  const l = _dimUnit === 'in' ? rawL * 2.54 : rawL;
+  const h = _dimUnit === 'in' ? rawH * 2.54 : rawH;
+
+  const p = calcFee(calcConfig.paysable, country, weight, w, l, h);
+  const k = calcFee(calcConfig.kfriday, country, weight, w, l, h);
+
+  // Reset selection state on new calculation
+  _calcSelectedProxy = null;
+  document.getElementById('calc-cta-btn').textContent = 'Calculate';
+
+  // Highlight cheaper option (subtle, not selection state)
+  const pCheaper = parseFloat(p.fee) <= parseFloat(k.fee);
+  document.getElementById('calc-paysable-card').style.border = pCheaper ? '1.5px solid #1565c0' : '1.5px solid #eee';
+  document.getElementById('calc-kfriday-card').style.border = !pCheaper ? '1.5px solid #6a1b9a' : '1.5px solid #eee';
+
+  document.getElementById('calc-paysable-price').textContent = `USD ${p.fee}`;
+  document.getElementById('calc-paysable-detail').textContent = p.detail;
+  document.getElementById('calc-kfriday-price').textContent = `USD ${k.fee}`;
+  document.getElementById('calc-kfriday-detail').textContent = k.detail;
+
+  document.getElementById('calc-compare-result').style.display = 'block';
+}
+
+// ─── PayPal Fee Info Toggle ───────────────────────
+function togglePaypalFeeInfo() {
+  const el = document.getElementById('paypal-fee-info');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ─── Payment Method & PayPal Fee ─────────────────
+const BASE_TOTAL = 43.70; // subtotal (38.70) + domestic shipping (5.00), before coupon
+
+function onPaymentMethodChange(method) {
+  // Reset Quick Pay button styles when a radio is selected
+  if (method !== 'apple' && method !== 'google') {
+    const a = document.getElementById('qp-apple-btn');
+    const g = document.getElementById('qp-google-btn');
+    if (a) { a.style.background = '#fff'; a.style.color = '#222'; a.style.border = '1px solid #ddd'; }
+    if (g) { g.style.background = '#fff'; g.style.color = '#222'; g.style.border = '1px solid #ddd'; }
+  }
+
+  const totalDiscount = Object.values(_appliedCoupons).reduce((sum, id) => sum + (couponData[id]?.numAmount || 0), 0);
+  const base = BASE_TOTAL - totalDiscount;
+  const isPaypal = method === 'paypal';
+  const fee = isPaypal ? base * 0.05 : 0;
+  const total = base + fee;
+
+  document.getElementById('paypal-fee-row').style.display = isPaypal ? 'flex' : 'none';
+  if (isPaypal) {
+    document.getElementById('paypal-fee-amount').textContent = `+ USD ${fee.toFixed(2)}`;
+  }
+
+  const totalStr = `USD ${total.toFixed(2)}`;
+  document.getElementById('checkout-total-amount').textContent = totalStr;
+  // price-details-header-amount removed
+
+  const btn = document.getElementById('checkout-place-order-btn');
+  if (method === 'apple') {
+    btn.textContent = `Apple Pay — ${totalStr}`;
+    btn.onclick = () => selectQuickPay('apple');
+  } else if (method === 'google') {
+    btn.textContent = `G Pay — ${totalStr}`;
+    btn.onclick = () => selectQuickPay('google');
+  } else {
+    btn.textContent = `${totalStr} — Place Order`;
+    btn.onclick = goToSSORedirect;
+  }
+}
+
+// ─── Quick Pay Method Select (no immediate payment) ──
+function selectQuickPayMethod(type) {
+  // Deselect all radios
+  document.querySelectorAll('input[name="payment"]').forEach(r => r.checked = false);
+  // Highlight selected QP button, reset other
+  const appleBtn = document.getElementById('qp-apple-btn');
+  const googleBtn = document.getElementById('qp-google-btn');
+  if (type === 'apple') {
+    appleBtn.style.background = '#000'; appleBtn.style.color = '#fff'; appleBtn.style.border = 'none';
+    googleBtn.style.background = '#fff'; googleBtn.style.color = '#222'; googleBtn.style.border = '1px solid #ddd';
+  } else {
+    googleBtn.style.background = '#4285f4'; googleBtn.style.color = '#fff'; googleBtn.style.border = 'none';
+    appleBtn.style.background = '#fff'; appleBtn.style.color = '#222'; appleBtn.style.border = '1px solid #ddd';
+  }
+  onPaymentMethodChange(type);
+}
+
+// ─── Quick Pay ───────────────────────────────────
+function selectQuickPay(type) {
+  if (!_dkConnected) { goToSSORedirect(); return; }
+  window._quickPayMethod = type;
+  const isApple = type === 'apple';
+  document.getElementById('quickpay-header-title').textContent = isApple ? 'Apple Pay' : 'Google Pay';
+  document.getElementById('quickpay-method-label').textContent = isApple ? 'Apple Pay' : 'Google Pay';
+  document.getElementById('quickpay-band').style.background = isApple ? '#000' : '#4285f4';
+  document.getElementById('quickpay-auth-icon').textContent = isApple ? '' : '🔐';
+  document.getElementById('quickpay-auth-hint').textContent = isApple ? 'Double-click side button to pay' : 'Authenticate with Google Pay';
+  document.getElementById('quickpay-pay-btn').style.background = isApple ? '#000' : '#4285f4';
+  showScreen('pg-quickpay');
+}
+
+function simulateQuickPay() {
+  const btn = document.getElementById('quickpay-pay-btn');
+  btn.textContent = 'Processing…';
+  btn.disabled = true;
+  setTimeout(() => { showScreen('order-complete'); }, 1400);
+}
+
+// ─── SSO Step Navigation ─────────────────────────
+let _ssoStep = 'tabs';
+const SSO_PREV = { consent: null, tabs: 'consent', create: 'tabs', confirm: 'tabs', success: null };
+const SSO_TITLES = { consent: 'Link Account', tabs: 'Log in to Delivered Korea', create: 'Link Account', confirm: 'Link Account', success: '' };
+
+function goToSSOStep(step) {
+  _ssoStep = step;
+  ['tabs','consent','create','confirm','success'].forEach(s => {
+    const el = document.getElementById('sso-step-' + s);
+    if (el) el.style.display = s === step ? 'block' : 'none';
+  });
+  const backBtn = document.getElementById('sso-back-btn');
+  const titleEl = document.getElementById('sso-header-title');
+  if (titleEl) titleEl.textContent = SSO_TITLES[step] || '';
+  if (step === 'success') {
+    backBtn.style.visibility = 'hidden';
+  } else {
+    backBtn.style.visibility = '';
+    const prev = SSO_PREV[step];
+    backBtn.onclick = prev ? () => goToSSOStep(prev) : () => showScreen('checkout');
+  }
+}
+
+function openSSOTermsSheet() {
+  // reset checkboxes
+  document.querySelectorAll('#sso-terms-sheet input[type="checkbox"]').forEach(c => c.checked = false);
+  document.getElementById('sso-terms-btn').disabled = true;
+  document.getElementById('sso-terms-sheet').classList.remove('hidden');
+}
+
+function closeSSOTermsSheet() {
+  document.getElementById('sso-terms-sheet').classList.add('hidden');
+}
+
+function toggleAllTerms(cb) {
+  document.querySelectorAll('.term-required, .term-optional').forEach(c => { c.checked = cb.checked; });
+  syncTermsBtn();
+}
+
+function syncTermsAll() {
+  const all = [...document.querySelectorAll('.term-required, .term-optional')];
+  document.getElementById('terms-all').checked = all.every(c => c.checked);
+  syncTermsBtn();
+}
+
+function syncTermsBtn() {
+  const required = [...document.querySelectorAll('.term-required')];
+  document.getElementById('sso-terms-btn').disabled = !required.every(c => c.checked);
+}
+
+function submitSSOTerms() {
+  closeSSOTermsSheet();
+  goToSSOStep('confirm');
+}
+
+function updateConsentBtn() {
+  const btn = document.getElementById('consent-btn');
+  const checked = document.getElementById('consent-check-1').checked && document.getElementById('consent-check-2').checked;
+  btn.disabled = !checked;
+  btn.style.background = checked ? '#222' : '#ddd';
+  btn.style.color = checked ? '#fff' : '#aaa';
+  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+}
+
+// ─── SSO Redirect ────────────────────────────────
+function goToSSORedirect() {
+  if (_dkConnected) {
+    goToPgScreen();
+  } else {
+    // Show error in shipping section and scroll to it
+    const errEl = document.getElementById('proxy-connect-error');
+    const p = proxyData[_selectedProxy];
+    document.getElementById('proxy-connect-error-msg').textContent =
+      `Connect your ${p.name} account to use this shipping option.`;
+    errEl.style.display = 'flex';
+    const shippingSection = errEl.closest('.section') || document.getElementById('proxy-section-container').closest('.section');
+    shippingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    shippingSection.style.outline = '2px solid #e74c3c';
+    shippingSection.style.borderRadius = '8px';
+    setTimeout(() => { shippingSection.style.outline = ''; shippingSection.style.borderRadius = ''; }, 3000);
+  }
+}
+
+function startSSOConnect() {
+  const errEl = document.getElementById('proxy-connect-error');
+  if (errEl) errEl.style.display = 'none';
+  updateSSOProxyName();
+  showScreen('sso-redirect');
+  goToSSOStep('consent');
+}
+
+function updateSSOProxyName() {
+  const p = proxyData[_selectedProxy];
+  const name = p.name;
+  const short = { dk: 'DK', paysable: 'Paysable', kfriday: 'Kfriday' }[_selectedProxy];
+
+  SSO_TITLES.tabs = `Log in to ${name}`;
+
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
+
+  // Tabs step
+  set('sso-proxy-blurb', `${name} handles international shipping. Link your account to continue.`);
+  set('tab-new', `New to ${short}`);
+  set('tab-existing', `Already have ${short} account`);
+
+  // Consent step
+  set('sso-consent-proxy-brand', name);
+  set('sso-consent-blurb', `${name} handles international shipping for your Bunjang Global order.`);
+  set('sso-consent-required-notice', `Account linking is required to complete payment with ${name}.`);
+  const dir1to = document.getElementById('sso-consent-dir-1-to');
+  if (dir1to) { dir1to.textContent = name; dir1to.style.background = p.color; }
+  set('sso-consent-label-1', `I consent to Bunjang Global sharing my Email and Username with ${name}.`);
+  const dir2from = document.getElementById('sso-consent-dir-2-from');
+  if (dir2from) { dir2from.textContent = name; dir2from.style.background = p.color; }
+  set('sso-consent-label-2', `I consent to ${name} sharing my Account ID with Bunjang Global.`);
+
+  // Create step
+  set('sso-create-title', `Create a ${name} account`);
+  set('sso-create-sub', `We'll create a ${name} account using your Bunjang Global account.`);
+  set('sso-create-proxy-label', `${name} account`);
+  setStyle('sso-create-proxy-icon', 'background', p.color);
+  set('sso-create-proxy-icon', p.icon);
+
+  // Confirm step
+  set('sso-confirm-sub', `We'll link your Bunjang Global account with your ${name} account.`);
+  set('sso-confirm-proxy-label', `${name} account`);
+  setStyle('sso-confirm-proxy-icon', 'background', p.color);
+  set('sso-confirm-proxy-icon', p.icon);
+
+  // Success step
+  set('sso-success-sub', `You're all set. Use your Bunjang Global account to sign in to ${name} — no separate login needed.`);
+
+  // Email placeholder
+  const emailInput = document.getElementById('sso-email-input');
+  if (emailInput) emailInput.placeholder = `Enter your ${name} account email`;
+
+  // Terms sheet
+  const termsTitle = document.querySelector('#sso-terms-sheet .coupon-sheet-title');
+  if (termsTitle) termsTitle.textContent = `Sign Up to ${name}`;
+}
+
+function switchSSOTab(tab) {
+  document.getElementById('sso-tab-new').style.display = tab === 'new' ? 'block' : 'none';
+  document.getElementById('sso-tab-existing').style.display = tab === 'existing' ? 'block' : 'none';
+  const base = 'flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;';
+  document.getElementById('tab-new').style.cssText = base + (tab==='new' ? 'background:#fff;color:#222;' : 'background:transparent;color:#999;');
+  document.getElementById('tab-existing').style.cssText = base + (tab==='existing' ? 'background:#fff;color:#222;' : 'background:transparent;color:#999;');
+}
+
+function completeSSOAndProceed() {
+  window._quickPayMethod = null;
+  _proxyConnected[_selectedProxy] = true;
+  _dkConnected = true;
+  renderProxySection();
+  updateProxyToggleBtn();
+  showScreen('checkout');
+}
+
+// ─── PG routing ──────────────────────────────────
+function goToPgScreen() {
+  const selected = document.querySelector('#screen-checkout input[name="payment"]:checked');
+  const value = selected ? selected.closest('label').querySelector('.payment-name').textContent.trim() : '';
+  if (value.toLowerCase().includes('paypal')) {
+    showScreen('pg-paypal');
+  } else {
+    showScreen('pg-card');
+  }
+}
+
+// ─── Payment Failure error types ─────────────────
+const errorMessages = {
+  'card-info': 'Please check your card details and try again.',
+  'limit': 'Your card limit or balance is insufficient.<br>Please use a different payment method.',
+  'issuer': 'Your card issuer has declined this payment.<br>Please contact your card issuer or try a different payment method.',
+  'generic': 'A temporary error occurred. Please try again in a moment.'
+};
+function updateErrorDisplay(type) {
+  document.getElementById('error-msg').innerHTML = errorMessages[type] || errorMessages['generic'];
+}
+
+function toggleRequest(btn) {
+  const area = btn.closest('.add-request-area');
+  const panel = area.querySelector('.request-panel');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    btn.style.display = 'none';
+  } else {
+    panel.style.display = 'none';
+    btn.style.display = 'block';
+  }
+}
+
+function saveRequest(btn) {
+  const area = btn.closest('.add-request-area');
+  const textarea = area.querySelector('.request-textarea');
+  const text = textarea.value.trim();
+  const thumbs = area.querySelectorAll('.upload-thumb img');
+  const saved = area.querySelector('.request-saved');
+  const hasContent = text || thumbs.length > 0;
+
+  if (hasContent) {
+    let label = text || '';
+    if (thumbs.length > 0) label += (label ? ' ' : '') + `[${thumbs.length} image${thumbs.length > 1 ? 's' : ''}]`;
+    saved.querySelector('.request-saved-text').textContent = label;
+    saved.style.display = 'flex';
+  } else {
+    saved.style.display = 'none';
+  }
+
+  area.querySelector('.request-panel').style.display = 'none';
+  area.querySelector('.add-request-btn').style.display = hasContent ? 'none' : 'block';
+}
+
+function triggerImageUpload(box) {
+  box.querySelector('input[type="file"]').click();
+}
+
+function handleImageUpload(input) {
+  const upload = input.closest('.request-upload');
+  const max = parseInt(upload.dataset.max) || 5;
+  const existing = upload.querySelectorAll('.upload-thumb').length;
+  const files = Array.from(input.files).slice(0, max - existing);
+
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'upload-thumb';
+      thumb.style.position = 'relative';
+      thumb.innerHTML = `
+        <img src="${e.target.result}" alt="upload">
+        <button class="upload-thumb-remove" onclick="removeThumb(this)" title="Remove">×</button>
+      `;
+      // Insert before the + button
+      const addBtn = upload.querySelector('.upload-add-btn');
+      upload.insertBefore(thumb, addBtn);
+      // Hide + button if max reached
+      if (upload.querySelectorAll('.upload-thumb').length >= max) {
+        addBtn.style.display = 'none';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  input.value = ''; // reset so same file can be re-added after removal
+}
+
+function removeThumb(btn) {
+  const thumb = btn.closest('.upload-thumb');
+  const upload = thumb.closest('.request-upload');
+  thumb.remove();
+  upload.querySelector('.upload-add-btn').style.display = 'flex';
+}
+
+function showScreen(id, updateNav = true) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (updateNav) {
+    document.querySelectorAll('.proto-nav-btn').forEach(b => b.classList.remove('active'));
+    if (event && event.target && event.target.classList.contains('proto-nav-btn')) event.target.classList.add('active');
+  }
+  // Update sidebar panel
+  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail' };
+  const panelId = sidebarMap[id] || 'default';
+  document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('sidebar-' + panelId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ─── Sidebar Controls ─────────────────────────────
+function setSidebarAgent(connected) {
+  _proxyConnected[_selectedProxy] = connected;
+  _dkConnected = connected;
+  renderProxySection();
+  updateProxyToggleBtn();
+  document.getElementById('sb-agent-connected').classList.toggle('active', connected);
+  document.getElementById('sb-agent-disconnected').classList.toggle('active', !connected);
+}
+
+function setSidebarCouponError(val) {
+  document.getElementById('coupon-error-select').value = val;
+  ['invalid','expired','duplicate','sold-out'].forEach(v => {
+    document.getElementById('sb-coupon-' + v).classList.toggle('active', v === val);
+  });
+}
+
+function setSidebarError(val) {
+  updateErrorDisplay(val);
+  ['card-info','limit','issuer','generic'].forEach(v => {
+    document.getElementById('sb-err-' + v).classList.toggle('active', v === val);
+  });
+}
+
+// Init
+renderProxySection();
+
+function adjustFrameTop() {
+  const nav = document.querySelector('.proto-nav');
+  const frame = document.querySelector('.phone-frame');
+  if (nav && frame) frame.style.marginTop = nav.offsetHeight + 'px';
+}
+adjustFrameTop();
+window.addEventListener('resize', adjustFrameTop);
+
+// Make proto nav buttons work by screen id
+document.querySelectorAll('.proto-nav-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.proto-nav-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
