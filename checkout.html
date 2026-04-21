@@ -189,6 +189,8 @@
   .proto-nav-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
   .proto-nav-btn:hover { background: rgba(255,255,255,0.25); }
   .proto-nav-btn.active { background: #7c7cf7; }
+  .proto-nav-version { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .proto-nav-version-tag { background: rgba(124,124,247,0.25); color: #c5c5ff; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; }
   .phone-frame { margin-top: 40px; } /* updated dynamically by adjustFrameTop() */
 
   /* Right sidebar */
@@ -348,7 +350,7 @@
   /* Modal */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 210px; bottom: 0; background: rgba(0,0,0,0.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 0 28px; }
   .modal-overlay.hidden { display: none; }
-  .modal { width: 100%; background: #fff; border-radius: 16px; padding: 24px 20px 20px; }
+  .modal { width: 100%; max-width: 319px; background: #fff; border-radius: 16px; padding: 24px 20px 20px; margin: 0 auto; }
   .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
   .modal-body { font-size: 13px; color: #555; margin-bottom: 16px; line-height: 1.6; }
   .modal-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8f8f8; border-radius: 8px; margin-bottom: 8px; }
@@ -392,6 +394,10 @@
   <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">SSO Redirect</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
+  <span class="proto-nav-version">
+    <span class="proto-nav-version-tag">v1.1</span>
+    <span>Updated 2026-04-22</span>
+  </span>
 </div>
 
 <!-- Right Sidebar -->
@@ -409,7 +415,14 @@
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Shipping Agent</div>
+      <div class="sidebar-section-title">Proxy Mode</div>
+      <div class="sidebar-chips">
+        <button id="sb-proxy-multi" class="sidebar-chip active" onclick="setProxyMode('multi')">Multi (3)</button>
+        <button id="sb-proxy-single" class="sidebar-chip" onclick="setProxyMode('single')">Single (DK only)</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Proxy Connection</div>
       <div class="sidebar-chips">
         <button id="sb-agent-connected" class="sidebar-chip" onclick="setSidebarAgent(true)">Connected</button>
         <button id="sb-agent-disconnected" class="sidebar-chip active warning" onclick="setSidebarAgent(false)">Disconnected</button>
@@ -529,7 +542,7 @@
       <div class="coupon-sheet-header">
         <div>
           <div class="coupon-sheet-title">Shipping Fee Estimator</div>
-          <div style="font-size:12px;color:#999;margin-top:2px;">Compare Paysable &amp; Kfriday rates at once</div>
+          <div id="calc-subtitle" style="font-size:12px;color:#999;margin-top:2px;">Compare Paysable &amp; Kfriday rates at once</div>
         </div>
         <button class="coupon-sheet-close" onclick="closeShippingCalc()">×</button>
       </div>
@@ -620,6 +633,10 @@
             </div>
             <a href="https://www.deliveredkorea.com" target="_blank" onclick="event.stopPropagation()" style="flex-shrink:0;font-size:12px;font-weight:600;color:#e65100;background:#fff;border:1.5px solid #e65100;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;">Visit site ↗</a>
           </div>
+          <div style="background:#f3f8ff;border:1px solid #d6e4f5;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#1565c0;line-height:1.6;">
+            📦 <strong>These rates are for shipping a single item.</strong> If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Proxy — check each Proxy's page for details.
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Proxy — check each Proxy's page for details.</div>
           <div style="font-size:11px;color:#aaa;margin-top:10px;line-height:1.6;">* Estimates only. Final fee calculated at the warehouse. Processing fees not included.</div>
         </div>
 
@@ -753,7 +770,7 @@
               <div class="coupon-card-amount-unit">OFF</div>
             </div>
             <div class="coupon-card-right">
-              <div class="coupon-card-name">Domestic Shipping Discount</div>
+              <div class="coupon-card-name">Shipping to Proxy Discount</div>
               <div class="coupon-card-min">Min. $30.00</div>
               <div class="coupon-card-remaining" style="color:#bbb;">45 days left</div>
             </div>
@@ -801,7 +818,7 @@
       <div class="modal-sub">You can still order the remaining 1 item.</div>
       <div class="modal-btns">
         <button class="modal-btn secondary" onclick="closeModal('modal-soldout-partial')">No</button>
-        <button class="modal-btn primary" onclick="closeModal('modal-soldout-partial')">Yes, continue</button>
+        <button class="modal-btn primary" onclick="confirmPartialSoldout()">Yes, continue</button>
       </div>
     </div>
   </div>
@@ -837,12 +854,12 @@
 
     <!-- Order Summary -->
     <div class="section">
-      <div class="section-header">
-        <span class="section-title">Order Summary (2)</span>
+      <div class="section-header" onclick="toggleSection(this)">
+        <span class="section-title" id="order-summary-title">Order Summary (2)</span>
         <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
-        <div class="order-item-card">
+        <div class="order-item-card" id="order-card-item1">
           <div class="order-item">
             <div class="order-item-img img-placeholder hat"></div>
             <div class="order-item-info">
@@ -863,7 +880,7 @@
             </div>
           </div>
           <div class="order-item-shipping">
-            <span>Domestic Shipping</span><span>USD 2.50</span>
+            <span>Shipping to Proxy</span><span>USD 2.50</span>
           </div>
           <div class="add-request-area">
             <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
@@ -911,7 +928,7 @@
             </div>
           </div>
           <div class="order-item-shipping">
-            <span>Domestic Shipping</span><span>USD 2.50</span>
+            <span>Shipping to Proxy</span><span>USD 2.50</span>
           </div>
           <div class="add-request-area">
             <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
@@ -942,29 +959,29 @@
 
     <!-- Shipping Method -->
     <div class="section">
-      <div class="section-header">
+      <div class="section-header" onclick="toggleSection(this)">
         <div>
-          <span class="section-title">Shipping Agent</span>
-          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">Receives your items in Korea, communicates with sellers, and ships internationally on your behalf.</div>
+          <span class="section-title">Proxy</span>
+          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally.</div>
         </div>
         <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
           <span style="font-size:14px;flex-shrink:0;">🔴</span>
-          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this shipping option.</span>
+          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Proxy.</span>
         </div>
         <div id="proxy-section-container"></div>
-        <div class="shipping-fee-note" style="justify-content:space-between;">
-          <span>ℹ️ International shipping fee will be paid on the shipping agent's website after items arrive at the warehouse</span>
-          <button onclick="openShippingCalc()" style="font-size:12px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;margin-left:12px;">Estimate</button>
+        <div class="shipping-fee-note" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <span>ℹ️ International shipping fee will be paid on the Proxy's website after items arrive at the warehouse</span>
+          <button id="estimate-btn-proxy" onclick="openShippingCalc()" style="font-size:12px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;">Estimate</button>
         </div>
       </div>
     </div>
 
     <!-- Payment -->
     <div class="section">
-      <div class="section-header">
+      <div class="section-header" onclick="toggleSection(this)">
         <span class="section-title">Payment</span>
         <span class="section-toggle">^</span>
       </div>
@@ -1027,16 +1044,16 @@
 
     <!-- Price Details -->
     <div class="section">
-      <div class="section-header">
+      <div class="section-header" onclick="toggleSection(this)">
         <span class="section-title">Price Details</span>
         <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div class="price-box">
           <div class="price-group-title">Product Purchase</div>
-          <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
+          <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount">USD 38.70</span></div>
           <div id="checkout-coupon-row" class="price-row discount" style="display:none;"><span id="checkout-coupon-label">Coupon</span><span id="checkout-coupon-amount"></span></div>
-          <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+          <div class="price-row"><span>Shipping to Proxy</span><span id="checkout-shipping-to-proxy-amount">USD 5.00</span></div>
           <div class="price-row" id="paypal-fee-row" style="display:none;color:#e07b00;">
             <span>PayPal Fee (5%)</span>
             <span id="paypal-fee-amount"></span>
@@ -1049,9 +1066,9 @@
           <div class="price-row muted"><span>International Shipping <span class="info-icon" onclick="showTooltip(event, 'intl-shipping')">ⓘ</span></span><span>Calculated later</span></div>
           <div class="price-row muted"><span>Tax &amp; Duties <span class="info-icon" onclick="showTooltip(event, 'tax-duties')">ⓘ</span></span><span>Calculated later</span></div>
 
-          <div class="price-intl-note" style="justify-content:space-between;align-items:center;">
+          <div class="price-intl-note" style="flex-direction:column;align-items:flex-start;gap:8px;">
             <span>ℹ️ International shipping fee will be calculated after items arrive in Korea.</span>
-            <button onclick="openShippingCalc()" style="font-size:11px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;margin-left:10px;flex-shrink:0;">Estimate</button>
+            <button id="estimate-btn-price" onclick="openShippingCalc()" style="font-size:11px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;flex-shrink:0;">Estimate</button>
           </div>
 
           <div class="price-total">
@@ -1062,11 +1079,35 @@
       </div>
     </div>
 
-    <!-- Terms -->
-    <div class="terms">
-      <input type="checkbox" checked>
-      <span>Agree to all terms and conditions</span>
-      <a href="#" onclick="event.preventDefault();document.getElementById('terms-sheet').classList.remove('hidden');">See all</a>
+    <!-- Terms & Consent -->
+    <div class="terms-list" style="margin:16px;padding:14px 16px;border:1px solid #eee;border-radius:10px;background:#fafafa;">
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+        <input type="checkbox" checked style="margin-top:3px;flex-shrink:0;">
+        <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
+          <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
+          I agree to the Terms &amp; Conditions.
+          <a href="#" onclick="event.preventDefault();document.getElementById('terms-sheet').classList.remove('hidden');" style="color:#1565c0;margin-left:4px;">See all</a>
+        </span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;border-top:1px solid #eee;">
+        <input type="checkbox" checked style="margin-top:3px;flex-shrink:0;">
+        <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
+          <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
+          I understand and agree that my order may be canceled after payment if the seller is unable to fulfill it.
+        </span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;border-top:1px solid #eee;">
+        <input type="checkbox" style="margin-top:3px;flex-shrink:0;">
+        <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
+          <span style="color:#999;font-size:10px;font-weight:700;">[Optional]</span>
+          If the seller requests an additional charge, I agree to make a re-payment. I will be notified via email, and can complete the re-payment from My Page &gt; Orders.
+        </span>
+      </label>
+    </div>
+
+    <!-- Intermediary disclaimer -->
+    <div style="padding:0 16px 16px;font-size:11px;color:#999;line-height:1.6;text-align:center;">
+      Global Bunjang operates solely as a communication sales intermediary (통신판매중개업자). It is not a party to the transaction between buyer and seller, and is not responsible for the item, listing information, or the transaction itself.
     </div>
 
     <!-- Terms Bottom Sheet -->
@@ -1082,8 +1123,8 @@
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">1. Order & Payment</div>
           <p style="margin-bottom:14px;color:#666;">By placing an order on Global Bunjang, you agree to purchase the item at the listed price in USD. All payments are processed securely. Prices are subject to exchange rate fluctuations and may vary slightly at the time of settlement.</p>
 
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Shipping Agent</div>
-          <p style="margin-bottom:14px;color:#666;">Your selected shipping agent acts on your behalf to receive items in Korea and ship them internationally. International shipping fees are calculated separately and paid directly on the shipping agent's website after items arrive at their warehouse.</p>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Proxy</div>
+          <p style="margin-bottom:14px;color:#666;">A Proxy is a third-party service that purchases items from Korean sellers on your behalf and ships them internationally. Your selected Proxy handles purchase, warehousing, and international shipping. International shipping fees, handling fees, and service policies (returns, consolidation, etc.) are set by each Proxy — review the respective Proxy's page for full terms.</p>
 
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">3. Customs & Duties</div>
           <p style="margin-bottom:14px;color:#666;">Import taxes, customs duties, and any related fees are the sole responsibility of the recipient. Global Bunjang is not liable for delays or additional costs incurred due to customs procedures in the destination country.</p>
@@ -1095,7 +1136,7 @@
           <p style="margin-bottom:14px;color:#666;">As a secondhand marketplace, all sales are generally final. Returns are accepted only in cases where the item received significantly differs from the listing description. Claims must be submitted within 3 days of delivery.</p>
 
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">6. Personal Information</div>
-          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the shipping agent solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
+          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the Proxy solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
 
           <div style="font-size:12px;color:#bbb;margin-top:8px;">Last updated: April 2026</div>
         </div>
@@ -1141,7 +1182,7 @@
         <div style="font-size:13px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Order Summary</div>
         <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Subtotal</span><span>USD 38.70</span></div>
         <div style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:8px;"><span>Coupon Discount</span><span>- USD 7.00</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
         <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:#222;border-top:1px solid #f0f0f0;padding-top:14px;"><span>Total</span><span>USD 36.70</span></div>
       </div>
       <!-- Biometric auth mock -->
@@ -1235,44 +1276,32 @@
 
     <!-- ── STEP 1: CONSENT ── -->
     <div id="sso-step-consent" style="display:none;">
-      <!-- Branding + required notice -->
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
-          <span style="font-size:15px;font-weight:800;letter-spacing:-0.5px;">⚡BUNJANG</span>
-          <span style="font-size:16px;color:#bbb;">⇄</span>
-          <span id="sso-consent-proxy-brand" style="font-size:14px;font-weight:800;color:#e65100;">Delivered Korea</span>
-        </div>
-        <div style="font-size:18px;font-weight:700;margin-bottom:8px;line-height:1.3;">Link your account to continue</div>
-        <div id="sso-consent-blurb" style="font-size:13px;color:#888;line-height:1.5;">Delivered Korea handles international shipping for your Bunjang Global order.</div>
+      <!-- Step indicator -->
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;margin-bottom:20px;letter-spacing:0.5px;">
+        <span style="color:#222;">STEP 1</span>
+        <span style="color:#ddd;">›</span>
+        <span style="color:#ccc;">STEP 2</span>
       </div>
-      <!-- Required notice -->
-      <div style="display:flex;align-items:center;gap:8px;background:#fff3e0;border-radius:8px;padding:10px 14px;margin-bottom:20px;">
-        <span style="font-size:14px;flex-shrink:0;">⚠️</span>
-        <span id="sso-consent-required-notice" style="font-size:12px;color:#e65100;line-height:1.5;">Account linking is required to complete payment with Delivered Korea.</span>
+      <!-- Title -->
+      <div style="font-size:22px;font-weight:800;line-height:1.3;margin-bottom:20px;color:#222;">
+        Consent to Share Information with <span id="sso-consent-proxy-name">Delivered Korea</span>
       </div>
-      <div id="sso-consent-title" style="font-size:15px;font-weight:700;margin-bottom:12px;color:#222;">Information to be shared</div>
-      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;background:#f8f8f8;border-radius:10px;margin-bottom:10px;">
-        <input type="checkbox" id="consent-check-1" onchange="updateConsentBtn()" style="width:18px;height:18px;accent-color:#222;margin-top:2px;flex-shrink:0;">
-        <div>
-          <div id="sso-consent-dir-1" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="font-size:11px;font-weight:700;background:#222;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Bunjang Global</span>
-            <span style="font-size:10px;color:#ccc;">▶</span>
-            <span id="sso-consent-dir-1-to" style="font-size:11px;font-weight:700;background:#555;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Delivered Korea</span>
-          </div>
-          <div id="sso-consent-label-1" style="font-size:12px;color:#888;line-height:1.5;">I consent to Bunjang Global sharing my <strong style="color:#444;">Email</strong> and <strong style="color:#444;">Username</strong> with Delivered Korea.</div>
+      <!-- Info box -->
+      <div style="background:#f5f5f5;border-radius:10px;padding:16px 18px;margin-bottom:24px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;line-height:1.4;color:#222;">
+          Bunjang Global will share the following information with <span id="sso-consent-proxy-name-2">Delivered Korea</span>:
         </div>
+        <ul style="margin:0;padding-left:18px;font-size:14px;color:#555;line-height:1.8;">
+          <li>Email</li>
+          <li>Username</li>
+        </ul>
+      </div>
+      <!-- Checkbox consent -->
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:28px;">
+        <input type="checkbox" id="consent-check-1" onchange="updateConsentBtn()" style="width:20px;height:20px;accent-color:#e74c3c;margin-top:1px;flex-shrink:0;">
+        <span style="font-size:14px;color:#333;line-height:1.5;">I agree to the collection and use of my personal information</span>
       </label>
-      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;background:#f8f8f8;border-radius:10px;margin-bottom:28px;">
-        <input type="checkbox" id="consent-check-2" onchange="updateConsentBtn()" style="width:18px;height:18px;accent-color:#222;margin-top:2px;flex-shrink:0;">
-        <div>
-          <div id="sso-consent-dir-2" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span id="sso-consent-dir-2-from" style="font-size:11px;font-weight:700;background:#555;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Delivered Korea</span>
-            <span style="font-size:10px;color:#ccc;">▶</span>
-            <span style="font-size:11px;font-weight:700;background:#222;color:#fff;padding:3px 10px;border-radius:20px;white-space:nowrap;">Bunjang Global</span>
-          </div>
-          <div id="sso-consent-label-2" style="font-size:12px;color:#888;line-height:1.5;">I consent to Delivered Korea sharing my <strong style="color:#444;">Account ID</strong> with Bunjang Global.</div>
-        </div>
-      </label>
+      <!-- Continue button -->
       <button id="consent-btn" disabled onclick="goToSSOStep('tabs')" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Continue</button>
     </div>
 
@@ -1530,7 +1559,7 @@
       <div class="section-body">
         <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
-        <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <div class="price-row"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
         <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
@@ -1597,7 +1626,7 @@
       <div class="section-body">
         <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
-        <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <div class="price-row"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
         <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
@@ -1692,7 +1721,7 @@
       <div class="section-body">
         <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
-        <div class="price-row"><span>Domestic Shipping</span><span>USD 5.00</span></div>
+        <div class="price-row"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
         <hr class="price-divider">
@@ -2158,10 +2187,10 @@ function removeCoupon(itemId) {
 
 // ─── Info Tooltips ───────────────────────────────
 const TOOLTIP_TEXT = {
-  'handling-fee':  'A service fee charged by your shipping agent for receiving, inspecting, and preparing your items at the Korean warehouse.',
+  'handling-fee':  'A service fee charged by your Proxy for purchasing, inspecting, and preparing your items at the Korean warehouse.',
   'intl-shipping': 'The cost to ship your package from Korea to your destination. Calculated based on weight and dimensions after items arrive at the warehouse.',
   'tax-duties':    'Import taxes and customs duties imposed by your country. These are the recipient\'s responsibility and are not included in the order total.',
-  'total':         'This total covers the item price and domestic shipping only. International shipping, handling fees, and customs duties are billed separately by your shipping agent.'
+  'total':         'This total covers the item price and shipping to your Proxy only. International shipping, handling fees, and customs duties are billed separately by your Proxy.'
 };
 let _tooltipEl = null;
 
@@ -2303,6 +2332,42 @@ function triggerScenario(type) {
   }, 100);
 }
 
+function toggleSection(headerEl) {
+  const section = headerEl.closest('.section');
+  if (!section) return;
+  const body = section.querySelector('.section-body');
+  const arrow = headerEl.querySelector('.section-toggle');
+  if (!body) return;
+  const willCollapse = body.style.display !== 'none';
+  body.style.display = willCollapse ? 'none' : '';
+  if (arrow) arrow.style.transform = willCollapse ? 'rotate(180deg)' : '';
+}
+
+function confirmPartialSoldout() {
+  // Remove item1 from the order summary
+  const card = document.getElementById('order-card-item1');
+  if (card) card.style.display = 'none';
+
+  // Drop any coupon applied to item1
+  if (_appliedCoupons['item1'] !== undefined) removeCoupon('item1');
+
+  // Update Order Summary count
+  const title = document.getElementById('order-summary-title');
+  if (title) title.textContent = 'Order Summary (1)';
+
+  // Update Subtotal (item2 only) and Shipping to Proxy (one item's worth)
+  const sub = document.getElementById('checkout-subtotal-amount');
+  if (sub) sub.textContent = 'USD 34.62';
+  const ks = document.getElementById('checkout-shipping-to-proxy-amount');
+  if (ks) ks.textContent = 'USD 2.50';
+
+  // Update base total so recalcTotal/onPaymentMethodChange reflect the new subtotal
+  BASE_TOTAL = 34.62 + 2.50;
+
+  recalcTotal();
+  closeModal('modal-soldout-partial');
+}
+
 // ─── Proxy Data & State ──────────────────────────
 const proxyData = {
   dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',  calcType: 'external' },
@@ -2314,6 +2379,54 @@ const proxyOrder = ['dk', 'paysable', 'kfriday'];
 let _selectedProxy = 'dk';
 let _proxyConnected = { dk: false, paysable: false, kfriday: false };
 let _dkConnected = false;
+let _proxyMode = 'multi'; // 'multi' | 'single' (DK only)
+
+function getActiveProxies() {
+  return _proxyMode === 'single' ? ['dk'] : proxyOrder;
+}
+
+function setProxyMode(mode) {
+  _proxyMode = mode;
+  document.getElementById('sb-proxy-multi').classList.toggle('active', mode === 'multi');
+  document.getElementById('sb-proxy-single').classList.toggle('active', mode === 'single');
+  if (mode === 'single') _selectedProxy = 'dk';
+  renderProxySection();
+  applyProxyModeToShippingCalc();
+}
+
+function applyProxyModeToShippingCalc() {
+  const pCard = document.getElementById('calc-paysable-card');
+  const kCard = document.getElementById('calc-kfriday-card');
+  const sub = document.getElementById('calc-subtitle');
+  const estProxy = document.getElementById('estimate-btn-proxy');
+  const estPrice = document.getElementById('estimate-btn-price');
+  const DK_CALC_URL = 'https://www.delivered.co.kr/en/calculator';
+  if (_proxyMode === 'single') {
+    if (pCard) pCard.style.display = 'none';
+    if (kCard) kCard.style.display = 'none';
+    if (sub) sub.textContent = 'Check rates on Delivered Korea';
+    if (estProxy) {
+      estProxy.textContent = 'Check on Delivered Korea →';
+      estProxy.onclick = () => window.open(DK_CALC_URL, '_blank');
+    }
+    if (estPrice) {
+      estPrice.textContent = 'Check on Delivered Korea →';
+      estPrice.onclick = () => window.open(DK_CALC_URL, '_blank');
+    }
+  } else {
+    if (pCard) pCard.style.display = '';
+    if (kCard) kCard.style.display = '';
+    if (sub) sub.textContent = 'Compare Paysable & Kfriday rates at once';
+    if (estProxy) {
+      estProxy.textContent = 'Estimate';
+      estProxy.onclick = () => openShippingCalc();
+    }
+    if (estPrice) {
+      estPrice.textContent = 'Estimate';
+      estPrice.onclick = () => openShippingCalc();
+    }
+  }
+}
 
 function renderProxySection() {
   const container = document.getElementById('proxy-section-container');
@@ -2330,8 +2443,10 @@ function renderProxySection() {
     : `openShippingCalc('${sel}')`;
 
   // All options as radio list — order fixed, selected one highlighted
+  const activeProxies = getActiveProxies();
+  const isSingleMode = _proxyMode === 'single';
   let html = '';
-  proxyOrder.forEach(id => {
+  activeProxies.forEach(id => {
     const p = proxyData[id];
     const isSelected = id === sel;
     const pConnected = _proxyConnected[id];
@@ -2341,15 +2456,22 @@ function renderProxySection() {
       : isSelected
         ? `<span style="color:#e53935;font-size:11px;">● Not connected &nbsp;·&nbsp; <span style="font-weight:600;">Required</span></span>`
         : `<span style="color:#bbb;font-size:11px;">● Not connected</span>`;
-    const radioDot = `<div style="width:18px;height:18px;border-radius:50%;border:2px solid ${isSelected ? '#222' : '#ccc'};background:${isSelected ? '#222' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${isSelected ? '<div style="width:7px;height:7px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
+    const radioDot = isSingleMode
+      ? ''
+      : `<div style="width:18px;height:18px;border-radius:50%;border:2px solid ${isSelected ? '#222' : '#ccc'};background:${isSelected ? '#222' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${isSelected ? '<div style="width:7px;height:7px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
 
     const pCalcLabel = p.calcType === 'external' ? `Check on ${p.name} →` : `Compare shipping fees →`;
     const pCalcOnclick = p.calcType === 'external'
       ? `window.open('https://www.delivered.co.kr/en/calculator', '_blank')`
       : `openShippingCalc()`;
 
+    const cardOnclick = isSingleMode ? '' : `onclick="selectProxy('${id}')"`;
+    const cardCursor = isSingleMode ? 'default' : 'pointer';
+    const cardBorder = isSingleMode ? '1px solid #eee' : (isSelected ? '1.5px solid #222' : '1px solid #eee');
+    const cardBg = isSingleMode ? '#fff' : (isSelected ? '#fafafa' : '#fff');
+
     html += `
-    <div onclick="selectProxy('${id}')" style="border:${isSelected ? '1.5px solid #222' : '1px solid #eee'};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;background:${isSelected ? '#fafafa' : '#fff'};">
+    <div ${cardOnclick} style="border:${cardBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:${cardCursor};background:${cardBg};">
       <div style="display:flex;align-items:flex-start;gap:12px;">
         ${radioDot}
         <div style="flex:1;min-width:0;">
@@ -2535,7 +2657,8 @@ function togglePaypalFeeInfo() {
 }
 
 // ─── Payment Method & PayPal Fee ─────────────────
-const BASE_TOTAL = 43.70; // subtotal (38.70) + domestic shipping (5.00), before coupon
+const INITIAL_BASE_TOTAL = 43.70; // subtotal (38.70) + shipping to Proxy (5.00), before coupon
+let BASE_TOTAL = INITIAL_BASE_TOTAL;
 
 function onPaymentMethodChange(method) {
   // Reset Quick Pay button styles when a radio is selected
@@ -2615,7 +2738,7 @@ function simulateQuickPay() {
 // ─── SSO Step Navigation ─────────────────────────
 let _ssoStep = 'tabs';
 const SSO_PREV = { consent: null, tabs: 'consent', create: 'tabs', confirm: 'tabs', success: null };
-const SSO_TITLES = { consent: 'Link Account', tabs: 'Log in to Delivered Korea', create: 'Link Account', confirm: 'Link Account', success: '' };
+const SSO_TITLES = { consent: '', tabs: 'Log in to Delivered Korea', create: 'Link Account', confirm: 'Link Account', success: '' };
 
 function goToSSOStep(step) {
   _ssoStep = step;
@@ -2669,7 +2792,7 @@ function submitSSOTerms() {
 
 function updateConsentBtn() {
   const btn = document.getElementById('consent-btn');
-  const checked = document.getElementById('consent-check-1').checked && document.getElementById('consent-check-2').checked;
+  const checked = document.getElementById('consent-check-1').checked;
   btn.disabled = !checked;
   btn.style.background = checked ? '#222' : '#ddd';
   btn.style.color = checked ? '#fff' : '#aaa';
@@ -2699,6 +2822,9 @@ function startSSOConnect() {
   const errEl = document.getElementById('proxy-connect-error');
   if (errEl) errEl.style.display = 'none';
   updateSSOProxyName();
+  const cb = document.getElementById('consent-check-1');
+  if (cb) cb.checked = false;
+  updateConsentBtn();
   showScreen('sso-redirect');
   goToSSOStep('consent');
 }
@@ -2719,15 +2845,8 @@ function updateSSOProxyName() {
   set('tab-existing', `Already have ${short} account`);
 
   // Consent step
-  set('sso-consent-proxy-brand', name);
-  set('sso-consent-blurb', `${name} handles international shipping for your Bunjang Global order.`);
-  set('sso-consent-required-notice', `Account linking is required to complete payment with ${name}.`);
-  const dir1to = document.getElementById('sso-consent-dir-1-to');
-  if (dir1to) { dir1to.textContent = name; dir1to.style.background = p.color; }
-  set('sso-consent-label-1', `I consent to Bunjang Global sharing my Email and Username with ${name}.`);
-  const dir2from = document.getElementById('sso-consent-dir-2-from');
-  if (dir2from) { dir2from.textContent = name; dir2from.style.background = p.color; }
-  set('sso-consent-label-2', `I consent to ${name} sharing my Account ID with Bunjang Global.`);
+  set('sso-consent-proxy-name', name);
+  set('sso-consent-proxy-name-2', name);
 
   // Create step
   set('sso-create-title', `Create a ${name} account`);
