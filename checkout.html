@@ -2529,8 +2529,9 @@ function renderProxySection() {
       <div style="display:flex;align-items:flex-start;gap:12px;">
         ${radioDot}
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-size:14px;font-weight:700;color:#222;">${p.name}</span>
+            ${isSingleMode ? `<span style="font-size:9px;font-weight:700;color:#555;background:#f0f0f0;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;">YOUR PROXY</span>` : ''}
           </div>
           ${p.promo ? `<div style="font-size:11px;color:#222;margin-top:4px;line-height:1.4;">${p.promo}</div>` : ''}
           <div style="font-size:11px;color:#999;margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
@@ -3094,7 +3095,8 @@ const CHANGELOG = [
     date: '2026-04-22',
     changes: [
       'Proxy별 프로모션 문구 색상 변경 (빨강 → 검정)',
-      '주문 상태 / Proxy 배송일 툴팁 개선: 클릭으로 열기 (hover → click), 모바일 화면 밖 overflow 수정, 커서를 일반 포인터로 변경'
+      '주문 상태 / Proxy 배송일 툴팁 개선: 클릭으로 열기 (hover → click), 모바일 화면 밖 overflow 수정, 커서를 일반 포인터로 변경',
+      'Single Proxy 모드에서 Proxy 이름 옆에 YOUR PROXY 라벨 추가'
     ]
   },
   {
