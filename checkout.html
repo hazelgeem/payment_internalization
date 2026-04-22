@@ -216,7 +216,23 @@
   .proto-nav-btn:hover { background: rgba(255,255,255,0.25); }
   .proto-nav-btn.active { background: #7c7cf7; }
   .proto-nav-version { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .proto-nav-version-tag { background: rgba(124,124,247,0.25); color: #c5c5ff; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; }
+  .proto-nav-version-tag { background: rgba(124,124,247,0.25); color: #c5c5ff; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; cursor: pointer; transition: background 0.15s; border: none; }
+  .proto-nav-version-tag:hover { background: rgba(124,124,247,0.45); color: #fff; }
+  .changelog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .changelog-overlay.show { display: flex; }
+  .changelog-modal { background: #fff; border-radius: 14px; max-width: 520px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .changelog-header { padding: 20px 24px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+  .changelog-title { font-size: 16px; font-weight: 800; color: #222; }
+  .changelog-close { background: none; border: none; font-size: 22px; color: #999; cursor: pointer; padding: 0; line-height: 1; }
+  .changelog-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+  .changelog-entry { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid #f0f0f0; }
+  .changelog-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .changelog-entry-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .changelog-entry-version { font-size: 13px; font-weight: 800; color: #fff; background: #222; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.3px; }
+  .changelog-entry-latest { font-size: 10px; font-weight: 700; color: #2e7d32; background: #e8f5e9; padding: 3px 7px; border-radius: 4px; letter-spacing: 0.3px; }
+  .changelog-entry-date { font-size: 11px; color: #999; }
+  .changelog-entry-list { margin: 0; padding-left: 18px; font-size: 13px; color: #444; line-height: 1.6; }
+  .changelog-entry-list li { margin-bottom: 4px; }
   .phone-frame { margin-top: 40px; } /* updated dynamically by adjustFrameTop() */
 
   /* Right sidebar */
@@ -421,9 +437,20 @@
   <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
   <span class="proto-nav-version">
-    <span class="proto-nav-version-tag">v1.1</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.6</button>
     <span>Updated 2026-04-22</span>
   </span>
+</div>
+
+<!-- Changelog Modal -->
+<div id="changelog-overlay" class="changelog-overlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="changelog-modal">
+    <div class="changelog-header">
+      <span class="changelog-title">Changelog</span>
+      <button class="changelog-close" onclick="closeChangelog()">×</button>
+    </div>
+    <div class="changelog-body" id="changelog-body"></div>
+  </div>
 </div>
 
 <!-- Right Sidebar -->
@@ -3042,6 +3069,85 @@ function removeThumb(btn) {
   const upload = thumb.closest('.request-upload');
   thumb.remove();
   upload.querySelector('.upload-add-btn').style.display = 'flex';
+}
+
+// ─── Changelog ──────────────────────────────────
+const CHANGELOG = [
+  {
+    version: 'v1.6',
+    date: '2026-04-22',
+    changes: [
+      'PayPal 결제 옵션의 fee 설명 툴팁(? 버튼) 제거'
+    ]
+  },
+  {
+    version: 'v1.5',
+    date: '2026-04-22',
+    changes: [
+      '해외배송비 계산기: Multi Proxy 모드에서 Delivered Korea 카드 제거 (Single 모드 유지)',
+      '"These rates are for shipping a single item." 안내 제목/본문 줄바꿈 분리',
+      '"* Estimates only..." 디스클레이머를 국가 선택 영역 바로 위로 이동'
+    ]
+  },
+  {
+    version: 'v1.4',
+    date: '2026-04-22',
+    changes: [
+      'Top nav 칩 이름 변경: Order Placed → Ordering, Complete (All/Partial) → Ordered (All/Partial)',
+      '주문 상태 배지에 hover 툴팁 추가 (Ordering / Ordered – Waiting for Confirmation)',
+      'Proxy 이름 아래 운영자 설정 프로모션 문구 라인 추가',
+      'Proxy 배송일 옆 info 아이콘 추가 (산정 기준 툴팁)',
+      'Proxy Connected 상태인데도 빨간 경고 배너가 남아있던 버그 수정'
+    ]
+  },
+  {
+    version: 'v1.3',
+    date: '2026-04-22',
+    changes: [
+      '주문 상태 라벨 2단계로 분리: Ordering (결제만 완료) / Ordered – Waiting for Confirmation (Core 번장 주문 완료)',
+      'Order Placed 페이지 하단에 What\'s Next 섹션 추가'
+    ]
+  },
+  {
+    version: 'v1.2',
+    date: '2026-04-22',
+    changes: [
+      '"Korea Shipping" → "Shipping to Proxy"로 용어 통일',
+      'Proxy 설명 두 문장 분리 (정의 / 서비스 정책 안내)',
+      'Section header 화살표 토글 기능 작동',
+      'Single Proxy 모드: Proxy 라디오 버튼 제거 + Estimate 버튼 → DK 계산기 링크',
+      'Shipping fee note 레이아웃 수정 (버튼 줄바꿈)',
+      'Proxy SSO Consent 화면 단순화 (단일 체크박스)'
+    ]
+  },
+  {
+    version: 'v1.1',
+    date: '2026-04-21',
+    changes: [
+      '초기 프로토타입 릴리즈'
+    ]
+  }
+];
+
+function openChangelog() {
+  const body = document.getElementById('changelog-body');
+  body.innerHTML = CHANGELOG.map((entry, i) => `
+    <div class="changelog-entry">
+      <div class="changelog-entry-head">
+        <span class="changelog-entry-version">${entry.version}</span>
+        ${i === 0 ? '<span class="changelog-entry-latest">LATEST</span>' : ''}
+        <span class="changelog-entry-date">${entry.date}</span>
+      </div>
+      <ul class="changelog-entry-list">
+        ${entry.changes.map(c => `<li>${c}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  document.getElementById('changelog-overlay').classList.add('show');
+}
+
+function closeChangelog() {
+  document.getElementById('changelog-overlay').classList.remove('show');
 }
 
 function showScreen(id, updateNav = true) {
