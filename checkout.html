@@ -174,31 +174,7 @@
   .status-info-icon { position: relative; width: 14px; height: 14px; border-radius: 50%; background: #e0e0e0; color: #666; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-family: serif; font-style: italic; }
   .status-info-icon:hover { background: #bdbdbd; color: #333; }
   .status-info-icon.show { background: #222; color: #fff; }
-  .status-info-icon::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    right: 0;
-    left: auto;
-    top: calc(100% + 6px);
-    background: #222;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 400;
-    font-style: normal;
-    font-family: inherit;
-    padding: 8px 10px;
-    border-radius: 6px;
-    width: 220px;
-    max-width: calc(100vw - 40px);
-    line-height: 1.45;
-    white-space: normal;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  .status-info-icon.show::after { opacity: 1; pointer-events: auto; }
+  .floating-info-tooltip { position: fixed; background: #222; color: #fff; font-size: 11px; font-weight: 400; font-style: normal; padding: 8px 10px; border-radius: 6px; width: 220px; line-height: 1.45; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.25); pointer-events: none; }
 
   /* Action buttons */
   .action-btns { display: flex; gap: 8px; padding: 16px; }
@@ -3075,17 +3051,41 @@ function removeThumb(btn) {
 }
 
 // ─── Info icon tooltip (click to open) ──────────
+function closeAllInfoTooltips() {
+  document.querySelectorAll('.floating-info-tooltip').forEach(t => t.remove());
+  document.querySelectorAll('.status-info-icon.show').forEach(e => e.classList.remove('show'));
+}
 function toggleInfoTooltip(event, el) {
   if (event) { event.stopPropagation(); event.preventDefault(); }
   const wasOpen = el.classList.contains('show');
-  document.querySelectorAll('.status-info-icon.show').forEach(e => e.classList.remove('show'));
-  if (!wasOpen) el.classList.add('show');
+  closeAllInfoTooltips();
+  if (wasOpen) return;
+  const text = el.getAttribute('data-tooltip') || '';
+  const tip = document.createElement('div');
+  tip.className = 'floating-info-tooltip';
+  tip.textContent = text;
+  document.body.appendChild(tip);
+  const iconRect = el.getBoundingClientRect();
+  const frame = document.querySelector('.phone-frame');
+  const fRect = frame ? frame.getBoundingClientRect() : { left: 0, right: window.innerWidth };
+  const tipWidth = tip.offsetWidth;
+  const margin = 8;
+  let left = iconRect.left + iconRect.width / 2 - tipWidth / 2;
+  const minLeft = fRect.left + margin;
+  const maxLeft = fRect.right - tipWidth - margin;
+  if (left < minLeft) left = minLeft;
+  if (left > maxLeft) left = maxLeft;
+  tip.style.left = left + 'px';
+  tip.style.top = (iconRect.bottom + 6) + 'px';
+  el.classList.add('show');
 }
 document.addEventListener('click', (e) => {
   if (!e.target.classList || !e.target.classList.contains('status-info-icon')) {
-    document.querySelectorAll('.status-info-icon.show').forEach(e => e.classList.remove('show'));
+    closeAllInfoTooltips();
   }
 });
+window.addEventListener('scroll', closeAllInfoTooltips, true);
+window.addEventListener('resize', closeAllInfoTooltips);
 
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
