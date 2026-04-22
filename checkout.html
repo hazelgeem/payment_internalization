@@ -170,6 +170,32 @@
   .status-badge.confirmed { background: #e8f5e9; color: #2e7d32; }
   .status-badge.shipping { background: #e3f2fd; color: #1565c0; }
   .status-badge.settled { background: #f3e5f5; color: #7b1fa2; }
+  .status-badge-wrap { display: inline-flex; align-items: center; gap: 4px; position: relative; }
+  .status-info-icon { position: relative; width: 14px; height: 14px; border-radius: 50%; background: #e0e0e0; color: #666; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: help; font-family: serif; font-style: italic; }
+  .status-info-icon:hover { background: #bdbdbd; color: #333; }
+  .status-info-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    top: calc(100% + 6px);
+    background: #222;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 400;
+    font-style: normal;
+    font-family: inherit;
+    padding: 8px 10px;
+    border-radius: 6px;
+    width: 240px;
+    line-height: 1.45;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .status-info-icon:hover::after { opacity: 1; }
 
   /* Action buttons */
   .action-btns { display: flex; gap: 8px; padding: 16px; }
@@ -385,9 +411,9 @@
   <button class="proto-nav-btn active" onclick="showScreen('cart')">Cart</button>
   <button class="proto-nav-btn" onclick="showScreen('checkout')">Checkout</button>
   <button class="proto-nav-btn" onclick="showScreen('processing')">Processing</button>
-  <button class="proto-nav-btn" onclick="showScreen('order-placed')">Order Placed</button>
-  <button class="proto-nav-btn" onclick="showScreen('complete-success')">Complete (All)</button>
-  <button class="proto-nav-btn" onclick="showScreen('complete')">Complete (Partial)</button>
+  <button class="proto-nav-btn" onclick="showScreen('order-placed')">Ordering</button>
+  <button class="proto-nav-btn" onclick="showScreen('complete-success')">Ordered (All)</button>
+  <button class="proto-nav-btn" onclick="showScreen('complete')">Ordered (Partial)</button>
   <button class="proto-nav-btn" onclick="showScreen('order-detail')">Order Detail</button>
   <button class="proto-nav-btn" onclick="showScreen('payment-fail')">Payment Fail</button>
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">My Orders</button>
@@ -1535,7 +1561,7 @@
           <div class="order-item-price">USD 4.08</div>
         </div>
         <div class="order-detail-item-status">
-          <span class="status-badge ordering">Ordering</span>
+          <span class="status-badge-wrap"><span class="status-badge ordering">Ordering</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed.">i</span></span>
         </div>
       </div>
 
@@ -1548,7 +1574,7 @@
           <div class="order-item-price">USD 34.62</div>
         </div>
         <div class="order-detail-item-status">
-          <span class="status-badge ordering">Ordering</span>
+          <span class="status-badge-wrap"><span class="status-badge ordering">Ordering</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed.">i</span></span>
         </div>
       </div>
     </div>
@@ -1617,7 +1643,7 @@
           <div class="order-item-price">USD 4.08</div>
         </div>
         <div class="order-detail-item-status">
-          <span class="status-badge processing">Ordered – Waiting for Confirmation</span>
+          <span class="status-badge-wrap"><span class="status-badge processing">Ordered – Waiting for Confirmation</span><span class="status-info-icon" data-tooltip="The seller has confirmed your order and is preparing it for shipment in Korea.">i</span></span>
         </div>
       </div>
       <div class="order-detail-item">
@@ -1629,7 +1655,7 @@
           <div class="order-item-price">USD 34.62</div>
         </div>
         <div class="order-detail-item-status">
-          <span class="status-badge processing">Ordered – Waiting for Confirmation</span>
+          <span class="status-badge-wrap"><span class="status-badge processing">Ordered – Waiting for Confirmation</span><span class="status-info-icon" data-tooltip="The seller has confirmed your order and is preparing it for shipment in Korea.">i</span></span>
         </div>
       </div>
     </div>
@@ -1706,7 +1732,7 @@
           <div class="order-item-price">USD 4.08</div>
         </div>
         <div class="order-detail-item-status">
-          <span class="status-badge processing">Ordered – Waiting for Confirmation</span>
+          <span class="status-badge-wrap"><span class="status-badge processing">Ordered – Waiting for Confirmation</span><span class="status-info-icon" data-tooltip="The seller has confirmed your order and is preparing it for shipment in Korea.">i</span></span>
         </div>
       </div>
 
@@ -2383,10 +2409,14 @@ function confirmPartialSoldout() {
 
 // ─── Proxy Data & State ──────────────────────────
 const proxyData = {
-  dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',  calcType: 'external' },
-  paysable: { name: 'Paysable',        icon: 'P', color: '#1565c0', price: 25.00, rating: 4.9, reviews: 588, days: '7–10',  badge: null,     calcType: 'modal' },
-  kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,     calcType: 'modal' },
+  dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',  calcType: 'external',
+              promo: '🎁 New members get a 10% off coupon on international shipping' },
+  paysable: { name: 'Paysable',        icon: 'P', color: '#1565c0', price: 25.00, rating: 4.9, reviews: 588, days: '7–10',  badge: null,     calcType: 'modal',
+              promo: '🔥 Handling fee FREE this month' },
+  kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,     calcType: 'modal',
+              promo: '✨ Free consolidation for orders over $150' },
 };
+const PROXY_DAYS_TOOLTIP = 'Estimated delivery time for a single-item shipment, calculated as: time from seller approval to arrival at the Proxy warehouse + time from warehouse intake to international delivery. Actual time may vary by destination country.';
 const proxyOrder = ['dk', 'paysable', 'kfriday'];
 
 let _selectedProxy = 'dk';
@@ -2447,6 +2477,8 @@ function renderProxySection() {
   const sel = _selectedProxy;
   const s = proxyData[sel];
   const connected = _proxyConnected[sel];
+  const errEl = document.getElementById('proxy-connect-error');
+  if (errEl && connected) errEl.style.display = 'none';
   const badgeHTML = connected
     ? `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:#2e7d32;background:#e8f5e9;white-space:nowrap;">Connected</span>`
     : `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:#c62828;background:#fce4ec;white-space:nowrap;">Not Connected</span>`;
@@ -2483,13 +2515,23 @@ function renderProxySection() {
     const cardBorder = isSingleMode ? '1px solid #eee' : (isSelected ? '1.5px solid #222' : '1px solid #eee');
     const cardBg = isSingleMode ? '#fff' : (isSelected ? '#fafafa' : '#fff');
 
+    const daysTooltipAttr = PROXY_DAYS_TOOLTIP.replace(/"/g, '&quot;');
     html += `
     <div ${cardOnclick} style="border:${cardBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:${cardCursor};background:${cardBg};">
       <div style="display:flex;align-items:flex-start;gap:12px;">
         ${radioDot}
         <div style="flex:1;min-width:0;">
-          <span style="font-size:14px;font-weight:700;color:#222;">${p.name}</span>
-          <div style="font-size:11px;color:#999;margin-top:5px;">⭐ ${p.rating} &nbsp;·&nbsp; ✈ ${p.days} days${p.badge ? `&nbsp;·&nbsp;<span style="font-size:10px;font-weight:700;background:#222;color:#fff;padding:1px 5px;border-radius:3px;">BEST</span>` : ''}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:14px;font-weight:700;color:#222;">${p.name}</span>
+          </div>
+          ${p.promo ? `<div style="font-size:11px;color:#d84315;margin-top:4px;line-height:1.4;">${p.promo}</div>` : ''}
+          <div style="font-size:11px;color:#999;margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+            <span>⭐ ${p.rating}</span>
+            <span>·</span>
+            <span>✈ ${p.days} days</span>
+            <span class="status-info-icon" data-tooltip="${daysTooltipAttr}" onclick="event.stopPropagation()" style="width:13px;height:13px;font-size:9px;">i</span>
+            ${p.badge ? `<span>·</span><span style="font-size:10px;font-weight:700;background:#222;color:#fff;padding:1px 5px;border-radius:3px;">BEST</span>` : ''}
+          </div>
           <div style="margin-top:4px;">${connDot}</div>
           ${isSelected && !pConnected ? `
           <div style="border-top:1px solid #f0f0f0;margin-top:12px;padding-top:10px;">
