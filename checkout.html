@@ -212,6 +212,7 @@
   .changelog-entry-date { font-size: 11px; color: #999; }
   .changelog-entry-list { margin: 0; padding-left: 18px; font-size: 13px; color: #444; line-height: 1.6; }
   .changelog-entry-list li { margin-bottom: 4px; }
+
   .phone-frame { margin-top: 40px; } /* updated dynamically by adjustFrameTop() */
 
   /* Right sidebar */
@@ -396,6 +397,118 @@
   .img-placeholder { background: linear-gradient(135deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%); background-size: 200% 200%; animation: shimmer 1.5s infinite; border-radius: 8px; }
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .img-placeholder.hat { background: #d0d0d0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpath d='m21 15-5-5L5 21'/%3E%3C/svg%3E") center no-repeat; animation: none; }
+
+  /* ═══════════ FLOW PAGE ════════════════════════════════════════════ */
+  #screen-flow {
+    position: fixed; inset: 0; right: 210px;
+    background: #F7F5FF; z-index: 600; overflow: auto; display: none;
+  }
+  .flow-topbar {
+    position: sticky; top: 0; z-index: 20; background: #1a1a2e; color: #fff;
+    padding: 9px 20px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 12px;
+  }
+  .flow-topbar-title { font-size: 13px; font-weight: 700; }
+  .flow-topbar-sub { color: rgba(255,255,255,0.4); margin-left: auto; font-size: 11px; }
+  .flow-scroll { overflow: auto; }
+  .flow-table { border-collapse: collapse; table-layout: fixed; min-width: 100%; }
+  .col-actor { width: 80px; }
+  .col-phase { width: 270px; }
+  .col-cancel { width: 310px; }
+  .flow-th-actor {
+    background: #1a1a2e; width: 80px; min-width: 80px;
+    position: sticky; left: 0; z-index: 15; border-right: 2px solid #7C3AED;
+  }
+  .flow-th {
+    background: #1a1a2e; color: #fff; font-size: 12px; font-weight: 800;
+    padding: 14px 12px; text-align: center;
+    border-right: 2px solid rgba(255,255,255,0.1);
+    border-bottom: 2px solid #7C3AED; white-space: nowrap;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .flow-th.cancel { background: #7F1D1D; border-right-color: rgba(255,255,255,0.1); }
+  .flow-actor {
+    position: sticky; left: 0; z-index: 5;
+    font-size: 10px; font-weight: 800; color: #fff; text-align: center;
+    padding: 8px 4px; vertical-align: top;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    border-right: 2px solid #7C3AED; white-space: normal; word-break: keep-all;
+  }
+  .flow-actor.user  { background: #1D4ED8; }
+  .flow-actor.gb    { background: #6D28D9; }
+  .flow-actor.pg    { background: #0369A1; }
+  .flow-actor.proxy { background: #B45309; }
+  .flow-actor.core  { background: #047857; }
+
+  .flow-cell {
+    vertical-align: top; padding: 10px;
+    border-right: 1px solid #DDD6FE; border-bottom: 1px solid #DDD6FE;
+    background: #FDFCFF;
+  }
+  .flow-cell.alt { background: #FAF8FF; }
+  .flow-cell.cancel-cell { background: #FFF5F5; border-right-color: #FECACA; border-bottom-color: #FECACA; }
+  .flow-cell.empty { background: #F8F7FC; }
+
+  .fnode {
+    border-radius: 5px; padding: 6px 9px; margin-bottom: 5px;
+    font-size: 11px; line-height: 1.5;
+  }
+  .fnode:last-child { margin-bottom: 0; }
+  .fnode.user  { background: #DBEAFE; border-left: 3px solid #2563EB; color: #1E3A8A; }
+  .fnode.gb    { background: #EDE9FE; border-left: 3px solid #7C3AED; color: #4C1D95; }
+  .fnode.pg    { background: #E0F2FE; border-left: 3px solid #0284C7; color: #0C4A6E; }
+  .fnode.proxy { background: #FEF3C7; border-left: 3px solid #D97706; color: #78350F; }
+  .fnode.core  { background: #D1FAE5; border-left: 3px solid #059669; color: #064E3B; }
+  .fnode.decision { background: #FFF7ED; border: 1px dashed #EA580C; border-left: 3px solid #EA580C; color: #7C2D12; }
+  .fnode.note  { background: #FEFCE8; border: 1px dashed #CA8A04; color: #713F12; font-size: 10px; font-style: italic; }
+
+  .fnode strong { display: block; font-weight: 700; margin-bottom: 1px; }
+  .badge {
+    display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px;
+    font-weight: 700; margin-left: 4px; vertical-align: middle;
+  }
+  .badge.async  { background: #7C3AED; color: #fff; }
+  .badge.loop   { background: #2563EB; color: #fff; }
+  .badge.manual { background: #D97706; color: #fff; }
+  .badge.auto   { background: #059669; color: #fff; }
+  .badge.opt    { background: #6B7280; color: #fff; }
+  .badge.crit   { background: #DC2626; color: #fff; }
+
+  .flow-subhead {
+    font-size: 9px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #9CA3AF;
+    margin: 8px 0 4px; padding-top: 6px; border-top: 1px dashed #E5E7EB;
+  }
+  .flow-subhead:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+  .flow-arrow { text-align: center; color: #C4B5FD; font-size: 12px; margin: 2px 0; }
+
+  .flow-legend-bar {
+    padding: 10px 20px; background: #fff; border-top: 2px solid #DDD6FE;
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: center; font-size: 11px;
+  }
+  .flow-legend-item { display: flex; align-items: center; gap: 5px; color: #555; }
+  .flow-legend-dot { width: 12px; height: 10px; border-radius: 2px; }
+
+  /* ── User Flow Canvas ────────────────────────────── */
+  .uf-canvas { padding: 28px 36px 36px; display: flex; flex-direction: column; gap: 24px; min-width: max-content; }
+  .uf-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.4px; color: #7C3AED; display: flex; align-items: center; gap: 10px; }
+  .uf-section-title::after { content: ''; display: block; width: 200px; height: 1px; background: #E5DEFF; }
+  .uf-track { display: flex; align-items: flex-start; gap: 0; }
+  .uf-stage { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .uf-stage-header { font-size: 10px; font-weight: 700; color: #fff; background: #1a1a2e; padding: 4px 12px; border-radius: 20px; white-space: nowrap; margin-bottom: 16px; letter-spacing: 0.2px; }
+  .uf-stage-body { display: flex; flex-direction: row; gap: 12px; align-items: flex-start; }
+  .uf-phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+  .uf-phone-wrap:hover .uf-phone { box-shadow: 0 6px 20px rgba(124,58,237,0.2); transform: translateY(-2px); }
+  .uf-phone-label { font-size: 10px; font-weight: 500; color: #888; white-space: nowrap; }
+  .uf-phone { width: 130px; height: 240px; overflow: hidden; border-radius: 8px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); background: #fff; transition: box-shadow 0.15s, transform 0.15s; flex-shrink: 0; }
+  .uf-inner { width: 375px; transform: scale(0.347); transform-origin: top left; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; color: #222; line-height: 1.4; }
+  .uf-arrow { display: flex; align-items: flex-start; padding: 116px 4px 0; font-size: 18px; color: #C4B5FD; flex-shrink: 0; }
+  .uf-arrow.top { padding-top: 50px; }
+  .uf-branch-tag { font-size: 10px; font-weight: 600; background: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 8px; white-space: nowrap; }
+  .uf-sep { border: none; border-top: 1px solid #EDE9FE; margin: 4px 0; width: 100%; }
+  .uf-branch-row { display: flex; align-items: flex-start; gap: 0; }
+  .uf-branch-note { font-size: 10px; color: #C4B5FD; padding-top: 116px; padding-right: 4px; white-space: nowrap; }
+  .uf-legend { padding: 10px 36px; background: #fff; border-top: 1px solid #EDE9FE; display: flex; gap: 20px; align-items: center; font-size: 11px; color: #888; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -403,6 +516,8 @@
 <!-- Prototype Navigation -->
 <div class="proto-nav">
   <span class="proto-nav-title">GB Checkout Flow (TO-BE)</span>
+  <button class="proto-nav-btn" onclick="showScreen('flow')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">Flow</button>
+  <span style="width:1px;height:16px;background:rgba(255,255,255,0.2);flex-shrink:0;"></span>
   <button class="proto-nav-btn active" onclick="showScreen('cart')">Cart</button>
   <button class="proto-nav-btn" onclick="showScreen('checkout')">Checkout</button>
   <button class="proto-nav-btn" onclick="showScreen('processing')">Processing</button>
@@ -416,8 +531,8 @@
   <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.7</button>
-    <span>Updated 2026-04-22</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.8</button>
+    <span>Updated 2026-04-27</span>
   </span>
 </div>
 
@@ -447,14 +562,14 @@
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Proxy Mode</div>
+      <div class="sidebar-section-title">Shop & Ship Partner Mode</div>
       <div class="sidebar-chips">
         <button id="sb-proxy-multi" class="sidebar-chip active" onclick="setProxyMode('multi')">Multi (3)</button>
         <button id="sb-proxy-single" class="sidebar-chip" onclick="setProxyMode('single')">Single (DK only)</button>
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Proxy Connection</div>
+      <div class="sidebar-section-title">Shop & Ship Partner Connection</div>
       <div class="sidebar-chips">
         <button id="sb-agent-connected" class="sidebar-chip" onclick="setSidebarAgent(true)">Connected</button>
         <button id="sb-agent-disconnected" class="sidebar-chip active warning" onclick="setSidebarAgent(false)">Disconnected</button>
@@ -483,6 +598,29 @@
         <button class="sidebar-chip" id="sb-err-generic" onclick="setSidebarError('generic')">Temporary Error</button>
       </div>
     </div>
+  </div>
+
+  <!-- Flow panel -->
+  <div id="sidebar-flow" class="sidebar-panel">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">화면 바로가기</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip" onclick="showScreen('cart')">🛒 Cart</button>
+        <button class="sidebar-chip" onclick="showScreen('checkout')">📋 Checkout</button>
+        <button class="sidebar-chip" onclick="showScreen('pg-card')">💳 카드 결제</button>
+        <button class="sidebar-chip" onclick="selectQuickPay('apple')">◾ Apple Pay</button>
+        <button class="sidebar-chip" onclick="showScreen('pg-paypal')">PayPal</button>
+        <button class="sidebar-chip" onclick="showScreen('processing')">⏳ Processing</button>
+        <button class="sidebar-chip" onclick="showScreen('order-placed')">📦 Ordering</button>
+        <button class="sidebar-chip" onclick="showScreen('complete-success')">✓ All Success</button>
+        <button class="sidebar-chip" onclick="showScreen('complete')">⚠ Partial Cancel</button>
+        <button class="sidebar-chip" onclick="showScreen('payment-fail')">✕ Payment Fail</button>
+        <button class="sidebar-chip" onclick="showScreen('sso-redirect')">🔑 DK Login</button>
+        <button class="sidebar-chip" onclick="showScreen('my-orders')">📄 My Orders</button>
+        <button class="sidebar-chip" onclick="showScreen('order-detail')">📍 Order Detail</button>
+      </div>
+    </div>
+    <div class="sidebar-hint">각 화면 카드를 클릭하면 해당 화면으로 이동합니다.</div>
   </div>
 
   <!-- Empty panel for other screens -->
@@ -670,9 +808,9 @@
           </div>
           <div style="background:#f3f8ff;border:1px solid #d6e4f5;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#1565c0;line-height:1.6;">
             <div style="font-weight:700;margin-bottom:4px;">📦 These rates are for shipping a single item.</div>
-            <div>If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Proxy — check each Proxy's page for details.</div>
+            <div>If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
           </div>
-          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Proxy — check each Proxy's page for details.</div>
+          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
         </div>
 
       </div>
@@ -805,7 +943,7 @@
               <div class="coupon-card-amount-unit">OFF</div>
             </div>
             <div class="coupon-card-right">
-              <div class="coupon-card-name">Shipping to Proxy Discount</div>
+              <div class="coupon-card-name">Shipping to Shop & Ship Partner Discount</div>
               <div class="coupon-card-min">Min. $30.00</div>
               <div class="coupon-card-remaining" style="color:#bbb;">45 days left</div>
             </div>
@@ -915,7 +1053,7 @@
             </div>
           </div>
           <div class="order-item-shipping">
-            <span>Shipping to Proxy</span><span>USD 2.50</span>
+            <span>Shipping to Shop & Ship Partner</span><span>USD 2.50</span>
           </div>
           <div class="add-request-area">
             <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
@@ -963,7 +1101,7 @@
             </div>
           </div>
           <div class="order-item-shipping">
-            <span>Shipping to Proxy</span><span>USD 2.50</span>
+            <span>Shipping to Shop & Ship Partner</span><span>USD 2.50</span>
           </div>
           <div class="add-request-area">
             <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
@@ -996,19 +1134,19 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <div>
-          <span class="section-title">Proxy</span>
-          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally.</div>
+          <span class="section-title">Shop & Ship Partner</span>
+          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally. Service policies (returns, consolidation, fees) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
         </div>
         <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
           <span style="font-size:14px;flex-shrink:0;">🔴</span>
-          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Proxy.</span>
+          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Shop & Ship Partner.</span>
         </div>
         <div id="proxy-section-container"></div>
         <div class="shipping-fee-note" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <span>ℹ️ International shipping fee will be paid on the Proxy's website after items arrive at the warehouse</span>
+          <span>ℹ️ International shipping fee will be paid on the Shop & Ship Partner's website after items arrive at the warehouse</span>
           <button id="estimate-btn-proxy" onclick="openShippingCalc()" style="font-size:12px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;">Estimate</button>
         </div>
       </div>
@@ -1084,7 +1222,7 @@
           <div class="price-group-title">Product Purchase</div>
           <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount">USD 38.70</span></div>
           <div id="checkout-coupon-row" class="price-row discount" style="display:none;"><span id="checkout-coupon-label">Coupon</span><span id="checkout-coupon-amount"></span></div>
-          <div class="price-row"><span>Shipping to Proxy</span><span id="checkout-shipping-to-proxy-amount">USD 5.00</span></div>
+          <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span id="checkout-shipping-to-proxy-amount">USD 5.00</span></div>
           <div class="price-row" id="paypal-fee-row" style="display:none;color:#e07b00;">
             <span>PayPal Fee (5%)</span>
             <span id="paypal-fee-amount"></span>
@@ -1154,8 +1292,8 @@
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">1. Order & Payment</div>
           <p style="margin-bottom:14px;color:#666;">By placing an order on Global Bunjang, you agree to purchase the item at the listed price in USD. All payments are processed securely. Prices are subject to exchange rate fluctuations and may vary slightly at the time of settlement.</p>
 
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Proxy</div>
-          <p style="margin-bottom:14px;color:#666;">A Proxy is a third-party service that purchases items from Korean sellers on your behalf and ships them internationally. Your selected Proxy handles purchase, warehousing, and international shipping. International shipping fees, handling fees, and service policies (returns, consolidation, etc.) are set by each Proxy — review the respective Proxy's page for full terms.</p>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Shop & Ship Partner</div>
+          <p style="margin-bottom:14px;color:#666;">A Shop & Ship Partner is a third-party service that purchases items from Korean sellers on your behalf and ships them internationally. Your selected Shop & Ship Partner handles purchase, warehousing, and international shipping. International shipping fees, handling fees, and service policies (returns, consolidation, etc.) are set by each Shop & Ship Partner — review the respective Shop & Ship Partner's page for full terms.</p>
 
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">3. Customs & Duties</div>
           <p style="margin-bottom:14px;color:#666;">Import taxes, customs duties, and any related fees are the sole responsibility of the recipient. Global Bunjang is not liable for delays or additional costs incurred due to customs procedures in the destination country.</p>
@@ -1167,7 +1305,7 @@
           <p style="margin-bottom:14px;color:#666;">As a secondhand marketplace, all sales are generally final. Returns are accepted only in cases where the item received significantly differs from the listing description. Claims must be submitted within 3 days of delivery.</p>
 
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">6. Personal Information</div>
-          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the Proxy solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
+          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the Shop & Ship Partner solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
 
           <div style="font-size:12px;color:#bbb;margin-top:8px;">Last updated: April 2026</div>
         </div>
@@ -1213,7 +1351,7 @@
         <div style="font-size:13px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Order Summary</div>
         <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Subtotal</span><span>USD 38.70</span></div>
         <div style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:8px;"><span>Coupon Discount</span><span>- USD 7.00</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Shipping to Shop & Ship Partner</span><span>USD 5.00</span></div>
         <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:#222;border-top:1px solid #f0f0f0;padding-top:14px;"><span>Total</span><span>USD 36.70</span></div>
       </div>
       <!-- Biometric auth mock -->
@@ -1590,7 +1728,7 @@
       <div class="section-body">
         <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
-        <div class="price-row"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
+        <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span>USD 5.00</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
         <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
@@ -1670,7 +1808,7 @@
       <div class="section-body">
         <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
-        <div class="price-row"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
+        <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span>USD 5.00</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
         <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span>Credit Card (VISA ****1234)</span></div>
@@ -1765,7 +1903,7 @@
       <div class="section-body">
         <div class="price-row"><span>Subtotal</span><span>USD 38.70</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span>- USD 7.00</span></div>
-        <div class="price-row"><span>Shipping to Proxy</span><span>USD 5.00</span></div>
+        <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span>USD 5.00</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span>USD 36.70</span></div>
         <hr class="price-divider">
@@ -1967,7 +2105,6 @@
 
     <div class="action-btns" style="margin-top:8px;">
       <button class="action-btn outline">Contact Support</button>
-      <button class="action-btn outline" style="color:#e74c3c;border-color:#e74c3c;">Request Cancel</button>
     </div>
   </div>
 </div>
@@ -2098,6 +2235,441 @@
 </div>
 
 </div><!-- /phone-frame -->
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- FLOW PAGE (full-width, outside phone-frame)                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-flow">
+  <div class="flow-topbar">
+    <span class="flow-topbar-title">User Flow — 구매자 경험 흐름</span>
+    <span class="flow-topbar-sub">화면 클릭 시 해당 화면으로 이동 · 가로 스크롤 지원</span>
+  </div>
+
+  <div class="flow-scroll">
+  <div class="uf-canvas">
+
+    <!-- ── Main Flow ─────────────────────────────────── -->
+    <div class="uf-section-title">메인 플로우</div>
+    <div class="uf-track">
+
+      <!-- Stage 1: 장바구니 -->
+      <div class="uf-stage">
+        <div class="uf-stage-header">① 장바구니</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('cart')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#f0f0f0;min-height:700px;">
+                <div style="background:#fff;padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;"><span style="font-size:22px;color:#222;">‹</span><span style="font-size:17px;font-weight:700;">Cart</span></div>
+                <div style="background:#fff;margin-top:8px;">
+                  <div style="padding:16px;display:flex;gap:12px;border-bottom:1px solid #f5f5f5;align-items:flex-start;">
+                    <div style="width:80px;height:80px;background:#d8d8d8;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4;">Day6 Roundlab Sunscreen Hand Mirror Sealed</div><div style="font-size:17px;font-weight:700;">$6.97</div></div>
+                  </div>
+                  <div style="padding:16px;display:flex;gap:12px;align-items:flex-start;">
+                    <div style="width:80px;height:80px;background:#c4c4c4;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:13px;color:#555;margin-bottom:6px;line-height:1.4;">Vintage Corduroy Cap Navy Blue</div><div style="font-size:17px;font-weight:700;">$14.96</div></div>
+                  </div>
+                </div>
+                <div style="background:#fff;margin-top:8px;padding:16px;border-top:1px solid #eee;">
+                  <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;"><span style="color:#666;">Subtotal (2 items)</span><span style="font-weight:700;">$21.93</span></div>
+                </div>
+                <div style="margin-top:16px;padding:0 16px;"><div style="background:#222;color:#fff;border-radius:12px;padding:18px;font-size:17px;font-weight:700;text-align:center;">Buy Now</div></div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Cart</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="uf-arrow">→</div>
+
+      <!-- Stage 2: 주문서 -->
+      <div class="uf-stage">
+        <div class="uf-stage-header">② 주문서</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('checkout')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#f0f0f0;min-height:700px;">
+                <div style="background:#fff;padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">‹</span><span style="font-size:17px;font-weight:700;">Checkout</span></div>
+                <!-- Items -->
+                <div style="background:#fff;margin-top:8px;padding:16px;">
+                  <div style="font-size:15px;font-weight:700;margin-bottom:12px;">Order Summary</div>
+                  <div style="display:flex;gap:10px;margin-bottom:10px;"><div style="width:60px;height:60px;background:#d8d8d8;border-radius:8px;"></div><div style="flex:1;font-size:13px;color:#555;">Day6 Roundlab...<br><span style="font-weight:700;color:#222;">$6.97</span></div></div>
+                  <div style="display:flex;gap:10px;"><div style="width:60px;height:60px;background:#c4c4c4;border-radius:8px;"></div><div style="flex:1;font-size:13px;color:#555;">Vintage Corduroy Cap<br><span style="font-weight:700;color:#222;">$14.96</span></div></div>
+                </div>
+                <!-- DK Login banner -->
+                <div style="background:#fff;margin-top:8px;padding:14px 16px;border-top:3px solid #e74c3c;">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:4px;">🔑 Log in to Delivered Korea</div>
+                  <div style="font-size:11px;color:#888;">Required to complete your order</div>
+                  <div style="margin-top:10px;background:#222;color:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:600;text-align:center;">Log In / Sign Up</div>
+                </div>
+                <!-- Shop & Ship Partner -->
+                <div style="background:#fff;margin-top:8px;padding:14px 16px;">
+                  <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Shop & Ship Partner</div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #eee;border-radius:8px;"><span style="font-size:13px;">📦</span><span style="font-size:13px;font-weight:600;">Delivered Korea</span><span style="margin-left:auto;font-size:12px;color:#888;">$8.00</span></div>
+                </div>
+                <!-- Payment method -->
+                <div style="background:#fff;margin-top:8px;padding:14px 16px;">
+                  <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Payment Method</div>
+                  <div style="font-size:13px;color:#555;padding:8px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;"><input type="radio" checked style="accent-color:#222;"> Credit / Debit Card</div>
+                  <div style="font-size:13px;color:#555;padding:8px 0;display:flex;align-items:center;gap:8px;"><input type="radio" style="accent-color:#222;"> Apple Pay / Google Pay</div>
+                </div>
+                <!-- Price summary -->
+                <div style="background:#fff;margin-top:8px;padding:14px 16px;">
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Items</span><span>$21.93</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Shipping to Shop & Ship Partner</span><span>$6.00</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:2px solid #222;padding-top:8px;margin-top:4px;"><span>Total</span><span style="color:#e74c3c;">$36.70</span></div>
+                </div>
+                <!-- Terms -->
+                <div style="background:#fff;margin-top:8px;padding:12px 16px;font-size:12px;color:#555;display:flex;align-items:center;gap:6px;"><input type="checkbox" checked style="accent-color:#222;">I agree to the Terms &amp; Conditions.</div>
+                <!-- CTA -->
+                <div style="padding:16px;"><div style="background:#222;color:#fff;border-radius:12px;padding:18px;font-size:17px;font-weight:700;text-align:center;">Pay USD 36.70</div></div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Checkout</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="uf-arrow">→</div>
+
+      <!-- Stage 3: 결제 (3 PG types) -->
+      <div class="uf-stage">
+        <div class="uf-stage-header">③ 결제 수단</div>
+        <div class="uf-stage-body">
+          <!-- Card -->
+          <div class="uf-phone-wrap" onclick="showScreen('pg-card')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;padding:20px 16px;">
+                <div style="text-align:center;margin-bottom:20px;font-size:16px;font-weight:700;color:#333;">Hecto Financial</div>
+                <div style="text-align:center;font-size:26px;font-weight:800;margin-bottom:4px;">₩ 53,215</div>
+                <div style="text-align:center;font-size:12px;color:#888;margin-bottom:28px;">≈ USD 36.70</div>
+                <div style="margin-bottom:12px;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Card Number</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">1234  5678  9012  3456</div></div>
+                <div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">MM / YY</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">MM / YY</div></div><div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">CVV</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">•••</div></div></div>
+                <div style="margin-bottom:24px;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Cardholder Name</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">Full name</div></div>
+                <div style="background:#222;color:#fff;border-radius:12px;padding:16px;font-size:16px;font-weight:700;text-align:center;margin-bottom:12px;">Pay ₩ 53,215</div>
+                <div style="text-align:center;font-size:11px;color:#999;">🔒 Secured by Hecto Financial · Powered by PortOne</div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">카드 결제</div>
+          </div>
+          <!-- Apple/Google Pay -->
+          <div class="uf-phone-wrap" onclick="selectQuickPay('apple')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="background:#000;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">✕</span><span style="font-size:16px;font-weight:600;flex:1;text-align:center;">Apple Pay</span></div>
+                <div style="padding:20px 16px;">
+                  <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Subtotal</span><span>$21.93</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Shipping</span><span>$6.00</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;color:#e74c3c;"><span>Coupon</span><span>- $5.00</span></div>
+                  <div style="border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;font-size:16px;font-weight:800;"><span>Total</span><span>$36.70</span></div>
+                  <div style="margin-top:40px;text-align:center;font-size:60px;">⬟</div>
+                  <div style="text-align:center;font-size:14px;color:#666;margin-top:8px;">Touch ID to Pay</div>
+                  <div style="margin-top:30px;background:#000;color:#fff;border-radius:12px;padding:16px;font-size:16px;font-weight:700;text-align:center;">[Demo] Pay USD 36.70</div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Apple/Google Pay</div>
+          </div>
+          <!-- PayPal -->
+          <div class="uf-phone-wrap" onclick="showScreen('pg-paypal')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;padding:24px 16px;">
+                <div style="text-align:center;margin-bottom:24px;"><span style="font-size:32px;font-weight:800;color:#003087;">Pay</span><span style="font-size:32px;font-weight:800;color:#009cde;">Pal</span></div>
+                <div style="margin-bottom:12px;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Email</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">you@email.com</div></div>
+                <div style="margin-bottom:24px;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Password</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">••••••••</div></div>
+                <div style="background:#009cde;color:#fff;border-radius:24px;padding:16px;font-size:16px;font-weight:700;text-align:center;">Log In &amp; Pay USD 36.70</div>
+                <div style="text-align:center;font-size:12px;color:#999;margin-top:12px;">🔒 Secured by PayPal</div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">PayPal</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="uf-arrow">→</div>
+
+      <!-- Stage 4: 결제 처리 -->
+      <div class="uf-stage">
+        <div class="uf-stage-header">④ 결제 처리</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('processing')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;padding:40px 20px;">
+                <!-- Spinner -->
+                <div style="text-align:center;margin-bottom:24px;"><div style="width:64px;height:64px;border:4px solid #eee;border-top-color:#222;border-radius:50%;margin:0 auto;animation:spin 1s linear infinite;"></div></div>
+                <div style="text-align:center;font-size:18px;font-weight:700;margin-bottom:4px;">Processing your payment...</div>
+                <div style="text-align:center;font-size:13px;color:#888;margin-bottom:32px;">Please don't close this page.</div>
+                <!-- Steps -->
+                <div style="padding:0 10px;">
+                  <div style="display:flex;gap:14px;margin-bottom:20px;">
+                    <div style="width:24px;height:24px;border-radius:50%;background:#4caf50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">✓</div>
+                    <div><div style="font-size:13px;font-weight:600;">Payment authorized</div></div>
+                  </div>
+                  <div style="display:flex;gap:14px;margin-bottom:20px;">
+                    <div style="width:24px;height:24px;border-radius:50%;background:#2196f3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">⋯</div>
+                    <div><div style="font-size:13px;font-weight:600;color:#2196f3;">Creating order...</div></div>
+                  </div>
+                  <div style="display:flex;gap:14px;">
+                    <div style="width:24px;height:24px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;color:#ddd;">3</div>
+                    <div><div style="font-size:13px;font-weight:600;color:#bbb;">Confirming payment</div></div>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Processing</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="uf-arrow">→</div>
+
+      <!-- Stage 5: 주문 처리 중 -->
+      <div class="uf-stage">
+        <div class="uf-stage-header">⑤ 주문 처리 중</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('order-placed')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="text-align:center;padding:30px 20px 16px;">
+                  <div style="width:64px;height:64px;border-radius:50%;background:#e3f2fd;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#2196f3;margin-bottom:12px;">✓</div>
+                  <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Payment Successful!</div>
+                  <div style="font-size:13px;color:#888;">Your order is being placed with the seller</div>
+                </div>
+                <!-- Info banner -->
+                <div style="background:#e3f2fd;padding:12px 16px;display:flex;gap:8px;font-size:12px;color:#1565c0;">
+                  <span>ℹ️</span><span>Items are being ordered on Korean Bunjang. This may take a moment.</span>
+                </div>
+                <!-- Items -->
+                <div style="padding:16px;">
+                  <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#d8d8d8;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:12px;color:#555;margin-bottom:4px;">Day6 Roundlab...</div><span style="font-size:11px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:3px 8px;border-radius:4px;">Ordering</span></div>
+                  </div>
+                  <div style="display:flex;gap:10px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#c4c4c4;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:12px;color:#555;margin-bottom:4px;">Vintage Corduroy Cap</div><span style="font-size:11px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:3px 8px;border-radius:4px;">Ordering</span></div>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Ordering...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="uf-arrow">→</div>
+
+      <!-- Stage 6: 결과 -->
+      <div class="uf-stage">
+        <div class="uf-stage-header">⑥ 결과</div>
+        <div class="uf-stage-body">
+          <!-- All success -->
+          <div class="uf-phone-wrap" onclick="showScreen('complete-success')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="text-align:center;padding:30px 20px 16px;">
+                  <div style="width:64px;height:64px;border-radius:50%;background:#e8f5e9;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#4caf50;margin-bottom:12px;">✓</div>
+                  <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Order Placed!</div>
+                  <div style="font-size:13px;color:#888;">All items have been successfully ordered</div>
+                </div>
+                <div style="padding:0 16px;">
+                  <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#d8d8d8;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:12px;color:#555;margin-bottom:4px;">Day6 Roundlab...</div><span style="font-size:11px;font-weight:600;background:#f0f0f0;color:#555;padding:3px 8px;border-radius:4px;">Ordered – Waiting for Confirmation</span></div>
+                  </div>
+                  <div style="display:flex;gap:10px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#c4c4c4;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:12px;color:#555;margin-bottom:4px;">Vintage Corduroy Cap</div><span style="font-size:11px;font-weight:600;background:#f0f0f0;color:#555;padding:3px 8px;border-radius:4px;">Ordered – Waiting for Confirmation</span></div>
+                  </div>
+                  <div style="margin-top:16px;background:#222;color:#fff;border-radius:10px;padding:14px;font-size:14px;font-weight:700;text-align:center;">Continue Shopping</div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">전체 확정 ✓</div>
+          </div>
+          <!-- Partial cancel -->
+          <div class="uf-phone-wrap" onclick="showScreen('complete')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="text-align:center;padding:24px 20px 12px;">
+                  <div style="width:64px;height:64px;border-radius:50%;background:#e3f2fd;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#2196f3;margin-bottom:10px;">✓</div>
+                  <div style="font-size:16px;font-weight:700;margin-bottom:2px;">Payment Successful!</div>
+                  <div style="font-size:12px;color:#888;">1 item confirmed · 1 item canceled</div>
+                </div>
+                <!-- Warning banner -->
+                <div style="background:#fff3e0;padding:12px 16px;display:flex;gap:8px;font-size:12px;color:#e65100;">
+                  <span>⚠️</span><span>One item became unavailable and was refunded.</span>
+                </div>
+                <div style="padding:16px;">
+                  <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#d8d8d8;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:12px;color:#555;margin-bottom:4px;">Day6 Roundlab...</div><span style="font-size:11px;font-weight:600;background:#f0f0f0;color:#555;padding:3px 8px;border-radius:4px;">Ordered – Waiting for Confirmation</span></div>
+                  </div>
+                  <div style="display:flex;gap:10px;align-items:center;opacity:0.6;">
+                    <div style="width:56px;height:56px;background:#c4c4c4;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:12px;color:#aaa;margin-bottom:4px;text-decoration:line-through;">Vintage Corduroy Cap</div><span style="font-size:11px;font-weight:600;background:#fce4ec;color:#c62828;padding:3px 8px;border-radius:4px;">Canceled · Sold Out</span></div>
+                  </div>
+                  <div style="margin-top:12px;padding:12px;background:#fff3e0;border-radius:8px;font-size:12px;color:#e65100;">Refund: $14.96 · 3–5 business days</div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">부분 취소 ⚠</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /uf-track main -->
+
+    <!-- ── 결제 실패 브랜치 ──────────────────────────── -->
+    <div style="display:flex;align-items:center;gap:0;padding-left:614px;">
+      <span class="uf-branch-tag fail" style="margin-right:8px;">결제 실패 경로 ↗</span>
+      <div class="uf-arrow top">→</div>
+      <div class="uf-stage">
+        <div class="uf-stage-header">결제 실패</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('payment-fail')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="text-align:center;padding:50px 20px 20px;">
+                  <div style="width:64px;height:64px;border-radius:50%;background:#ffebee;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#e53935;margin-bottom:14px;">✕</div>
+                  <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Payment Failed</div>
+                  <div style="font-size:13px;color:#888;margin-bottom:28px;">No charges have been made to your account.</div>
+                  <div style="background:#fff5f5;border:1px solid #ffcccc;border-radius:10px;padding:14px;font-size:13px;color:#c62828;text-align:left;margin-bottom:24px;">Your card limit or balance is insufficient.</div>
+                  <div style="background:#222;color:#fff;border-radius:12px;padding:16px;font-size:16px;font-weight:700;text-align:center;margin-bottom:10px;">Try Again</div>
+                  <div style="border:1px solid #ddd;border-radius:12px;padding:14px;font-size:14px;font-weight:600;text-align:center;color:#555;">Back to Cart</div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Payment Fail</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SSO / DK 로그인 ──────────────────────────── -->
+    <div class="uf-sep"></div>
+    <div class="uf-section-title">DK 로그인 (주문서 내 필수 단계)</div>
+    <div class="uf-track">
+      <div class="uf-stage">
+        <div class="uf-stage-header">DK 로그인 / 회원가입</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('sso-redirect')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">‹</span><span style="font-size:17px;font-weight:700;">Delivered Korea</span></div>
+                <!-- Tabs -->
+                <div style="display:flex;border-bottom:2px solid #eee;">
+                  <div style="flex:1;text-align:center;padding:14px;font-size:13px;font-weight:700;border-bottom:2px solid #222;margin-bottom:-2px;">New to DK</div>
+                  <div style="flex:1;text-align:center;padding:14px;font-size:13px;color:#999;">Have account</div>
+                </div>
+                <div style="padding:20px 16px;">
+                  <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Sign up with Bunjang</div>
+                  <div style="font-size:13px;color:#666;margin-bottom:20px;">Create your Delivered Korea account instantly using your Bunjang credentials.</div>
+                  <div style="display:flex;align-items:center;gap:10px;padding:14px;border:1px solid #eee;border-radius:10px;margin-bottom:16px;"><div style="width:36px;height:36px;border-radius:50%;background:#e74c3c;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">B</div><div><div style="font-size:13px;font-weight:600;">hazel.k</div><div style="font-size:11px;color:#888;">hazel.k@bunjang.co.kr</div></div></div>
+                  <div style="background:#222;color:#fff;border-radius:12px;padding:16px;font-size:15px;font-weight:700;text-align:center;">Sign up &amp; Continue ↗</div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">DK 신규 가입</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 주문 관리 ──────────────────────────────────── -->
+    <div class="uf-sep"></div>
+    <div class="uf-section-title">주문 관리</div>
+    <div class="uf-track">
+      <div class="uf-stage">
+        <div class="uf-stage-header">My Orders</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('my-orders')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#f0f0f0;min-height:700px;">
+                <div style="background:#fff;padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;"><span style="font-size:17px;font-weight:700;">My Orders</span></div>
+                <!-- DK connected -->
+                <div style="background:#e8f5e9;padding:10px 16px;font-size:12px;font-weight:600;color:#2e7d32;display:flex;gap:6px;align-items:center;">✓ Your DK account is connected</div>
+                <!-- Order cards -->
+                <div style="background:#fff;margin-top:8px;padding:16px;border-bottom:1px solid #f0f0f0;">
+                  <div style="font-size:11px;color:#888;margin-bottom:10px;">2026-04-22</div>
+                  <div style="display:flex;gap:10px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#d8d8d8;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:13px;margin-bottom:4px;">Day6 Roundlab...</div><span style="font-size:11px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:4px;">Shipping</span></div>
+                    <span style="font-size:14px;font-weight:700;">$6.97</span>
+                  </div>
+                </div>
+                <div style="background:#fff;padding:16px;">
+                  <div style="font-size:11px;color:#888;margin-bottom:10px;">2026-04-18</div>
+                  <div style="display:flex;gap:10px;align-items:center;">
+                    <div style="width:56px;height:56px;background:#c4c4c4;border-radius:8px;flex-shrink:0;"></div>
+                    <div style="flex:1;"><div style="font-size:13px;margin-bottom:4px;">Vintage Corduroy Cap</div><span style="font-size:11px;font-weight:700;background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:4px;">Completed</span></div>
+                    <span style="font-size:14px;font-weight:700;">$14.96</span>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">My Orders</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="uf-arrow">→</div>
+
+      <div class="uf-stage">
+        <div class="uf-stage-header">Order Detail</div>
+        <div class="uf-stage-body">
+          <div class="uf-phone-wrap" onclick="showScreen('order-detail')">
+            <div class="uf-phone"><div class="uf-inner">
+              <div style="background:#fff;min-height:700px;">
+                <div style="padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">‹</span><span style="font-size:17px;font-weight:700;">Order Detail</span></div>
+                <div style="padding:16px;border-bottom:1px solid #f0f0f0;"><div style="font-size:12px;color:#888;">Order ID</div><div style="font-size:14px;font-weight:600;">GB-20260422-001</div></div>
+                <!-- Status tracker -->
+                <div style="padding:20px 20px;">
+                  <div style="display:flex;gap:14px;margin-bottom:20px;position:relative;">
+                    <div style="width:24px;height:24px;border-radius:50%;background:#4caf50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">✓</div>
+                    <div><div style="font-size:13px;font-weight:600;">Payment Confirmed</div><div style="font-size:11px;color:#999;">2026-04-22</div></div>
+                  </div>
+                  <div style="display:flex;gap:14px;margin-bottom:20px;">
+                    <div style="width:24px;height:24px;border-radius:50%;background:#4caf50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">✓</div>
+                    <div><div style="font-size:13px;font-weight:600;">Order Created</div><div style="font-size:11px;color:#999;">2026-04-22</div></div>
+                  </div>
+                  <div style="display:flex;gap:14px;margin-bottom:20px;">
+                    <div style="width:24px;height:24px;border-radius:50%;background:#2196f3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">▶</div>
+                    <div><div style="font-size:13px;font-weight:600;color:#2196f3;">Shipping to Shop & Ship Partner</div><div style="font-size:11px;color:#999;">In progress</div></div>
+                  </div>
+                  <div style="display:flex;gap:14px;margin-bottom:20px;">
+                    <div style="width:24px;height:24px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;flex-shrink:0;">4</div>
+                    <div style="color:#bbb;"><div style="font-size:13px;font-weight:600;">Shop & Ship Partner Confirmed</div></div>
+                  </div>
+                  <div style="display:flex;gap:14px;">
+                    <div style="width:24px;height:24px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;flex-shrink:0;">5</div>
+                    <div style="color:#bbb;"><div style="font-size:13px;font-weight:600;">Delivered Internationally</div></div>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+            <div class="uf-phone-label">Order Detail</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /uf-canvas -->
+  </div><!-- /flow-scroll -->
+
+  <!-- Legend -->
+  <div class="uf-legend">
+    <span style="font-weight:700;color:#1a1a2e;">화면 클릭 → 전체 화면으로 이동</span>
+    <span style="color:#ccc;">|</span>
+    <span style="color:#9CA3AF;">⚠ 결제 실패</span>는 Processing 단계에서 분기
+    <span style="color:#ccc;">|</span>
+    <span style="color:#9CA3AF;">부분 취소</span>는 Order Placed 단계에서 분기
+    <span style="color:#ccc;">|</span>
+    <span style="color:#9CA3AF;">DK 로그인</span>은 주문서 안에 내장된 필수 단계
+  </div>
+</div><!-- /screen-flow -->
+
 
 <script>
 // ─── Coupon ──────────────────────────────────────
@@ -2231,10 +2803,10 @@ function removeCoupon(itemId) {
 
 // ─── Info Tooltips ───────────────────────────────
 const TOOLTIP_TEXT = {
-  'handling-fee':  'A service fee charged by your Proxy for purchasing, inspecting, and preparing your items at the Korean warehouse.',
+  'handling-fee':  'A service fee charged by your Shop & Ship Partner for purchasing, inspecting, and preparing your items at the Korean warehouse.',
   'intl-shipping': 'The cost to ship your package from Korea to your destination. Calculated based on weight and dimensions after items arrive at the warehouse.',
   'tax-duties':    'Import taxes and customs duties imposed by your country. These are the recipient\'s responsibility and are not included in the order total.',
-  'total':         'This total covers the item price and shipping to your Proxy only. International shipping, handling fees, and customs duties are billed separately by your Proxy.'
+  'total':         'This total covers the item price and shipping to your Shop & Ship Partner only. International shipping, handling fees, and customs duties are billed separately by your Shop & Ship Partner.'
 };
 let _tooltipEl = null;
 
@@ -2399,7 +2971,7 @@ function confirmPartialSoldout() {
   const title = document.getElementById('order-summary-title');
   if (title) title.textContent = 'Order Summary (1)';
 
-  // Update Subtotal (item2 only) and Shipping to Proxy (one item's worth)
+  // Update Subtotal (item2 only) and Shipping to Shop & Ship Partner (one item's worth)
   const sub = document.getElementById('checkout-subtotal-amount');
   if (sub) sub.textContent = 'USD 34.62';
   const ks = document.getElementById('checkout-shipping-to-proxy-amount');
@@ -2421,7 +2993,7 @@ const proxyData = {
   kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,     calcType: 'modal',
               promo: '✨ Free consolidation for orders over $150' },
 };
-const PROXY_DAYS_TOOLTIP = 'Estimated delivery time for a single-item shipment, calculated as: time from seller approval to arrival at the Proxy warehouse + time from warehouse intake to international delivery. Actual time may vary by destination country.';
+const PROXY_DAYS_TOOLTIP = 'Estimated delivery time for a single-item shipment, calculated as: time from seller approval to arrival at the Shop & Ship Partner warehouse + time from warehouse intake to international delivery. Actual time may vary by destination country.';
 const proxyOrder = ['dk', 'paysable', 'kfriday'];
 
 let _selectedProxy = 'dk';
@@ -2721,7 +3293,7 @@ function togglePaypalFeeInfo() {
 }
 
 // ─── Payment Method & PayPal Fee ─────────────────
-const INITIAL_BASE_TOTAL = 43.70; // subtotal (38.70) + shipping to Proxy (5.00), before coupon
+const INITIAL_BASE_TOTAL = 43.70; // subtotal (38.70) + shipping to Shop & Ship Partner (5.00), before coupon
 let BASE_TOTAL = INITIAL_BASE_TOTAL;
 
 function onPaymentMethodChange(method) {
@@ -2796,7 +3368,7 @@ function simulateQuickPay() {
   const btn = document.getElementById('quickpay-pay-btn');
   btn.textContent = 'Processing…';
   btn.disabled = true;
-  setTimeout(() => { showScreen('order-complete'); }, 1400);
+  setTimeout(() => { showScreen('processing'); }, 1400);
 }
 
 // ─── SSO Step Navigation ─────────────────────────
@@ -3091,6 +3663,17 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.8',
+    date: '2026-04-27',
+    changes: [
+      '"Proxy" 용어를 전체 "Shop & Ship Partner"로 교체 (사이드바, 주문서, 결제 요약, 툴팁, 약관 등 전면)',
+      'Flow 페이지 신규 추가 — 전체 구매자 흐름을 화면 단위로 보여주는 뷰, 각 화면 클릭 시 해당 화면으로 이동',
+      '네비게이션에 Flow 버튼 추가',
+      '결제 완료 후 Processing 화면으로 이동하도록 플로우 수정 (기존: order-complete로 바로 이동)',
+      'Order Detail에서 "Request Cancel" 버튼 제거'
+    ]
+  },
+  {
     version: 'v1.7',
     date: '2026-04-22',
     changes: [
@@ -3138,7 +3721,7 @@ const CHANGELOG = [
     version: 'v1.2',
     date: '2026-04-22',
     changes: [
-      '"Korea Shipping" → "Shipping to Proxy"로 용어 통일',
+      '"Korea Shipping" → "Shipping to Shop & Ship Partner"로 용어 통일',
       'Proxy 설명 두 문장 분리 (정의 / 서비스 정책 안내)',
       'Section header 화살표 토글 기능 작동',
       'Single Proxy 모드: Proxy 라디오 버튼 제거 + Estimate 버튼 → DK 계산기 링크',
@@ -3177,14 +3760,29 @@ function closeChangelog() {
 }
 
 function showScreen(id, updateNav = true) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
+  const phoneFrame = document.querySelector('.phone-frame');
+  const flowPage = document.getElementById('screen-flow');
+
+  if (id === 'flow') {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    phoneFrame.style.display = 'none';
+    flowPage.style.display = 'block';
+    // position the flow page below the nav bar
+    const nav = document.querySelector('.proto-nav');
+    flowPage.style.top = (nav ? nav.offsetHeight : 40) + 'px';
+  } else {
+    phoneFrame.style.display = '';
+    flowPage.style.display = 'none';
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+  }
+
   if (updateNav) {
     document.querySelectorAll('.proto-nav-btn').forEach(b => b.classList.remove('active'));
     if (event && event.target && event.target.classList.contains('proto-nav-btn')) event.target.classList.add('active');
   }
   // Update sidebar panel
-  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail' };
+  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow' };
   const panelId = sidebarMap[id] || 'default';
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('sidebar-' + panelId).classList.add('active');
