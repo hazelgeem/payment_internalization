@@ -510,6 +510,41 @@
   .uf-branch-note { font-size: 10px; color: #C4B5FD; padding-top: 116px; padding-right: 4px; white-space: nowrap; }
   .uf-legend { padding: 10px 36px; background: #fff; border-top: 1px solid #EDE9FE; display: flex; gap: 20px; align-items: center; font-size: 11px; color: #888; flex-wrap: wrap; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' });</script>
+<style>
+
+  /* ═══════════ DIAGRAM PAGE ══════════════════════════════════════════ */
+  #screen-diagram {
+    position: fixed; inset: 0; right: 210px;
+    background: #F7F5FF; z-index: 600; overflow: auto; display: none;
+  }
+  .diag-topbar {
+    position: sticky; top: 0; z-index: 20; background: #1a1a2e; color: #fff;
+    padding: 9px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .diag-topbar-title { font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .diag-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .diag-tab {
+    font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2); background: transparent; color: rgba(255,255,255,0.6);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .diag-tab.active { background: rgba(124,58,237,0.5); border-color: #7C3AED; color: #fff; }
+  .diag-tab:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
+  .diag-body { padding: 28px 36px 48px; }
+  .diag-section { display: none; }
+  .diag-section.active { display: block; }
+  .diag-section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+  .diag-section-sub { font-size: 12px; color: #888; margin-bottom: 20px; line-height: 1.6; }
+  .diag-render { background: #fff; border-radius: 8px; padding: 28px 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: auto; text-align: center; }
+  .diag-render svg { max-width: 100%; }
+  .diag-notes { margin-top: 16px; background: #FFF9E6; border: 1px solid #E6C000; border-radius: 6px; padding: 14px 18px; font-size: 12px; line-height: 1.7; color: #555; }
+  .diag-notes strong { color: #333; }
+  .diag-notes ul { margin: 6px 0 0 16px; }
+  .diag-notes li { margin-bottom: 3px; }
+</style>
 </head>
 <body>
 
@@ -517,6 +552,7 @@
 <div class="proto-nav">
   <span class="proto-nav-title">GB Checkout Flow (TO-BE)</span>
   <button class="proto-nav-btn" onclick="showScreen('flow')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">Flow</button>
+  <button class="proto-nav-btn" onclick="showScreen('diagram')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">Diagram</button>
   <span style="width:1px;height:16px;background:rgba(255,255,255,0.2);flex-shrink:0;"></span>
   <button class="proto-nav-btn active" onclick="showScreen('cart')">Cart</button>
   <button class="proto-nav-btn" onclick="showScreen('checkout')">Checkout</button>
@@ -531,7 +567,7 @@
   <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.8</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.9</button>
     <span>Updated 2026-04-27</span>
   </span>
 </div>
@@ -598,6 +634,20 @@
         <button class="sidebar-chip" id="sb-err-generic" onclick="setSidebarError('generic')">Temporary Error</button>
       </div>
     </div>
+  </div>
+
+  <!-- Diagram panel -->
+  <div id="sidebar-diagram" class="sidebar-panel">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">다이어그램 선택</div>
+      <div class="sidebar-chips" style="flex-direction:column;gap:6px;">
+        <button class="sidebar-chip" onclick="showDiag('payment',event)">💳 결제 시퀀스</button>
+        <button class="sidebar-chip" onclick="showDiag('confirmation',event)">✓ 구매확정</button>
+        <button class="sidebar-chip" onclick="showDiag('cancel',event)">✕ 주문취소</button>
+        <button class="sidebar-chip" onclick="showDiag('return',event)">↩ 반품 / 차지백</button>
+      </div>
+    </div>
+    <div class="sidebar-hint">탭을 클릭하거나 버튼을 눌러 다이어그램을 전환합니다.</div>
   </div>
 
   <!-- Flow panel -->
@@ -2671,6 +2721,265 @@
 </div><!-- /screen-flow -->
 
 
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- DIAGRAM PAGE                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-diagram">
+  <div class="diag-topbar">
+    <span class="diag-topbar-title">Sequence Diagrams</span>
+    <div class="diag-tabs">
+      <button class="diag-tab active" onclick="showDiag('payment',event)">💳 결제</button>
+      <button class="diag-tab" onclick="showDiag('confirmation',event)">✓ 구매확정</button>
+      <button class="diag-tab" onclick="showDiag('cancel',event)">✕ 주문취소</button>
+      <button class="diag-tab" onclick="showDiag('return',event)">↩ 반품 / 차지백</button>
+    </div>
+  </div>
+
+  <div class="diag-body">
+
+    <!-- ── 결제 ──────────────────────────────────────────── -->
+    <div id="diag-payment" class="diag-section active">
+      <div class="diag-section-title">결제 시퀀스</div>
+      <div class="diag-section-sub">PG 결제 완료 후 Shop &amp; Ship Partner에 주문 생성 요청 → N개 상품 전체 Core 번장 주문 완료 후 일괄 상태 업데이트</div>
+      <div class="diag-render">
+        <pre class="mermaid">
+sequenceDiagram
+    actor User as 글로벌번장 구매자
+    participant GB as 글로벌번장
+    participant PO as 포트원
+    participant DK as Shop & Ship Partner
+    participant Core as Core 번장
+
+    User->>GB: PDP / 장바구니 → 주문서 진입
+    opt 가격 변경 있음
+        GB-->>User: USD 가격 변동 안내
+    end
+    User->>GB: 결제 수단 선택 후 Checkout 클릭
+    GB->>PO: PortOne.requestPayment() SDK 호출
+    PO-->>User: 결제창 표시
+    User->>PO: 결제 정보 입력 & 인증
+
+    alt 결제 성공
+        PO-->>GB: 결제 성공 콜백 + 웹훅
+        GB->>PO: PG 캡처 요청
+        PO-->>GB: 캡처 완료
+        GB-->>User: 결제완료 페이지 (전체 상품 주문중 상태)
+
+        Note over GB,Core: 이 아래부터 비동기 처리
+
+        GB->>DK: 글로벌번장 주문 생성 요청 (상품 N개)
+        DK->>DK: Shop & Ship Partner 주문 생성
+
+        loop 상품 수(N)만큼 반복
+            Note over DK,Core: Shop & Ship Partner 내부 정책에 따라 처리 (재시도 등)
+            DK->>Core: Core 번장 주문 요청 (상품 1건)
+            Core-->>DK: 주문 결과 응답
+        end
+
+        DK-->>GB: 전체 상품 주문 결과 일괄 업데이트 (성공 → 결제완료 / 실패 → 주문취소)
+
+        opt 실패 상품 있음
+            GB->>PO: 실패 상품 금액만큼 부분 취소 요청
+            PO-->>GB: 부분 취소 완료
+        end
+
+        GB-->>User: 결제완료 페이지 갱신 (상품별 상태 반영)
+
+    else 결제 실패
+        PO-->>GB: 결제 실패 콜백
+        GB-->>User: 결제 실패 안내
+    end
+        </pre>
+      </div>
+      <div class="diag-notes">
+        <strong>주요 설계 결정사항</strong>
+        <ul>
+          <li>결제 수단은 체크아웃 페이지에서 먼저 선택 → <code>requestPayment()</code> 호출 시 <code>payMethod</code> + <code>channelKey</code> 함께 전달</li>
+          <li>결제창 호출은 프론트엔드 SDK, 결제 검증/취소는 서버 REST API</li>
+          <li>글로벌 주문 1 : Core 번장 주문 N (1:N). 글로벌번장은 상품별로 주문 상태를 독립적으로 관리</li>
+          <li>Shop &amp; Ship Partner는 N개 상품 전체 Core 처리 완료 후 결과를 일괄 업데이트 (성공 → 결제완료 / 실패 → 주문취소)</li>
+          <li>부분 취소 금액 기준: 쿠폰 적용 후 실결제 금액. 여러 실패 상품은 합산하여 1회 요청</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── 구매확정 ───────────────────────────────────────── -->
+    <div id="diag-confirmation" class="diag-section">
+      <div class="diag-section-title">구매확정 시퀀스</div>
+      <div class="diag-section-sub">Shop &amp; Ship Partner 창고 입고·검수 후 수동 확정, 또는 배송완료 5일 후 자동 확정. 구매확정 + 6영업일 후 정산 배치 트리거.</div>
+      <div class="diag-render">
+        <pre class="mermaid">
+sequenceDiagram
+    actor DKOps as Shop & Ship Partner 운영팀
+    participant GB as 글로벌번장
+    participant DK as Shop & Ship Partner
+    participant Core as Core 번장
+
+    Note over GB,Core: 결제 완료 (상품별 주문중/결제완료 상태)
+
+    alt 수동 구매확정
+        Note over DKOps: 창고 입고 & 검수 → 정상
+        DKOps->>Core: 구매확정 처리 (상품 단위)
+        Core-->>DK: 구매확정 완료 웹훅
+        DK-->>GB: 상품별 주문 상태 업데이트 (구매확정)
+        GB->>GB: 해당 상품 상태 → 구매확정
+        Note over GB: 구매확정 + 6영업일 후 Shop & Ship Partner 정산 배치 트리거
+
+    else 자동 구매확정
+        Core-->>DK: 배송완료 웹훅
+        Note over Core: 배송완료 후 5일 경과 → 시스템 자동 구매확정
+        Core-->>DK: 구매확정 완료 웹훅
+        DK-->>GB: 상품별 주문 상태 업데이트 (구매확정)
+        GB->>GB: 해당 상품 상태 → 구매확정
+        Note over GB: 구매확정 + 6영업일 후 Shop & Ship Partner 정산 배치 트리거
+    end
+        </pre>
+      </div>
+      <div class="diag-notes">
+        <strong>주요 설계 결정사항</strong>
+        <ul>
+          <li>구매확정은 상품 단위로 처리 (국내번장 시스템 규칙 준수)</li>
+          <li>수동: Shop &amp; Ship Partner 운영팀이 창고 입고 &amp; 검수 후 직접 처리</li>
+          <li>자동: Core 번장 배송완료 후 5일 경과 시 시스템 자동 처리</li>
+          <li>구매확정 완료 후 유저 이메일 발송 없음. 구매확정 + 6영업일 후 정산 배치 트리거</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── 주문취소 ───────────────────────────────────────── -->
+    <div id="diag-cancel" class="diag-section">
+      <div class="diag-section-title">주문취소 시퀀스</div>
+      <div class="diag-section-sub">취소는 상품 단위만 가능. 구매자는 글로벌번장에서 직접 취소 불가 — Shop &amp; Ship Partner에 문의 후 운영팀이 Core 번장 앱으로 직접 처리.</div>
+      <div class="diag-render">
+        <pre class="mermaid">
+sequenceDiagram
+    actor User as 글로벌번장 구매자
+    actor Seller as Core 번장 판매자
+    participant GB as 글로벌번장
+    participant PO as 포트원
+    participant DK as Shop & Ship Partner
+    participant Core as Core 번장
+
+    Note over User,Core: 결제 완료 (상품별 주문중/결제완료 상태)
+
+    alt 취소 — 구매자 요청
+        Note over User,DK: 구매자 → Shop & Ship Partner에 직접 문의 (글로벌번장 외부)
+        DK->>Core: 운영팀이 Core 번장 앱으로 주문 직접 취소 (상품 단위)
+        Core-->>DK: 취소 완료 웹훅
+        DK-->>GB: 상품별 취소 상태 업데이트
+        GB->>PO: 부분 취소 요청 (취소 상품 실결제 금액)
+        PO-->>GB: 환불 완료
+        GB->>GB: 해당 상품 상태 → 취소
+        GB-->>User: 취소 및 환불 완료 안내 (이메일)
+
+    else 취소 — 판매자 취소
+        Seller->>Core: Core 번장 앱에서 주문 직접 취소
+        Core-->>DK: 취소 상태 웹훅
+        DK-->>GB: 상품별 취소 상태 업데이트
+        GB->>PO: 부분 취소 요청 (취소 상품 실결제 금액)
+        PO-->>GB: 환불 완료
+        GB->>GB: 해당 상품 상태 → 취소
+        GB-->>User: 취소 및 환불 완료 안내 (이메일)
+
+    else 취소 — 시스템 자동 취소 (결제 후 7일 판매자 미승인)
+        Note over Core: 결제 후 7일 경과 & 판매자 미승인
+        Core-->>DK: 자동 취소 상태 웹훅
+        DK-->>GB: 상품별 취소 상태 업데이트
+        GB->>PO: 부분 취소 요청 (취소 상품 실결제 금액)
+        PO-->>GB: 환불 완료
+        GB->>GB: 해당 상품 상태 → 취소
+        GB-->>User: 취소 및 환불 완료 안내 (이메일)
+    end
+        </pre>
+      </div>
+      <div class="diag-notes">
+        <strong>주요 설계 결정사항</strong>
+        <ul>
+          <li>취소는 상품 단위로만 가능</li>
+          <li>구매자는 글로벌번장에서 직접 취소 불가 — Shop &amp; Ship Partner에 문의 → 운영팀이 Core 번장 앱으로 직접 취소</li>
+          <li>취소 가능 조건: 판매자 승인(구매확정) 이전까지</li>
+          <li>포트원 환불 트리거: Core 번장 취소 완료 웹훅 → DK가 글로벌번장에 상태 업데이트 → 글로벌번장이 포트원 환불 요청</li>
+          <li>유저 알림 채널: 이메일</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── 반품/차지백 ─────────────────────────────────────── -->
+    <div id="diag-return" class="diag-section">
+      <div class="diag-section-title">반품 / 차지백 시퀀스</div>
+      <div class="diag-section-sub">구매확정 이전 반품은 Core 번장 처리 후 글로벌번장이 환불. 구매확정 이후는 원칙상 불가하며 예외만 수동 처리.</div>
+      <div class="diag-render">
+        <pre class="mermaid">
+sequenceDiagram
+    actor User as 글로벌번장 구매자
+    actor Ops as 글로벌번장 TnS
+    actor DKOps as Shop & Ship Partner 운영팀
+    participant GB as 글로벌번장
+    participant PO as 포트원
+    participant DK as Shop & Ship Partner
+    participant Core as Core 번장
+
+    Note over User,Core: 결제 완료 (상품별 주문중/결제완료 상태)
+
+    alt 반품 (창고 검수 후 비정상 — 구매확정 이전)
+        Note over DK: 창고 입고 & 검수 → 비정상
+        DK->>Core: Core 번장 앱으로 반품 처리
+        Core-->>DK: 반품 진행 상태 웹훅
+        DK-->>GB: 상품별 반품 상태 업데이트
+        GB->>GB: 해당 상품 상태 → 반품중
+        Core-->>DK: 반품 완료 웹훅
+        DK-->>GB: 반품 완료 상태 업데이트
+        GB->>PO: 환불 요청 (반품 상품 실결제 금액)
+        PO-->>GB: 환불 완료
+        GB->>GB: 해당 상품 상태 → 반품완료
+        Note over GB: Core 번장이 DK 포인트 자동 환원 — 정산금 차감 없음
+        GB-->>User: 반품 및 환불 완료 안내 (이메일)
+
+    else 반품 (구매확정 이후 — 정책상 불가, 예외만 수동)
+        Note over DKOps: 구매확정 이후 반품 사유 발생
+        DKOps->>Ops: 글로벌번장 운영팀에 예외 처리 요청 (Slack)
+        Note over Ops: 글로벌번장 운영팀 재량 판단
+        alt 승인 시
+            Ops->>PO: 환불 요청 (수동)
+            PO-->>Ops: 환불 완료
+            Ops->>GB: 해당 상품 상태 → 반품완료 (수동)
+            Note over Ops,DKOps: 반품 완료 다음 영업일 정산 배치에서 해당 금액 상계
+            Ops-->>User: 반품 및 환불 완료 안내 (이메일, 수동)
+        else 거절 시
+            Ops-->>DKOps: 거절 사유 회신
+        end
+
+    else 차지백
+        Note over User,PO: 구매자가 PG에 직접 차지백 신청
+        PO-->>Ops: 차지백 이슈 수신
+        Ops->>PO: 소명 자료 제출 (수동)
+        alt 차지백 기각
+            PO-->>Ops: 기각 통보
+        else 차지백 확정 — 글로벌번장 귀책
+            PO-->>Ops: 확정 통보
+            Ops->>GB: 주문 상태 → 차지백 취소 (수동)
+        else 차지백 확정 — Shop & Ship Partner 귀책
+            PO-->>Ops: 확정 통보
+            Ops->>GB: 주문 상태 → 차지백 취소 (수동)
+            Note over Ops: 운영팀이 Shop & Ship Partner에 별도 청구
+        end
+    end
+        </pre>
+      </div>
+      <div class="diag-notes">
+        <strong>주요 설계 결정사항</strong>
+        <ul>
+          <li>구매확정 이전 반품: Core 번장이 DK 포인트 자동 환원 → 정산금 차감 없음. 글로벌번장이 포트원에 환불 요청 (매입 완료 이후이므로 환불 처리)</li>
+          <li>구매확정 이후 반품: 원칙적으로 불가. Shop &amp; Ship Partner 운영팀이 Slack으로 글로벌번장 운영팀에 예외 요청 시 재량 판단</li>
+          <li>차지백: 글로벌번장 TnS 수동 처리. 시스템에 의한 Shop &amp; Ship Partner 정산금 자동 차감 없음</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /screen-diagram -->
+
+
 <script>
 // ─── Coupon ──────────────────────────────────────
 const couponData = {
@@ -3663,6 +3972,15 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.9',
+    date: '2026-04-27',
+    changes: [
+      'Diagram 페이지 신규 추가 — 결제 / 구매확정 / 주문취소 / 반품·차지백 시퀀스 다이어그램 4개 탭',
+      '네비게이션에 Diagram 버튼 추가',
+      'Mermaid.js CDN 연동으로 다이어그램 렌더링',
+    ]
+  },
+  {
     version: 'v1.8',
     date: '2026-04-27',
     changes: [
@@ -3759,20 +4077,32 @@ function closeChangelog() {
   document.getElementById('changelog-overlay').classList.remove('show');
 }
 
+let _diagRendered = false;
+
 function showScreen(id, updateNav = true) {
   const phoneFrame = document.querySelector('.phone-frame');
   const flowPage = document.getElementById('screen-flow');
+  const diagPage = document.getElementById('screen-diagram');
+  const nav = document.querySelector('.proto-nav');
+  const navH = nav ? nav.offsetHeight : 40;
 
   if (id === 'flow') {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     phoneFrame.style.display = 'none';
     flowPage.style.display = 'block';
-    // position the flow page below the nav bar
-    const nav = document.querySelector('.proto-nav');
-    flowPage.style.top = (nav ? nav.offsetHeight : 40) + 'px';
+    diagPage.style.display = 'none';
+    flowPage.style.top = navH + 'px';
+  } else if (id === 'diagram') {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    phoneFrame.style.display = 'none';
+    flowPage.style.display = 'none';
+    diagPage.style.display = 'block';
+    diagPage.style.top = navH + 'px';
+    if (!_diagRendered) { mermaid.run(); _diagRendered = true; }
   } else {
     phoneFrame.style.display = '';
     flowPage.style.display = 'none';
+    diagPage.style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + id).classList.add('active');
   }
@@ -3782,11 +4112,19 @@ function showScreen(id, updateNav = true) {
     if (event && event.target && event.target.classList.contains('proto-nav-btn')) event.target.classList.add('active');
   }
   // Update sidebar panel
-  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow' };
+  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram' };
   const panelId = sidebarMap[id] || 'default';
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('sidebar-' + panelId).classList.add('active');
   window.scrollTo(0, 0);
+}
+
+function showDiag(id, e) {
+  document.querySelectorAll('.diag-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('diag-' + id).classList.add('active');
+  document.querySelectorAll('.diag-tab').forEach(t => t.classList.remove('active'));
+  const src = e && e.target ? e.target : null;
+  if (src && src.classList.contains('diag-tab')) src.classList.add('active');
 }
 
 // ─── Sidebar Controls ─────────────────────────────
