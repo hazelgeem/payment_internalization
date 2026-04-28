@@ -510,8 +510,6 @@
   .uf-branch-note { font-size: 10px; color: #C4B5FD; padding-top: 116px; padding-right: 4px; white-space: nowrap; }
   .uf-legend { padding: 10px 36px; background: #fff; border-top: 1px solid #EDE9FE; display: flex; gap: 20px; align-items: center; font-size: 11px; color: #888; flex-wrap: wrap; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' });</script>
 <style>
 
   /* ═══════════ DIAGRAM PAGE ══════════════════════════════════════════ */
@@ -538,8 +536,38 @@
   .diag-section.active { display: block; }
   .diag-section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
   .diag-section-sub { font-size: 12px; color: #888; margin-bottom: 20px; line-height: 1.6; }
-  .diag-render { background: #fff; border-radius: 8px; padding: 28px 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: auto; text-align: center; }
-  .diag-render svg { max-width: 100%; }
+  .diag-render { background: #fff; border-radius: 8px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: auto; }
+
+  /* ── Sequence Renderer ─────────────────────────────── */
+  .sq { font-size: 12.5px; line-height: 1.55; }
+  .sq-legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; padding: 8px 12px; background: #F5F3FF; border-radius: 6px; border: 1px solid #E5DEFF; align-items: center; }
+  .sq-legend-label { font-size: 10px; font-weight: 700; color: #9CA3AF; margin-right: 4px; white-space: nowrap; }
+  .sq-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; padding: 5px 2px; border-bottom: 1px solid #F5F3FF; min-height: 32px; }
+  .sq-row:last-child { border-bottom: none; }
+  .sq-arr { font-size: 15px; color: #374151; flex-shrink: 0; }
+  .sq-lbl { color: #111827; }
+  .sq-lbl.ret { color: #6B7280; font-style: italic; }
+  .sq-note { background: #FEFCE8; border-left: 3px solid #D97706; border-radius: 3px; padding: 4px 10px; margin: 5px 0; font-size: 12px; color: #78350F; font-style: italic; }
+  .sq-block { border-radius: 6px; overflow: hidden; margin: 8px 0; border: 1px solid; }
+  .sq-alt  { border-color: #9CA3AF; }
+  .sq-opt  { border-color: #D1D5DB; }
+  .sq-loop { border-color: #3B82F6; }
+  .sq-bh { padding: 5px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
+  .sq-alt  > .sq-bh { background: #4B5563; color: #fff; }
+  .sq-opt  > .sq-bh { background: #6B7280; color: #fff; }
+  .sq-loop > .sq-bh { background: #2563EB; color: #fff; }
+  .sq-bb { padding: 8px 14px; background: #FDFCFF; }
+  .sq-bb .sq-block { margin: 6px 0; }
+  .sq-else { background: #F3F4F6; border-top: 1px solid #D1D5DB; padding: 4px 12px; font-size: 11px; font-weight: 700; color: #6B7280; letter-spacing: 0.3px; }
+  .sq-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  .sq-tag.user   { background: #DBEAFE; color: #1E3A8A; }
+  .sq-tag.gb     { background: #EDE9FE; color: #4C1D95; }
+  .sq-tag.po     { background: #E0F2FE; color: #0C4A6E; }
+  .sq-tag.dk     { background: #FEF3C7; color: #78350F; }
+  .sq-tag.core   { background: #D1FAE5; color: #064E3B; }
+  .sq-tag.ops    { background: #FEE2E2; color: #7F1D1D; }
+  .sq-tag.dkops  { background: #FDE68A; color: #78350F; }
+  .sq-tag.seller { background: #E0E7FF; color: #1E1B4B; }
   .diag-notes { margin-top: 16px; background: #FFF9E6; border: 1px solid #E6C000; border-radius: 6px; padding: 14px 18px; font-size: 12px; line-height: 1.7; color: #555; }
   .diag-notes strong { color: #333; }
   .diag-notes ul { margin: 6px 0 0 16px; }
@@ -567,8 +595,8 @@
   <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.9</button>
-    <span>Updated 2026-04-27</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.10</button>
+    <span>Updated 2026-04-28</span>
   </span>
 </div>
 
@@ -1318,7 +1346,7 @@
       <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;border-top:1px solid #eee;">
         <input type="checkbox" style="margin-top:3px;flex-shrink:0;">
         <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
-          <span style="color:#999;font-size:10px;font-weight:700;">[Optional]</span>
+          <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
           If the seller requests an additional charge, I agree to make a re-payment. I will be notified via email, and can complete the re-payment from My Page &gt; Orders.
         </span>
       </label>
@@ -2742,54 +2770,61 @@
       <div class="diag-section-title">결제 시퀀스</div>
       <div class="diag-section-sub">PG 결제 완료 후 Shop &amp; Ship Partner에 주문 생성 요청 → N개 상품 전체 Core 번장 주문 완료 후 일괄 상태 업데이트</div>
       <div class="diag-render">
-        <pre class="mermaid">
-sequenceDiagram
-    actor User as 글로벌번장 구매자
-    participant GB as 글로벌번장
-    participant PO as 포트원
-    participant DK as Shop & Ship Partner
-    participant Core as Core 번장
-
-    User->>GB: PDP / 장바구니 → 주문서 진입
-    opt 가격 변경 있음
-        GB-->>User: USD 가격 변동 안내
-    end
-    User->>GB: 결제 수단 선택 후 Checkout 클릭
-    GB->>PO: PortOne.requestPayment() SDK 호출
-    PO-->>User: 결제창 표시
-    User->>PO: 결제 정보 입력 & 인증
-
-    alt 결제 성공
-        PO-->>GB: 결제 성공 콜백 + 웹훅
-        GB->>PO: PG 캡처 요청
-        PO-->>GB: 캡처 완료
-        GB-->>User: 결제완료 페이지 (전체 상품 주문중 상태)
-
-        Note over GB,Core: 이 아래부터 비동기 처리
-
-        GB->>DK: 글로벌번장 주문 생성 요청 (상품 N개)
-        DK->>DK: Shop & Ship Partner 주문 생성
-
-        loop 상품 수(N)만큼 반복
-            Note over DK,Core: Shop & Ship Partner 내부 정책에 따라 처리 (재시도 등)
-            DK->>Core: Core 번장 주문 요청 (상품 1건)
-            Core-->>DK: 주문 결과 응답
-        end
-
-        DK-->>GB: 전체 상품 주문 결과 일괄 업데이트 (성공 → 결제완료 / 실패 → 주문취소)
-
-        opt 실패 상품 있음
-            GB->>PO: 실패 상품 금액만큼 부분 취소 요청
-            PO-->>GB: 부분 취소 완료
-        end
-
-        GB-->>User: 결제완료 페이지 갱신 (상품별 상태 반영)
-
-    else 결제 실패
-        PO-->>GB: 결제 실패 콜백
-        GB-->>User: 결제 실패 안내
-    end
-        </pre>
+        <div class="sq">
+          <div class="sq-legend">
+            <span class="sq-legend-label">참여자</span>
+            <span class="sq-tag user">구매자</span>
+            <span class="sq-tag gb">글로벌번장</span>
+            <span class="sq-tag po">포트원</span>
+            <span class="sq-tag dk">S&amp;SP</span>
+            <span class="sq-tag core">Core 번장</span>
+          </div>
+          <div class="sq-row"><span class="sq-tag user">구매자</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">PDP / 장바구니 → 주문서 진입</span></div>
+          <div class="sq-block sq-opt">
+            <div class="sq-bh">opt — 가격 변경 있음</div>
+            <div class="sq-bb">
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">USD 가격 변동 안내</span></div>
+            </div>
+          </div>
+          <div class="sq-row"><span class="sq-tag user">구매자</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">결제 수단 선택 후 Checkout 클릭</span></div>
+          <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">PortOne.requestPayment() SDK 호출</span></div>
+          <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">결제창 표시</span></div>
+          <div class="sq-row"><span class="sq-tag user">구매자</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">결제 정보 입력 &amp; 인증</span></div>
+          <div class="sq-block sq-alt">
+            <div class="sq-bh">alt — 결제 성공</div>
+            <div class="sq-bb">
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">결제 성공 콜백 + 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">PG 캡처 요청</span></div>
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">캡처 완료</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">결제완료 페이지 (전체 상품 주문중 상태)</span></div>
+              <div class="sq-note">↓ 이 아래부터 비동기 처리</div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl">글로벌번장 주문 생성 요청 (상품 N개)</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl">Shop &amp; Ship Partner 주문 생성</span></div>
+              <div class="sq-block sq-loop">
+                <div class="sq-bh">loop — 상품 수(N)만큼 반복</div>
+                <div class="sq-bb">
+                  <div class="sq-note">S&amp;SP 내부 정책에 따라 처리 (재시도 등)</div>
+                  <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">Core 번장 주문 요청 (상품 1건)</span></div>
+                  <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">주문 결과 응답</span></div>
+                </div>
+              </div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">전체 상품 주문 결과 일괄 업데이트 (성공 → 결제완료 / 실패 → 주문취소)</span></div>
+              <div class="sq-block sq-opt">
+                <div class="sq-bh">opt — 실패 상품 있음</div>
+                <div class="sq-bb">
+                  <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">실패 상품 금액만큼 부분 취소 요청</span></div>
+                  <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">부분 취소 완료</span></div>
+                </div>
+              </div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">결제완료 페이지 갱신 (상품별 상태 반영)</span></div>
+            </div>
+            <div class="sq-else">else — 결제 실패</div>
+            <div class="sq-bb">
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">결제 실패 콜백</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">결제 실패 안내</span></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="diag-notes">
         <strong>주요 설계 결정사항</strong>
@@ -2808,32 +2843,36 @@ sequenceDiagram
       <div class="diag-section-title">구매확정 시퀀스</div>
       <div class="diag-section-sub">Shop &amp; Ship Partner 창고 입고·검수 후 수동 확정, 또는 배송완료 5일 후 자동 확정. 구매확정 + 6영업일 후 정산 배치 트리거.</div>
       <div class="diag-render">
-        <pre class="mermaid">
-sequenceDiagram
-    actor DKOps as Shop & Ship Partner 운영팀
-    participant GB as 글로벌번장
-    participant DK as Shop & Ship Partner
-    participant Core as Core 번장
-
-    Note over GB,Core: 결제 완료 (상품별 주문중/결제완료 상태)
-
-    alt 수동 구매확정
-        Note over DKOps: 창고 입고 & 검수 → 정상
-        DKOps->>Core: 구매확정 처리 (상품 단위)
-        Core-->>DK: 구매확정 완료 웹훅
-        DK-->>GB: 상품별 주문 상태 업데이트 (구매확정)
-        GB->>GB: 해당 상품 상태 → 구매확정
-        Note over GB: 구매확정 + 6영업일 후 Shop & Ship Partner 정산 배치 트리거
-
-    else 자동 구매확정
-        Core-->>DK: 배송완료 웹훅
-        Note over Core: 배송완료 후 5일 경과 → 시스템 자동 구매확정
-        Core-->>DK: 구매확정 완료 웹훅
-        DK-->>GB: 상품별 주문 상태 업데이트 (구매확정)
-        GB->>GB: 해당 상품 상태 → 구매확정
-        Note over GB: 구매확정 + 6영업일 후 Shop & Ship Partner 정산 배치 트리거
-    end
-        </pre>
+        <div class="sq">
+          <div class="sq-legend">
+            <span class="sq-legend-label">참여자</span>
+            <span class="sq-tag dkops">S&amp;SP 운영팀</span>
+            <span class="sq-tag gb">글로벌번장</span>
+            <span class="sq-tag dk">S&amp;SP</span>
+            <span class="sq-tag core">Core 번장</span>
+          </div>
+          <div class="sq-note">결제 완료 상태</div>
+          <div class="sq-block sq-alt">
+            <div class="sq-bh">alt — 수동 구매확정</div>
+            <div class="sq-bb">
+              <div class="sq-note">창고 입고 &amp; 검수 → 정상</div>
+              <div class="sq-row"><span class="sq-tag dkops">S&amp;SP 운영팀</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">구매확정 처리 (상품 단위)</span></div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">구매확정 완료 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 주문 상태 업데이트 (구매확정)</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 구매확정</span></div>
+              <div class="sq-note">구매확정 +6영업일 → 정산 트리거</div>
+            </div>
+            <div class="sq-else">else — 자동 구매확정</div>
+            <div class="sq-bb">
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">배송완료 웹훅</span></div>
+              <div class="sq-note">배송완료 +5일 → 자동 구매확정</div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">구매확정 완료 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 주문 상태 업데이트 (구매확정)</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 구매확정</span></div>
+              <div class="sq-note">구매확정 +6영업일 → 정산 트리거</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="diag-notes">
         <strong>주요 설계 결정사항</strong>
@@ -2851,46 +2890,51 @@ sequenceDiagram
       <div class="diag-section-title">주문취소 시퀀스</div>
       <div class="diag-section-sub">취소는 상품 단위만 가능. 구매자는 글로벌번장에서 직접 취소 불가 — Shop &amp; Ship Partner에 문의 후 운영팀이 Core 번장 앱으로 직접 처리.</div>
       <div class="diag-render">
-        <pre class="mermaid">
-sequenceDiagram
-    actor User as 글로벌번장 구매자
-    actor Seller as Core 번장 판매자
-    participant GB as 글로벌번장
-    participant PO as 포트원
-    participant DK as Shop & Ship Partner
-    participant Core as Core 번장
-
-    Note over User,Core: 결제 완료 (상품별 주문중/결제완료 상태)
-
-    alt 취소 — 구매자 요청
-        Note over User,DK: 구매자 → Shop & Ship Partner에 직접 문의 (글로벌번장 외부)
-        DK->>Core: 운영팀이 Core 번장 앱으로 주문 직접 취소 (상품 단위)
-        Core-->>DK: 취소 완료 웹훅
-        DK-->>GB: 상품별 취소 상태 업데이트
-        GB->>PO: 부분 취소 요청 (취소 상품 실결제 금액)
-        PO-->>GB: 환불 완료
-        GB->>GB: 해당 상품 상태 → 취소
-        GB-->>User: 취소 및 환불 완료 안내 (이메일)
-
-    else 취소 — 판매자 취소
-        Seller->>Core: Core 번장 앱에서 주문 직접 취소
-        Core-->>DK: 취소 상태 웹훅
-        DK-->>GB: 상품별 취소 상태 업데이트
-        GB->>PO: 부분 취소 요청 (취소 상품 실결제 금액)
-        PO-->>GB: 환불 완료
-        GB->>GB: 해당 상품 상태 → 취소
-        GB-->>User: 취소 및 환불 완료 안내 (이메일)
-
-    else 취소 — 시스템 자동 취소 (결제 후 7일 판매자 미승인)
-        Note over Core: 결제 후 7일 경과 & 판매자 미승인
-        Core-->>DK: 자동 취소 상태 웹훅
-        DK-->>GB: 상품별 취소 상태 업데이트
-        GB->>PO: 부분 취소 요청 (취소 상품 실결제 금액)
-        PO-->>GB: 환불 완료
-        GB->>GB: 해당 상품 상태 → 취소
-        GB-->>User: 취소 및 환불 완료 안내 (이메일)
-    end
-        </pre>
+        <div class="sq">
+          <div class="sq-legend">
+            <span class="sq-legend-label">참여자</span>
+            <span class="sq-tag user">구매자</span>
+            <span class="sq-tag seller">판매자</span>
+            <span class="sq-tag gb">글로벌번장</span>
+            <span class="sq-tag po">포트원</span>
+            <span class="sq-tag dk">S&amp;SP</span>
+            <span class="sq-tag core">Core 번장</span>
+          </div>
+          <div class="sq-note">결제 완료 상태</div>
+          <div class="sq-block sq-alt">
+            <div class="sq-bh">alt — 취소: 구매자 요청</div>
+            <div class="sq-bb">
+              <div class="sq-note">구매자 → S&amp;SP에 직접 문의</div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">운영팀이 Core 번장 앱으로 주문 직접 취소 (상품 단위)</span></div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">취소 완료 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">부분 취소 요청 (취소 상품 실결제 금액)</span></div>
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 취소</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 (이메일)</span></div>
+            </div>
+            <div class="sq-else">else — 취소: 판매자 취소</div>
+            <div class="sq-bb">
+              <div class="sq-row"><span class="sq-tag seller">판매자</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">Core 번장 앱에서 주문 직접 취소</span></div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">취소 상태 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">부분 취소 요청 (취소 상품 실결제 금액)</span></div>
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 취소</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 (이메일)</span></div>
+            </div>
+            <div class="sq-else">else — 취소: 시스템 자동 취소 (결제 후 7일 판매자 미승인)</div>
+            <div class="sq-bb">
+              <div class="sq-note">결제 +7일, 판매자 미승인</div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">자동 취소 상태 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">부분 취소 요청 (취소 상품 실결제 금액)</span></div>
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 취소</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 (이메일)</span></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="diag-notes">
         <strong>주요 설계 결정사항</strong>
@@ -2909,62 +2953,79 @@ sequenceDiagram
       <div class="diag-section-title">반품 / 차지백 시퀀스</div>
       <div class="diag-section-sub">구매확정 이전 반품은 Core 번장 처리 후 글로벌번장이 환불. 구매확정 이후는 원칙상 불가하며 예외만 수동 처리.</div>
       <div class="diag-render">
-        <pre class="mermaid">
-sequenceDiagram
-    actor User as 글로벌번장 구매자
-    actor Ops as 글로벌번장 TnS
-    actor DKOps as Shop & Ship Partner 운영팀
-    participant GB as 글로벌번장
-    participant PO as 포트원
-    participant DK as Shop & Ship Partner
-    participant Core as Core 번장
-
-    Note over User,Core: 결제 완료 (상품별 주문중/결제완료 상태)
-
-    alt 반품 (창고 검수 후 비정상 — 구매확정 이전)
-        Note over DK: 창고 입고 & 검수 → 비정상
-        DK->>Core: Core 번장 앱으로 반품 처리
-        Core-->>DK: 반품 진행 상태 웹훅
-        DK-->>GB: 상품별 반품 상태 업데이트
-        GB->>GB: 해당 상품 상태 → 반품중
-        Core-->>DK: 반품 완료 웹훅
-        DK-->>GB: 반품 완료 상태 업데이트
-        GB->>PO: 환불 요청 (반품 상품 실결제 금액)
-        PO-->>GB: 환불 완료
-        GB->>GB: 해당 상품 상태 → 반품완료
-        Note over GB: Core 번장이 DK 포인트 자동 환원 — 정산금 차감 없음
-        GB-->>User: 반품 및 환불 완료 안내 (이메일)
-
-    else 반품 (구매확정 이후 — 정책상 불가, 예외만 수동)
-        Note over DKOps: 구매확정 이후 반품 사유 발생
-        DKOps->>Ops: 글로벌번장 운영팀에 예외 처리 요청 (Slack)
-        Note over Ops: 글로벌번장 운영팀 재량 판단
-        alt 승인 시
-            Ops->>PO: 환불 요청 (수동)
-            PO-->>Ops: 환불 완료
-            Ops->>GB: 해당 상품 상태 → 반품완료 (수동)
-            Note over Ops,DKOps: 반품 완료 다음 영업일 정산 배치에서 해당 금액 상계
-            Ops-->>User: 반품 및 환불 완료 안내 (이메일, 수동)
-        else 거절 시
-            Ops-->>DKOps: 거절 사유 회신
-        end
-
-    else 차지백
-        Note over User,PO: 구매자가 PG에 직접 차지백 신청
-        PO-->>Ops: 차지백 이슈 수신
-        Ops->>PO: 소명 자료 제출 (수동)
-        alt 차지백 기각
-            PO-->>Ops: 기각 통보
-        else 차지백 확정 — 글로벌번장 귀책
-            PO-->>Ops: 확정 통보
-            Ops->>GB: 주문 상태 → 차지백 취소 (수동)
-        else 차지백 확정 — Shop & Ship Partner 귀책
-            PO-->>Ops: 확정 통보
-            Ops->>GB: 주문 상태 → 차지백 취소 (수동)
-            Note over Ops: 운영팀이 Shop & Ship Partner에 별도 청구
-        end
-    end
-        </pre>
+        <div class="sq">
+          <div class="sq-legend">
+            <span class="sq-legend-label">참여자</span>
+            <span class="sq-tag user">구매자</span>
+            <span class="sq-tag ops">글로벌번장 TnS</span>
+            <span class="sq-tag dkops">S&amp;SP 운영팀</span>
+            <span class="sq-tag gb">글로벌번장</span>
+            <span class="sq-tag po">포트원</span>
+            <span class="sq-tag dk">S&amp;SP</span>
+            <span class="sq-tag core">Core 번장</span>
+          </div>
+          <div class="sq-note">결제 완료 상태</div>
+          <div class="sq-block sq-alt">
+            <div class="sq-bh">alt — 반품 (창고 검수 후 비정상 · 구매확정 이전)</div>
+            <div class="sq-bb">
+              <div class="sq-note">창고 입고 &amp; 검수 → 비정상</div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">Core 번장 앱으로 반품 처리</span></div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">반품 진행 상태 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 반품 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 반품중</span></div>
+              <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">반품 완료 웹훅</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">반품 완료 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">환불 요청 (반품 상품 실결제 금액)</span></div>
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 반품완료</span></div>
+              <div class="sq-note">S&amp;SP 포인트 자동 환원, 정산 차감 없음</div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">반품 및 환불 완료 안내 (이메일)</span></div>
+            </div>
+            <div class="sq-else">else — 반품 (구매확정 이후 · 예외만 수동)</div>
+            <div class="sq-bb">
+              <div class="sq-note">구매확정 이후 반품 사유 발생</div>
+              <div class="sq-row"><span class="sq-tag dkops">S&amp;SP 운영팀</span><span class="sq-arr">→</span><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-lbl">예외 처리 요청 (Slack)</span></div>
+              <div class="sq-note">글로벌번장 운영팀 재량 판단</div>
+              <div class="sq-block sq-alt">
+                <div class="sq-bh">alt — 승인 시</div>
+                <div class="sq-bb">
+                  <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">환불 요청 (수동)</span></div>
+                  <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-lbl ret">환불 완료</span></div>
+                  <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 반품완료 (수동)</span></div>
+                  <div class="sq-note">다음 영업일 정산 배치에서 상계</div>
+                  <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">반품 및 환불 완료 안내 (이메일, 수동)</span></div>
+                </div>
+                <div class="sq-else">else — 거절 시</div>
+                <div class="sq-bb">
+                  <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">⤳</span><span class="sq-tag dkops">S&amp;SP 운영팀</span><span class="sq-lbl ret">거절 사유 회신</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="sq-else">else — 차지백</div>
+            <div class="sq-bb">
+              <div class="sq-note">구매자가 PG에 직접 차지백 신청</div>
+              <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-lbl ret">차지백 이슈 수신</span></div>
+              <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">소명 자료 제출 (수동)</span></div>
+              <div class="sq-block sq-alt">
+                <div class="sq-bh">alt — 차지백 기각</div>
+                <div class="sq-bb">
+                  <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-lbl ret">기각 통보</span></div>
+                </div>
+                <div class="sq-else">else — 차지백 확정: 글로벌번장 귀책</div>
+                <div class="sq-bb">
+                  <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-lbl ret">확정 통보</span></div>
+                  <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">주문 상태 → 차지백 취소 (수동)</span></div>
+                </div>
+                <div class="sq-else">else — 차지백 확정: S&amp;SP 귀책</div>
+                <div class="sq-bb">
+                  <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-lbl ret">확정 통보</span></div>
+                  <div class="sq-row"><span class="sq-tag ops">글로벌번장 TnS</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">주문 상태 → 차지백 취소 (수동)</span></div>
+                  <div class="sq-note">S&amp;SP에 별도 청구</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="diag-notes">
         <strong>주요 설계 결정사항</strong>
@@ -3972,6 +4033,14 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.10',
+    date: '2026-04-28',
+    changes: [
+      'Diagram 탭: Mermaid 렌더러를 커스텀 HTML 방식으로 전면 교체 — 한글 텍스트 깨짐 이슈 해결',
+      '주문서 동의 항목: 추가 결제 동의 체크박스를 [Optional] → [Required]로 변경',
+    ]
+  },
+  {
     version: 'v1.9',
     date: '2026-04-27',
     changes: [
@@ -4077,8 +4146,6 @@ function closeChangelog() {
   document.getElementById('changelog-overlay').classList.remove('show');
 }
 
-let _diagRendered = false;
-
 function showScreen(id, updateNav = true) {
   const phoneFrame = document.querySelector('.phone-frame');
   const flowPage = document.getElementById('screen-flow');
@@ -4098,7 +4165,6 @@ function showScreen(id, updateNav = true) {
     flowPage.style.display = 'none';
     diagPage.style.display = 'block';
     diagPage.style.top = navH + 'px';
-    if (!_diagRendered) { mermaid.run(); _diagRendered = true; }
   } else {
     phoneFrame.style.display = '';
     flowPage.style.display = 'none';
