@@ -595,8 +595,8 @@
   <button class="proto-nav-btn" onclick="selectQuickPay('apple')">Apple Pay</button>
   <button class="proto-nav-btn" onclick="selectQuickPay('google')">Google Pay</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.10</button>
-    <span>Updated 2026-04-28</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.11</button>
+    <span>Updated 2026-04-30</span>
   </span>
 </div>
 
@@ -1328,28 +1328,54 @@
 
     <!-- Terms & Consent -->
     <div class="terms-list" style="margin:16px;padding:14px 16px;border:1px solid #eee;border-radius:10px;background:#fafafa;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:700;color:#888;letter-spacing:0.05em;text-transform:uppercase;">Agreement</span>
+        <span style="font-size:10px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fde68a;padding:2px 8px;border-radius:99px;">⚠ 법무 검토 중</span>
+      </div>
       <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
         <input type="checkbox" checked style="margin-top:3px;flex-shrink:0;">
         <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
           <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
-          I agree to the Terms &amp; Conditions.
-          <a href="#" onclick="event.preventDefault();document.getElementById('terms-sheet').classList.remove('hidden');" style="color:#1565c0;margin-left:4px;">See all</a>
+          I confirm that I am 14 years of age or older.
         </span>
       </label>
       <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;border-top:1px solid #eee;">
         <input type="checkbox" checked style="margin-top:3px;flex-shrink:0;">
         <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
           <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
-          I understand and agree that my order may be canceled after payment if the seller is unable to fulfill it.
+          I agree to the Terms &amp; Conditions.
+          <a href="https://globalbunjang.com/terms/globalbunjang.html" target="_blank" style="color:#1565c0;margin-left:4px;">See all</a>
         </span>
       </label>
       <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;border-top:1px solid #eee;">
-        <input type="checkbox" style="margin-top:3px;flex-shrink:0;">
+        <input type="checkbox" checked style="margin-top:3px;flex-shrink:0;">
         <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
           <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
-          If the seller requests an additional charge, I agree to make a re-payment. I will be notified via email, and can complete the re-payment from My Page &gt; Orders.
+          I have reviewed the Privacy Policy and agree to the collection, use, sharing, and overseas transfer of my personal information.
         </span>
       </label>
+      <div style="border-top:1px solid #eee;">
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;">
+          <input type="checkbox" checked style="margin-top:3px;flex-shrink:0;">
+          <span style="font-size:12px;color:#555;line-height:1.6;flex:1;">
+            <span style="color:#e74c3c;font-size:10px;font-weight:700;">[Required]</span>
+            I understand that my order may be canceled after payment if the seller is unable to fulfill it, and that the seller may request an additional charge.
+          </span>
+        </label>
+        <div style="padding:0 0 10px 23px;">
+          <button onclick="toggleRepaymentDetails(this)" style="font-size:11px;color:#1565c0;background:none;border:none;padding:0;cursor:pointer;">Show details ▾</button>
+          <div id="repayment-details" style="display:none;margin-top:6px;padding:10px 12px;background:#f0f0f0;border-radius:8px;font-size:11px;color:#666;line-height:1.8;">
+            <ul style="margin:0;padding-left:14px;">
+              <li>If a re-payment is requested, I will be notified via email.</li>
+              <li>If payment is not completed promptly, the item may be sold to another buyer.</li>
+              <li>Re-payment must be completed within 30 days of the request.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:#999;line-height:1.6;">
+        Duties, taxes, and import fees may be charged separately by the carrier upon delivery. These charges are the buyer's responsibility.
+      </div>
     </div>
 
     <!-- Intermediary disclaimer -->
@@ -4033,6 +4059,17 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.11',
+    date: '2026-04-30',
+    changes: [
+      '주문서 동의항목 3개 → 4개로 개편: 만 14세 이상 확인, 개인정보 수집·이용·해외이전 동의 체크박스 신규 추가',
+      '취소 안내 + 재결제 동의를 단일 인지 항목으로 통합 (Optional 항목 삭제)',
+      '재결제 상세 내용 "Show details" 토글 추가 (3개 세부 안내 포함)',
+      'Terms & Conditions "See all" 링크를 실제 URL(globalbunjang.com)로 연결',
+      '동의 섹션 상단에 "⚠ 법무 검토 중" 배지 추가',
+    ]
+  },
+  {
     version: 'v1.10',
     date: '2026-04-28',
     changes: [
@@ -4235,6 +4272,16 @@ document.querySelectorAll('.proto-nav-btn').forEach(btn => {
     this.classList.add('active');
   });
 });
+function toggleRepaymentDetails(btn) {
+  var d = document.getElementById('repayment-details');
+  if (d.style.display === 'none') {
+    d.style.display = 'block';
+    btn.textContent = 'Hide details ▴';
+  } else {
+    d.style.display = 'none';
+    btn.textContent = 'Show details ▾';
+  }
+}
 </script>
 </body>
 </html>
