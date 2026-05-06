@@ -98,6 +98,12 @@
   .payment-option:last-child { border-bottom: none; }
   .payment-radio { accent-color: #222; }
   .payment-name { flex: 1; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .alipay-sub-list { display: none; flex-direction: column; gap: 2px; padding: 4px 0 12px 30px; border-bottom: 1px solid #f5f5f5; }
+  .alipay-sub-list.show { display: flex; }
+  .alipay-sub-list-label { font-size: 11px; color: #888; margin-bottom: 4px; letter-spacing: 0.02em; }
+  .alipay-sub-option { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer; font-size: 13px; color: #333; }
+  .alipay-sub-option input { accent-color: #222; }
+  .alipay-sub-option-region { color: #999; font-size: 11px; margin-left: 4px; }
   .payment-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #e8f5e9; color: #2e7d32; font-weight: 600; }
   .payment-icons { display: flex; gap: 4px; align-items: center; }
   .payment-icon { height: 20px; padding: 2px 6px; border: 1px solid #eee; border-radius: 4px; font-size: 10px; font-weight: 600; display: flex; align-items: center; background: #fafafa; }
@@ -398,7 +404,7 @@
   .sidebar-chip.active { background: #7c7cf7; color: #fff; }
   .sidebar-chip.warning { }
   .sidebar-chip.warning.active { background: #e65100; }
-  .sidebar-hint { font-size: 11px; color: #555; margin-top: 10px; line-height: 1.5; }
+  .sidebar-hint { font-size: 11px; color: #fff; margin-top: 10px; line-height: 1.5; }
   .sidebar-hint code { background: rgba(255,255,255,0.1); color: #c5c5ff; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; }
 
   /* Skeleton for images */
@@ -822,25 +828,25 @@
 <!-- Prototype Navigation -->
 <div class="proto-nav">
   <span class="proto-nav-title">거래구조전환</span>
-  <button class="proto-nav-btn" onclick="showScreen('flow')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">Flow</button>
-  <button class="proto-nav-btn" onclick="showScreen('diagram')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">Diagram</button>
+  <button class="proto-nav-btn" onclick="showScreen('flow')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">플로우</button>
+  <button class="proto-nav-btn" onclick="showScreen('diagram')" style="background:rgba(124,58,237,0.35);border:1px solid rgba(124,58,237,0.6);">다이어그램</button>
   <span style="width:1px;height:16px;background:rgba(255,255,255,0.2);flex-shrink:0;"></span>
   <div class="view-toggle" title="Toggle between component-spec wireframe and realistic UI mock">
     <button id="view-toggle-spec" class="view-toggle-btn" onclick="setViewMode('spec')">Spec</button>
     <button id="view-toggle-ui" class="view-toggle-btn active" onclick="setViewMode('ui')">UI</button>
   </div>
-  <button class="proto-nav-btn active" onclick="showScreen('pdp')">PDP</button>
-  <button class="proto-nav-btn" onclick="showScreen('cart')">Cart</button>
-  <button class="proto-nav-btn" onclick="showScreen('checkout')">Checkout</button>
-  <button class="proto-nav-btn" onclick="showScreen('processing')">Processing</button>
-  <button class="proto-nav-btn" onclick="showScreen('order-summary')">Order Summary</button>
-  <button class="proto-nav-btn" onclick="showScreen('payment-fail')">Payment Fail</button>
-  <button class="proto-nav-btn" onclick="showScreen('order-detail')">Order Detail</button>
-  <button class="proto-nav-btn" onclick="showScreen('my-orders')">My Orders</button>
-  <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">SSO Redirect</button>
+  <button class="proto-nav-btn active" onclick="showScreen('pdp')">상품 상세</button>
+  <button class="proto-nav-btn" onclick="showScreen('cart')">장바구니</button>
+  <button class="proto-nav-btn" onclick="showScreen('checkout')">체크아웃</button>
+  <button class="proto-nav-btn" onclick="showScreen('processing')">결제 중</button>
+  <button class="proto-nav-btn" onclick="showScreen('order-summary')">결제 완료</button>
+  <button class="proto-nav-btn" onclick="showScreen('payment-fail')">결제 실패</button>
+  <button class="proto-nav-btn" onclick="showScreen('order-detail')">주문 상세</button>
+  <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
+  <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">프록시 SSO 연동</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.12</button>
-    <span>Updated 2026-05-02</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.13</button>
+    <span>Updated 2026-05-07</span>
   </span>
 </div>
 
@@ -861,49 +867,55 @@
   <!-- Checkout panel -->
   <div id="sidebar-checkout" class="sidebar-panel active">
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Scenarios</div>
+      <div class="sidebar-section-title">시나리오</div>
       <div class="sidebar-chips">
-        <button class="sidebar-chip" onclick="triggerScenario('fx')">FX Rate Change</button>
-        <button class="sidebar-chip" onclick="triggerScenario('price')">Price Change</button>
-        <button class="sidebar-chip" onclick="triggerScenario('soldout-partial')">Partial Soldout</button>
-        <button class="sidebar-chip" onclick="triggerScenario('soldout-all')">All Soldout</button>
+        <button class="sidebar-chip" onclick="triggerScenario('fx')">환율 변동</button>
+        <button class="sidebar-chip" onclick="triggerScenario('price')">가격 변동</button>
+        <button class="sidebar-chip" onclick="triggerScenario('soldout-partial')">일부 품절</button>
+        <button class="sidebar-chip" onclick="triggerScenario('soldout-all')">전체 품절</button>
+      </div>
+      <div class="sidebar-hint">
+        검증 시점 3단계:<br>
+        1. PDP 혹은 장바구니 → 체크아웃 진입 시<br>
+        2. 체크아웃 → [구매하기] 클릭 → PG 모듈 노출 시<br>
+        3. PG 모듈 내 결제 시작 및 결제 완료 전환 시
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Shop & Ship Partner Mode</div>
+      <div class="sidebar-section-title">프록시 노출 기준</div>
       <div class="sidebar-chips">
-        <button id="sb-proxy-multi" class="sidebar-chip active" onclick="setProxyMode('multi')">Multi (3)</button>
-        <button id="sb-proxy-single" class="sidebar-chip" onclick="setProxyMode('single')">Single (DK only)</button>
+        <button id="sb-proxy-multi" class="sidebar-chip" onclick="setProxyMode('multi')">Multi (3)</button>
+        <button id="sb-proxy-single" class="sidebar-chip active" onclick="setProxyMode('single')">Single (DK only)</button>
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Shop & Ship Partner Connection</div>
+      <div class="sidebar-section-title">프록시 연동 상태</div>
       <div class="sidebar-chips">
-        <button id="sb-agent-connected" class="sidebar-chip" onclick="setSidebarAgent(true)">Connected</button>
-        <button id="sb-agent-disconnected" class="sidebar-chip active warning" onclick="setSidebarAgent(false)">Disconnected</button>
+        <button id="sb-agent-connected" class="sidebar-chip" onclick="setSidebarAgent(true)">연동됨</button>
+        <button id="sb-agent-disconnected" class="sidebar-chip active warning" onclick="setSidebarAgent(false)">연동 안 됨</button>
       </div>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Coupon Code Error</div>
+      <div class="sidebar-section-title">쿠폰 코드 에러</div>
       <div class="sidebar-chips">
-        <button class="sidebar-chip active" id="sb-coupon-invalid" onclick="setSidebarCouponError('invalid')">Not valid</button>
-        <button class="sidebar-chip" id="sb-coupon-expired" onclick="setSidebarCouponError('expired')">Expired</button>
-        <button class="sidebar-chip" id="sb-coupon-duplicate" onclick="setSidebarCouponError('duplicate')">Already claimed</button>
-        <button class="sidebar-chip" id="sb-coupon-sold-out" onclick="setSidebarCouponError('sold-out')">Fully redeemed</button>
+        <button class="sidebar-chip active" id="sb-coupon-invalid" onclick="setSidebarCouponError('invalid')">유효하지 않음</button>
+        <button class="sidebar-chip" id="sb-coupon-expired" onclick="setSidebarCouponError('expired')">만료됨</button>
+        <button class="sidebar-chip" id="sb-coupon-duplicate" onclick="setSidebarCouponError('duplicate')">이미 사용됨</button>
+        <button class="sidebar-chip" id="sb-coupon-sold-out" onclick="setSidebarCouponError('sold-out')">소진됨</button>
       </div>
-      <div class="sidebar-hint">Valid test code: <code>GDpromotion</code><br>Any other input triggers the error selected above.</div>
+      <div class="sidebar-hint">테스트용 유효 코드: <code>GDpromotion</code><br>그 외 입력값은 위에서 선택한 에러를 트리거합니다.</div>
     </div>
   </div>
 
   <!-- Payment Fail panel -->
   <div id="sidebar-payment-fail" class="sidebar-panel">
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Error Type</div>
+      <div class="sidebar-section-title">에러 종류</div>
       <div class="sidebar-chips">
-        <button class="sidebar-chip active" id="sb-err-card-info" onclick="setSidebarError('card-info')">Card Info Error</button>
-        <button class="sidebar-chip" id="sb-err-limit" onclick="setSidebarError('limit')">Limit / Insufficient Funds</button>
-        <button class="sidebar-chip" id="sb-err-issuer" onclick="setSidebarError('issuer')">Card Issuer Declined</button>
-        <button class="sidebar-chip" id="sb-err-generic" onclick="setSidebarError('generic')">Temporary Error</button>
+        <button class="sidebar-chip active" id="sb-err-card-info" onclick="setSidebarError('card-info')">카드 정보 오류</button>
+        <button class="sidebar-chip" id="sb-err-limit" onclick="setSidebarError('limit')">한도 / 잔액 부족</button>
+        <button class="sidebar-chip" id="sb-err-issuer" onclick="setSidebarError('issuer')">카드사 거절</button>
+        <button class="sidebar-chip" id="sb-err-generic" onclick="setSidebarError('generic')">일시적 오류</button>
       </div>
     </div>
   </div>
@@ -927,18 +939,18 @@
     <div class="sidebar-section">
       <div class="sidebar-section-title">화면 바로가기</div>
       <div class="sidebar-chips">
-        <button class="sidebar-chip" onclick="showScreen('pdp')">🛍 PDP</button>
-        <button class="sidebar-chip" onclick="showScreen('cart')">🛒 Cart</button>
-        <button class="sidebar-chip" onclick="showScreen('checkout')">📋 Checkout</button>
+        <button class="sidebar-chip" onclick="showScreen('pdp')">🛍 상품 상세</button>
+        <button class="sidebar-chip" onclick="showScreen('cart')">🛒 장바구니</button>
+        <button class="sidebar-chip" onclick="showScreen('checkout')">📋 체크아웃</button>
         <button class="sidebar-chip" onclick="showScreen('pg-card')">💳 카드 결제</button>
         <button class="sidebar-chip" onclick="selectQuickPay('apple')">◾ Apple Pay</button>
         <button class="sidebar-chip" onclick="showScreen('pg-paypal')">PayPal</button>
-        <button class="sidebar-chip" onclick="showScreen('processing')">⏳ Processing</button>
-        <button class="sidebar-chip" onclick="showScreen('order-summary')">📋 Order Summary</button>
-        <button class="sidebar-chip" onclick="showScreen('payment-fail')">✕ Payment Fail</button>
+        <button class="sidebar-chip" onclick="showScreen('processing')">⏳ 결제 중</button>
+        <button class="sidebar-chip" onclick="showScreen('order-summary')">📋 결제 완료</button>
+        <button class="sidebar-chip" onclick="showScreen('payment-fail')">✕ 결제 실패</button>
         <button class="sidebar-chip" onclick="showScreen('sso-redirect')">🔑 DK Login</button>
-        <button class="sidebar-chip" onclick="showScreen('my-orders')">📄 My Orders</button>
-        <button class="sidebar-chip" onclick="showScreen('order-detail')">📍 Order Detail</button>
+        <button class="sidebar-chip" onclick="showScreen('my-orders')">📄 내 주문</button>
+        <button class="sidebar-chip" onclick="showScreen('order-detail')">📍 주문 상세</button>
       </div>
     </div>
     <div class="sidebar-hint">각 화면 카드를 클릭하면 해당 화면으로 이동합니다.</div>
@@ -947,11 +959,11 @@
   <!-- Order Summary panel -->
   <div id="sidebar-order-summary" class="sidebar-panel">
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Variant</div>
+      <div class="sidebar-section-title">베리에이션</div>
       <div class="sidebar-chips">
-        <button class="sidebar-chip active" data-variant-chip="ordering" onclick="setOrderVariant('ordering', event)">Ordering</button>
-        <button class="sidebar-chip" data-variant-chip="all" onclick="setOrderVariant('all', event)">Ordered (All)</button>
-        <button class="sidebar-chip" data-variant-chip="partial" onclick="setOrderVariant('partial', event)">Ordered (Partial Cancel)</button>
+        <button class="sidebar-chip active" data-variant-chip="ordering" onclick="setOrderVariant('ordering', event)">주문 직후</button>
+        <button class="sidebar-chip" data-variant-chip="all" onclick="setOrderVariant('all', event)">전체 확정</button>
+        <button class="sidebar-chip" data-variant-chip="partial" onclick="setOrderVariant('partial', event)">일부 취소</button>
       </div>
     </div>
     <div class="sidebar-hint">우측 패널에서 Order Summary 변형(주문 직후 / 전체 확정 / 일부 취소)을 전환합니다.</div>
@@ -959,7 +971,7 @@
 
   <!-- Empty panel for other screens -->
   <div id="sidebar-default" class="sidebar-panel">
-    <div style="font-size:11px;color:#444;padding:4px 0;">No controls for this screen.</div>
+    <div style="font-size:11px;color:#444;padding:4px 0;">이 화면에는 컨트롤이 없습니다.</div>
   </div>
 
 </div>
@@ -1575,7 +1587,15 @@
   <div id="modal-price-change" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-title">Price has been updated</div>
-      <div class="modal-body">The seller has changed the price of one or more items. You can check the updated prices below.</div>
+      <div class="modal-body">The seller has changed the price of the following item. Updated prices are reflected below.</div>
+      <div class="modal-item">
+        <div class="modal-item-img"></div>
+        <div class="modal-item-name" data-spec="{Product Name(EN)}">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+        <div class="modal-item-price" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span data-spec="{usd_old_price}" style="font-size:11px;color:#aaa;text-decoration:line-through;font-weight:500;">USD 32.10</span>
+          <span data-spec="{usd_new_price}">USD 34.62</span>
+        </div>
+      </div>
       <div class="modal-btns">
         <button class="modal-btn primary" onclick="closeModal('modal-price-change')">Got it</button>
       </div>
@@ -1756,41 +1776,32 @@
       </div>
     </div>
 
-    <!-- Shipping Address -->
+    <!-- Shipping & Delivery -->
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
-        <span class="section-title">Shipping Address</span>
+        <span class="section-title">Shipping &amp; Delivery</span>
         <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
 
-        <!-- Korea (warehouse) address — auto-set by selected partner -->
-        <div style="border:1px solid #eee;border-radius:10px;padding:14px;margin-bottom:10px;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <span style="font-size:11px;font-weight:700;background:#191919;color:#fff;padding:2px 8px;border-radius:10px;letter-spacing:0.3px;">KR</span>
-            <span style="font-size:13px;font-weight:700;color:#191919;">Domestic Address</span>
+        <div style="border:1px solid #eee;border-radius:10px;padding:14px;">
+          <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px;">
+            <span data-spec="{Proxy Name}" id="addr-proxy-intro" style="font-weight:700;color:#191919;">Delivered Korea</span> handles international shipping.
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.6;">
-            <div data-spec="{Proxy Warehouse Recipient}" id="addr-warehouse-recipient">Delivered Korea Warehouse</div>
-            <div data-spec="{Proxy Warehouse Address}" id="addr-warehouse-line">123 Mapo-daero, Mapo-gu, Seoul, 04144, Korea</div>
-            <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
-              <span style="font-size:11px;color:#888;">Suite #</span>
-              <span data-spec="{User Suite Number}" id="addr-suite" style="font-size:13px;font-weight:600;color:#191919;background:#f5f5f5;padding:2px 8px;border-radius:6px;">DK-018472</span>
-            </div>
-          </div>
-          <div style="font-size:11px;color:#888;line-height:1.6;margin-top:10px;padding-top:10px;border-top:1px dashed #eee;">
-            ℹ️ Items are first shipped to <span data-spec="{Proxy Name}" id="addr-proxy-name-1">Delivered Korea</span>'s Korean warehouse using your Suite #.
-          </div>
-        </div>
 
-        <!-- International address — informational only, set on partner site -->
-        <div style="border:1px solid #eee;border-radius:10px;padding:14px;background:#fafafa;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <span style="font-size:11px;font-weight:700;background:#1565c0;color:#fff;padding:2px 8px;border-radius:10px;letter-spacing:0.3px;">INT'L</span>
-            <span style="font-size:13px;font-weight:700;color:#191919;">International Destination</span>
-          </div>
-          <div style="font-size:12px;color:#666;line-height:1.6;">
-            Enter your overseas shipping address on <span data-spec="{Proxy Name}" id="addr-proxy-name-2" style="font-weight:600;color:#191919;">Delivered Korea</span>'s website after your items arrive at their Korean warehouse.
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>
+              <span style="font-size:13px;color:#333;line-height:1.6;">Seller ships your item to <span data-spec="{Proxy Name}" id="addr-step-1-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s Korean warehouse.</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span>
+              <span style="font-size:13px;color:#333;line-height:1.6;">You enter your destination address on <span data-spec="{Proxy Name}" id="addr-step-2-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s site once items arrive.</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span>
+              <span style="font-size:13px;color:#333;line-height:1.6;"><span data-spec="{Proxy Name}" id="addr-step-3-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span> ships internationally to you.</span>
+            </div>
           </div>
         </div>
 
@@ -1837,13 +1848,25 @@
           </div>
         </label>
 
-        <label class="payment-option">
-          <input type="radio" name="payment" class="payment-radio" onchange="onPaymentMethodChange('alipay')">
+        <label class="payment-option" style="border-bottom:none;">
+          <input type="radio" name="payment" class="payment-radio" id="payment-alipay" onchange="onPaymentMethodChange('alipay')">
           <span class="payment-name">Alipay+</span>
           <div class="payment-icons">
-            <span class="payment-icon" style="color:#1677ff;">Alipay</span>
+            <span class="payment-icon" style="color:#1677ff;">Alipay+</span>
           </div>
         </label>
+        <div id="alipay-sub-list" class="alipay-sub-list">
+          <div class="alipay-sub-list-label">Choose your wallet</div>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="alipay-cn" checked> <span>Alipay</span><span class="alipay-sub-option-region">CN</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="alipay-hk"> <span>AlipayHK</span><span class="alipay-sub-option-region">HK</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="gcash"> <span>GCash</span><span class="alipay-sub-option-region">PH</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="truemoney"> <span>TrueMoney</span><span class="alipay-sub-option-region">TH</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="touchngo"> <span>Touch 'n Go</span><span class="alipay-sub-option-region">MY</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="dana"> <span>DANA</span><span class="alipay-sub-option-region">ID</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="rabbit-linepay"> <span>Rabbit LINE Pay</span><span class="alipay-sub-option-region">TH</span></label>
+          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="bpi"> <span>BPI</span><span class="alipay-sub-option-region">PH</span></label>
+          <label class="alipay-sub-option" style="opacity:0.55;cursor:not-allowed;"><input type="radio" name="alipay-wallet" value="shopeepay" disabled> <span>ShopeePay</span><span class="alipay-sub-option-region">SEA</span><span style="font-size:10px;color:#e07b00;font-weight:600;margin-left:auto;">(under review)</span></label>
+        </div>
 
         <label class="payment-option">
           <input type="radio" name="payment" class="payment-radio" onchange="onPaymentMethodChange('wechat')">
@@ -1865,8 +1888,9 @@
       <div class="section-body">
         <div class="price-box">
           <div class="price-group-title">Product Purchase</div>
-          <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount" data-spec="{usd_subtotal}">USD 38.70</span></div>
+          <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount" data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
           <div id="checkout-coupon-row" class="price-row discount" style="display:none;"><span id="checkout-coupon-label">Coupon</span><span id="checkout-coupon-amount" data-spec="-{usd_coupon_value}"></span></div>
+          <div id="checkout-promo-row" class="price-row discount"><span>Payment Promotion (5% off)</span><span id="checkout-promo-amount" data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
           <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span id="checkout-shipping-to-proxy-amount" data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
           <hr class="price-divider">
 
@@ -2077,12 +2101,8 @@
         <div style="display:flex;align-items:center;gap:12px;">
           <div id="sso-create-proxy-icon" style="width:40px;height:40px;border-radius:8px;background:#e65100;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#fff;font-weight:800;">D</div>
           <div>
-            <div id="sso-create-proxy-label" data-spec="{Proxy Name} account" style="font-size:12px;color:#666;font-weight:600;margin-bottom:2px;">Delivered Korea account</div>
-            <div style="font-size:14px;font-weight:600;color:#191919;">New account</div>
+            <div id="sso-create-proxy-label" data-spec="{Proxy Name} account" style="font-size:14px;font-weight:600;color:#191919;">Delivered Korea account</div>
           </div>
-        </div>
-        <div style="margin-top:10px;">
-          <button onclick="goToSSOStep('login')" id="sso-existing-link" data-spec="Already have a {Proxy Name} account?" style="font-size:12px;color:#666;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;">Already have a Delivered Korea account?</button>
         </div>
       </div>
 
@@ -2092,7 +2112,8 @@
         <span style="font-size:14px;color:#191919;line-height:1.5;font-weight:500;">I agree to the collection and use of my personal information</span>
       </label>
 
-      <button id="consent-btn" disabled onclick="goToSSOStep('signup-terms')" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Continue</button>
+      <button id="sso-create-new-btn" disabled onclick="goToSSOStep('signup-terms')" data-spec="Continue" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;margin-bottom:8px;">Continue</button>
+      <button id="sso-use-existing-btn" disabled onclick="goToSSOStep('login')" data-spec="Already have an account?" style="width:100%;padding:16px;background:#fff;color:#aaa;border:1px solid #ddd;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Already have an account?</button>
     </div>
 
     <!-- ════════════════════════════════════════════════ -->
@@ -2324,7 +2345,7 @@
             <div class="order-item-price">USD 4.08</div>
           </div>
           <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Awaiting Seller Confirmation</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></span>
+            <span class="status-badge-wrap"><span class="status-badge ordering">Ordering</span><span class="status-info-icon" data-tooltip="Your order is being placed with the Korean seller. You'll be notified once it's submitted." onclick="toggleInfoTooltip(event, this)">i</span></span>
           </div>
         </div>
         <div class="order-detail-item">
@@ -2336,7 +2357,7 @@
             <div class="order-item-price">USD 34.62</div>
           </div>
           <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Awaiting Seller Confirmation</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></span>
+            <span class="status-badge-wrap"><span class="status-badge ordering">Ordering</span><span class="status-info-icon" data-tooltip="Your order is being placed with the Korean seller. You'll be notified once it's submitted." onclick="toggleInfoTooltip(event, this)">i</span></span>
           </div>
         </div>
       </div>
@@ -2349,7 +2370,7 @@
           <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
-          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (VISA ****1234)</span></div>
+          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
         </div>
       </div>
 
@@ -2417,7 +2438,7 @@
           <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
-          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (VISA ****1234)</span></div>
+          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
         </div>
       </div>
 
@@ -2494,7 +2515,7 @@
           <hr class="price-divider">
           <div class="price-row" style="color:#c62828;"><span>Refund (Sold Out)</span><span data-spec="-{usd_refund}">- USD 27.62</span></div>
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Final Amount</span><span data-spec="{usd_final_amount}">USD 9.08</span></div>
-          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (VISA ****1234)</span></div>
+          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
           <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#e65100;" data-spec="⏱ Refund of {usd_refund} will be returned to your card within 3–5 business days.">
             ⏱ Refund of USD 27.62 will be returned to your card within 3–5 business days.
           </div>
@@ -2595,6 +2616,13 @@
             <div class="status-step done">
               <div class="status-dot">✓</div>
               <div class="status-info">
+                <div class="status-label">Ordering <span class="status-info-icon" data-tooltip="Your order is being placed with the Korean seller. You'll be notified once it's submitted." onclick="toggleInfoTooltip(event, this)">i</span></div>
+                <div class="status-time" data-spec="{Status Date}">2026-03-26 14:28</div>
+              </div>
+            </div>
+            <div class="status-step done">
+              <div class="status-dot">✓</div>
+              <div class="status-info">
                 <div class="status-label">Awaiting Seller Confirmation <span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></div>
                 <div class="status-time" data-spec="{Status Date}">2026-03-26 14:32</div>
               </div>
@@ -2643,6 +2671,13 @@
             <div class="status-step done">
               <div class="status-dot">✓</div>
               <div class="status-info">
+                <div class="status-label">Ordering <span class="status-info-icon" data-tooltip="Your order is being placed with the Korean seller. You'll be notified once it's submitted." onclick="toggleInfoTooltip(event, this)">i</span></div>
+                <div class="status-time" data-spec="{Status Date}">2026-03-26 14:28</div>
+              </div>
+            </div>
+            <div class="status-step done">
+              <div class="status-dot">✓</div>
+              <div class="status-info">
                 <div class="status-label">Awaiting Seller Confirmation <span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></div>
                 <div class="status-time" data-spec="{Status Date}">2026-03-26 14:32</div>
               </div>
@@ -2683,8 +2718,7 @@
     <div class="section">
       <div class="section-header"><span class="section-title">Payment Info</span></div>
       <div class="section-body">
-        <div class="price-row"><span style="color:#999;">Method</span><span data-spec="{Payment Method}">Credit Card (VISA ****1234)</span></div>
-        <div class="price-row"><span style="color:#999;">PG</span><span data-spec="{PG Name}">Hecto (Adyen)</span></div>
+        <div class="price-row"><span style="color:#999;">Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
         <div class="price-row"><span style="color:#999;">Total Paid</span><span style="font-weight:700;" data-spec="{usd_total}">USD 36.70</span></div>
         <div class="price-row"><span style="color:#999;">Status</span><span style="color:#4caf50;font-weight:600;" data-spec="{Payment Status}">Captured</span></div>
       </div>
@@ -3693,15 +3727,24 @@ function recalcTotal() {
   } else {
     couponRow.style.display = 'none';
   }
-  const currentMethod = document.querySelector('input[name="payment"]:checked')?.value || '';
-  const base = BASE_TOTAL - totalDiscount;
-  const fee = currentMethod === 'paypal' ? base * 0.05 : 0;
-  const total = base + fee;
+  const isPaypal = _currentPaymentMethod === 'paypal';
+  const additional = _checkoutInAdditionalMode;
+  const grossSubtotal = additional ? _currentSubtotalNet : _currentSubtotalNet / (1 - PROMO_RATE);
+  const shipping = BASE_TOTAL - _currentSubtotalNet;
+  const showPromo = !additional && !isPaypal;
+  const promo = showPromo ? grossSubtotal * PROMO_RATE : 0;
+  const total = grossSubtotal + shipping - totalDiscount - promo;
+
+  document.getElementById('checkout-subtotal-amount').textContent = `USD ${grossSubtotal.toFixed(2)}`;
+  const promoRow = document.getElementById('checkout-promo-row');
+  if (promoRow) {
+    promoRow.style.display = showPromo ? 'flex' : 'none';
+    document.getElementById('checkout-promo-amount').textContent = `- USD ${promo.toFixed(2)}`;
+  }
   const totalStr = `USD ${total.toFixed(2)}`;
   document.getElementById('checkout-total-amount').textContent = totalStr;
-  document.getElementById('checkout-subtotal-amount').textContent = `USD ${(SUBTOTAL_BASE + fee).toFixed(2)}`;
   const btn = document.getElementById('checkout-place-order-btn');
-  if (btn && currentMethod !== 'apple' && currentMethod !== 'google') {
+  if (btn && _currentPaymentMethod !== 'apple' && _currentPaymentMethod !== 'google') {
     btn.textContent = `${totalStr} — Place Order`;
   }
 }
@@ -3831,6 +3874,7 @@ function confirmPartialSoldout() {
 
   // Update base total so recalcTotal/onPaymentMethodChange reflect the new subtotal
   BASE_TOTAL = 34.62 + 2.50;
+  _currentSubtotalNet = 34.62;
 
   recalcTotal();
   closeModal('modal-soldout-partial');
@@ -3853,7 +3897,7 @@ const proxyOrder = ['dk', 'paysable', 'kfriday'];
 let _selectedProxy = 'dk';
 let _proxyConnected = { dk: false, paysable: false, kfriday: false };
 let _dkConnected = false;
-let _proxyMode = 'multi'; // 'multi' | 'single' (DK only)
+let _proxyMode = 'single'; // 'multi' | 'single' (DK only)
 
 function getActiveProxies() {
   return _proxyMode === 'single' ? ['dk'] : proxyOrder;
@@ -3985,18 +4029,16 @@ function selectProxy(id) {
 function updateShippingAddress() {
   const p = proxyData[_selectedProxy];
   if (!p) return;
-  const w = p.warehouse;
   const setUi = (id, text) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (el.dataset.uiText !== undefined) el.dataset.uiText = text;
     if (!document.body.classList.contains('spec-mode')) el.textContent = text;
   };
-  setUi('addr-warehouse-recipient', w.recipient);
-  setUi('addr-warehouse-line', w.line);
-  setUi('addr-suite', w.suite);
-  setUi('addr-proxy-name-1', p.name);
-  setUi('addr-proxy-name-2', p.name);
+  setUi('addr-proxy-intro', p.name);
+  setUi('addr-step-1-proxy', p.name);
+  setUi('addr-step-2-proxy', p.name);
+  setUi('addr-step-3-proxy', p.name);
 }
 
 function toggleDKConnection() {
@@ -4167,12 +4209,16 @@ function togglePaypalFeeInfo() {
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-// ─── Payment Method & PayPal Fee ─────────────────
-const INITIAL_BASE_TOTAL = 43.70; // subtotal (38.70) + shipping to Shop & Ship Partner (5.00), before coupon
-const SUBTOTAL_BASE = 38.70; // original subtotal (without PayPal fee)
+// ─── Payment Method & Promo ─────────────────
+const INITIAL_BASE_TOTAL = 43.70; // net subtotal (38.70) + shipping (5.00), before coupon
+const INITIAL_SUBTOTAL_NET = 38.70; // net subtotal (post-promotion); gross = net / 0.95
+const PROMO_RATE = 0.05;
 let BASE_TOTAL = INITIAL_BASE_TOTAL;
+let _currentSubtotalNet = INITIAL_SUBTOTAL_NET;
+let _currentPaymentMethod = 'card';
 
 function onPaymentMethodChange(method) {
+  _currentPaymentMethod = method;
   // Reset Quick Pay button styles when a radio is selected
   if (method !== 'apple' && method !== 'google') {
     const a = document.getElementById('qp-apple-btn');
@@ -4181,18 +4227,13 @@ function onPaymentMethodChange(method) {
     if (g) { g.style.background = '#fff'; g.style.color = '#222'; g.style.border = '1px solid #ddd'; }
   }
 
-  const totalDiscount = Object.values(_appliedCoupons).reduce((sum, id) => sum + (couponData[id]?.numAmount || 0), 0);
-  const base = BASE_TOTAL - totalDiscount;
-  const isPaypal = method === 'paypal';
-  const fee = isPaypal ? base * 0.05 : 0;
-  const total = base + fee;
+  // Toggle Alipay+ wallet sub-list visibility
+  const subList = document.getElementById('alipay-sub-list');
+  if (subList) subList.classList.toggle('show', method === 'alipay');
 
-  document.getElementById('checkout-subtotal-amount').textContent = `USD ${(SUBTOTAL_BASE + fee).toFixed(2)}`;
+  recalcTotal();
 
-  const totalStr = `USD ${total.toFixed(2)}`;
-  document.getElementById('checkout-total-amount').textContent = totalStr;
-  // price-details-header-amount removed
-
+  const totalStr = document.getElementById('checkout-total-amount').textContent;
   const btn = document.getElementById('checkout-place-order-btn');
   if (method === 'apple') {
     btn.textContent = `Apple Pay — ${totalStr}`;
@@ -4302,12 +4343,24 @@ function submitSSOTerms() {
 }
 
 function updateConsentBtn() {
-  const btn = document.getElementById('consent-btn');
   const checked = document.getElementById('consent-check-1').checked;
-  btn.disabled = !checked;
-  btn.style.background = checked ? '#191919' : '#ddd';
-  btn.style.color = checked ? '#fff' : '#aaa';
-  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+
+  const primary = document.getElementById('sso-create-new-btn');
+  if (primary) {
+    primary.disabled = !checked;
+    primary.style.background = checked ? '#191919' : '#ddd';
+    primary.style.color = checked ? '#fff' : '#aaa';
+    primary.style.cursor = checked ? 'pointer' : 'not-allowed';
+  }
+
+  const secondary = document.getElementById('sso-use-existing-btn');
+  if (secondary) {
+    secondary.disabled = !checked;
+    secondary.style.background = '#fff';
+    secondary.style.borderColor = checked ? '#191919' : '#ddd';
+    secondary.style.color = checked ? '#191919' : '#aaa';
+    secondary.style.cursor = checked ? 'pointer' : 'not-allowed';
+  }
 }
 
 // ─── SSO Redirect ────────────────────────────────
@@ -4365,7 +4418,6 @@ function updateSSOProxyName() {
   setStyle('sso-create-proxy-icon', 'background', p.color);
   const proxyIcon = document.getElementById('sso-create-proxy-icon');
   if (proxyIcon) proxyIcon.textContent = p.icon;
-  setUi('sso-existing-link', `Already have a ${name} account?`);
 
   // Step 2A — Sign Up terms
   setUi('sso-signup-title', `Sign Up to ${name}`);
@@ -4527,6 +4579,16 @@ window.addEventListener('resize', closeAllInfoTooltips);
 
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
+  {
+    version: 'v1.13',
+    date: '2026-05-07',
+    changes: [
+      'Shipping Address → Shipping & Delivery 3-step 안내로 개편 (Proxy 창고 주소/Suite # 미노출, 두-다리 배송 흐름 명시)',
+      'Alipay+ 결제수단 선택 시 하위 지갑(Core 6 + Secondary 2 + ShopeePay 검토 중) 라디오 리스트 노출',
+      'Payment Promotion 표시 정책 변경: Subtotal을 gross 가격으로 노출하고 Payment Promotion (5% off) 라인을 별도 표시 (PayPal 제외)',
+      "'Ordering' 상태 신규 추가: 결제 직후 ~ 판매자 통보 전 단계를 'Awaiting Seller Confirmation'과 분리하여 별도 노출 (Order Summary, Order Detail 타임라인 포함)",
+    ]
+  },
   {
     version: 'v1.12',
     date: '2026-05-02',
@@ -4697,10 +4759,10 @@ function _resetCheckoutToDefaults() {
     title.textContent = _CHECKOUT_DEFAULTS.title;
     title.dataset.uiText = _CHECKOUT_DEFAULTS.title;
   }
-  document.getElementById('checkout-subtotal-amount').textContent = _CHECKOUT_DEFAULTS.subtotal;
-  document.getElementById('checkout-total-amount').textContent = _CHECKOUT_DEFAULTS.total;
   if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = INITIAL_BASE_TOTAL;
+  _currentSubtotalNet = INITIAL_SUBTOTAL_NET;
   _checkoutInAdditionalMode = false;
+  recalcTotal();
 }
 
 function enterAdditionalPaymentCheckout() {
@@ -4724,10 +4786,10 @@ function enterAdditionalPaymentCheckout() {
     title.textContent = 'Order Summary (1)';
     title.dataset.uiText = 'Order Summary (1)';
   }
-  document.getElementById('checkout-subtotal-amount').textContent = 'USD 50.45';
-  document.getElementById('checkout-total-amount').textContent = 'USD 50.45';
   if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = 50.45;
+  _currentSubtotalNet = 50.45;
   _checkoutInAdditionalMode = true;
+  recalcTotal();
 }
 
 function showScreen(id, updateNav = true) {
