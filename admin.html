@@ -6,21 +6,21 @@
 <title>글로벌번장 어드민 - 쿠폰 관리</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; padding-top: 48px; }
 
   /* Layout */
-  .layout { display: flex; min-height: 100vh; }
-  .sidebar { width: 220px; background: #1a1a2e; color: #fff; padding: 0; flex-shrink: 0; }
-  .sidebar-header { padding: 20px 16px; font-size: 15px; font-weight: 700; border-bottom: 1px solid #2a2a4a; }
-  .sidebar-header span { color: #7c7cf7; }
+  .layout { display: flex; min-height: calc(100vh - 48px); }
+  .sidebar { width: 220px; background: #fff; color: #333; padding: 0; flex-shrink: 0; border-right: 1px solid #e5e5e8; position: sticky; top: 48px; align-self: flex-start; height: calc(100vh - 48px); overflow-y: auto; }
+  .sidebar-header { padding: 20px 16px; font-size: 15px; font-weight: 700; border-bottom: 1px solid #eee; color: #222; }
+  .sidebar-header span { color: #ff4757; }
   .nav-group { padding: 12px 0; }
-  .nav-group-title { padding: 8px 16px; font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 1px; }
-  .nav-item { padding: 10px 16px 10px 24px; cursor: pointer; font-size: 13px; color: #aaa; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
-  .nav-item:hover { background: #2a2a4a; color: #fff; }
-  .nav-item.active { background: #2a2a4a; color: #7c7cf7; border-left: 3px solid #7c7cf7; padding-left: 21px; }
-  .nav-item .badge { background: #7c7cf7; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
+  .nav-group-title { padding: 8px 16px; font-size: 11px; text-transform: uppercase; color: #999; letter-spacing: 1px; }
+  .nav-item { padding: 10px 16px 10px 24px; cursor: pointer; font-size: 13px; color: #555; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+  .nav-item:hover { background: #f5f5f7; color: #222; }
+  .nav-item.active { background: #fff0f1; color: #ff4757; border-left: 3px solid #ff4757; padding-left: 21px; }
+  .nav-item .badge { background: #ff4757; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
 
-  .main { flex: 1; display: flex; flex-direction: column; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
   /* Top bar */
   .topbar { background: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e0e0e0; }
@@ -33,7 +33,7 @@
   .tabs { display: flex; background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 24px; }
   .tab { padding: 14px 20px; cursor: pointer; font-size: 13px; color: #888; border-bottom: 2px solid transparent; transition: all 0.15s; }
   .tab:hover { color: #333; }
-  .tab.active { color: #7c7cf7; border-bottom-color: #7c7cf7; font-weight: 600; }
+  .tab.active { color: #ff4757; border-bottom-color: #ff4757; font-weight: 600; }
 
   .content { flex: 1; padding: 24px; overflow-y: auto; }
 
@@ -41,8 +41,8 @@
   .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .page-title { font-size: 20px; font-weight: 700; }
   .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; transition: all 0.15s; }
-  .btn-primary { background: #7c7cf7; color: #fff; }
-  .btn-primary:hover { background: #6b6be0; }
+  .btn-primary { background: #ff4757; color: #fff; }
+  .btn-primary:hover { background: #e63946; }
   .btn-secondary { background: #fff; color: #333; border: 1px solid #ddd; }
   .btn-secondary:hover { background: #f5f5f5; }
   .btn-sm { padding: 5px 10px; font-size: 12px; }
@@ -54,11 +54,11 @@
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 22px; transition: 0.2s; }
   .toggle-slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
-  .toggle input:checked + .toggle-slider { background: #7c7cf7; }
+  .toggle input:checked + .toggle-slider { background: #ff4757; }
   .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
 
   /* Table */
-  .table-wrapper { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .table-wrapper { background: #fff; border-radius: 8px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   .table-toolbar { padding: 16px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #f0f0f0; }
   .search-input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 250px; }
   .filter-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: #fff; }
@@ -71,8 +71,8 @@
   .status-active { background: #e8f5e9; color: #2e7d32; }
   .status-inactive { background: #f5f5f5; color: #999; }
   .status-expired { background: #fff3e0; color: #e65100; }
-  .link-copy { color: #7c7cf7; cursor: pointer; font-size: 12px; text-decoration: underline; }
-  .link-copy:hover { color: #6b6be0; }
+  .link-copy { color: #ff4757; cursor: pointer; font-size: 12px; text-decoration: underline; }
+  .link-copy:hover { color: #e63946; }
 
   /* Create Form */
   .form-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
@@ -89,7 +89,7 @@
   .form-error.show { display: block; }
 
   .input { padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 100%; transition: border-color 0.15s; }
-  .input:focus { outline: none; border-color: #7c7cf7; box-shadow: 0 0 0 3px rgba(124,124,247,0.1); }
+  .input:focus { outline: none; border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.12); }
   .input-sm { width: 200px; }
   .input-md { width: 350px; }
   .input-with-unit { display: flex; align-items: center; gap: 8px; }
@@ -99,23 +99,23 @@
 
   .checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; }
   .checkbox-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-  .checkbox-item input[type="checkbox"] { accent-color: #7c7cf7; width: 16px; height: 16px; }
+  .checkbox-item input[type="checkbox"] { accent-color: #ff4757; width: 16px; height: 16px; }
 
   .tag-input-area { border: 1px solid #ddd; border-radius: 6px; padding: 8px; min-height: 42px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .tag-input-area:focus-within { border-color: #7c7cf7; box-shadow: 0 0 0 3px rgba(124,124,247,0.1); }
-  .tag { display: inline-flex; align-items: center; gap: 4px; background: #f0f0ff; color: #5c5cb8; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+  .tag-input-area:focus-within { border-color: #ff4757; box-shadow: 0 0 0 3px rgba(255,71,87,0.12); }
+  .tag { display: inline-flex; align-items: center; gap: 4px; background: #ffeaec; color: #c43847; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
   .tag .remove { cursor: pointer; font-size: 14px; color: #999; }
   .tag .remove:hover { color: #ff4757; }
   .tag-input { border: none; outline: none; font-size: 13px; flex: 1; min-width: 120px; padding: 2px; }
 
   .date-range { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .date-range .separator { color: #888; font-size: 13px; }
-  .kst-display { font-size: 12px; color: #7c7cf7; margin-top: 4px; }
+  .kst-display { font-size: 12px; color: #ff4757; margin-top: 4px; }
 
   .form-row { display: flex; gap: 24px; }
   .form-row .form-group { flex: 1; }
 
-  .conditional-section { margin-left: 24px; padding-left: 16px; border-left: 3px solid #e0e0ff; }
+  .conditional-section { margin-left: 24px; padding-left: 16px; border-left: 3px solid #ffd9dd; }
 
   .form-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #f0f0f0; margin-top: 24px; }
 
@@ -135,6 +135,51 @@
   .tooltip-trigger::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
   .tooltip-trigger:hover::after { opacity: 1; }
 
+  /* === Prototype chrome (top nav + right sidebar) ============== */
+  .proto-nav { position: fixed; top: 0; left: 0; right: 0; background: #1a1a2e; color: #fff; padding: 8px 16px; display: flex; align-items: center; gap: 8px; z-index: 999; font-size: 12px; flex-wrap: wrap; }
+  .proto-nav-title { font-weight: 700; font-size: 13px; margin-right: 8px; line-height: 1.3; }
+  .proto-nav-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .proto-nav-btn:hover { background: rgba(255,255,255,0.25); }
+  .proto-nav-btn.active { background: #7c7cf7; }
+  .proto-nav-version { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .proto-nav-version-tag { background: rgba(124,124,247,0.25); color: #c5c5ff; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; cursor: pointer; transition: background 0.15s; border: none; }
+  .proto-nav-version-tag:hover { background: rgba(124,124,247,0.45); color: #fff; }
+
+  /* Changelog modal */
+  .changelog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .changelog-overlay.show { display: flex; }
+  .changelog-modal { background: #fff; border-radius: 14px; max-width: 520px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .changelog-header { padding: 20px 24px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+  .changelog-title { font-size: 16px; font-weight: 800; color: #222; }
+  .changelog-close { background: none; border: none; font-size: 22px; color: #999; cursor: pointer; padding: 0; line-height: 1; }
+  .changelog-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+  .changelog-entry { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid #f0f0f0; }
+  .changelog-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .changelog-entry-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .changelog-entry-version { font-size: 13px; font-weight: 800; color: #fff; background: #222; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.3px; }
+  .changelog-entry-latest { font-size: 10px; font-weight: 700; color: #2e7d32; background: #e8f5e9; padding: 3px 7px; border-radius: 4px; letter-spacing: 0.3px; }
+  .changelog-entry-date { font-size: 11px; color: #999; }
+  .changelog-entry-list { margin: 0; padding-left: 18px; font-size: 13px; color: #444; line-height: 1.6; }
+  .changelog-entry-list li { margin-bottom: 4px; }
+
+  /* Custom Date Picker */
+  .dp-wrap { position: relative; display: inline-block; }
+  .dp-input { cursor: pointer; background: #fff; }
+  .dp-dropdown { position: absolute; top: 100%; left: 0; margin-top: 4px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 100; display: none; min-width: 240px; }
+  .dp-dropdown.show { display: block; }
+  .dp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #333; }
+  .dp-nav { background: none; border: none; font-size: 18px; padding: 2px 10px; cursor: pointer; color: #555; border-radius: 4px; line-height: 1; }
+  .dp-nav:hover { background: #f5f5f5; }
+  .dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .dp-weekday { text-align: center; font-size: 11px; color: #888; padding: 4px 0; font-weight: 600; }
+  .dp-day { background: none; border: none; padding: 6px 0; font-size: 12px; cursor: pointer; border-radius: 4px; color: #333; }
+  .dp-day:hover { background: #fff0f1; color: #ff4757; }
+  .dp-day.today { background: #f5f5f5; font-weight: 700; }
+  .dp-day.selected { background: #ff4757; color: #fff; }
+  .dp-day.selected:hover { background: #e63946; color: #fff; }
+  .dp-time-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee; font-size: 12px; color: #555; }
+  .dp-time-input { font-size: 12px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; color: #333; background: #fff; font-family: inherit; }
+
   /* Responsive */
   @media (max-width: 1200px) {
     .form-row { flex-direction: column; gap: 0; }
@@ -142,6 +187,29 @@
 </style>
 </head>
 <body>
+
+<!-- Prototype Navigation (top) -->
+<div class="proto-nav">
+  <span class="proto-nav-title">쿠폰</span>
+  <button class="proto-nav-btn active" onclick="showView('list')">쿠폰 목록</button>
+  <button class="proto-nav-btn" onclick="showView('create')">쿠폰 생성</button>
+  <button class="proto-nav-btn" onclick="showView('detail')">쿠폰 상세</button>
+  <span class="proto-nav-version">
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.2</button>
+    <span>Updated 2026-05-07</span>
+  </span>
+</div>
+
+<!-- Changelog Modal -->
+<div id="changelog-overlay" class="changelog-overlay" onclick="if(event.target===this)closeChangelog()">
+  <div class="changelog-modal">
+    <div class="changelog-header">
+      <span class="changelog-title">Changelog</span>
+      <button class="changelog-close" onclick="closeChangelog()">×</button>
+    </div>
+    <div class="changelog-body" id="changelog-body"></div>
+  </div>
+</div>
 
 <div class="layout">
   <!-- Sidebar -->
@@ -152,14 +220,11 @@
     <div class="nav-group">
       <div class="nav-group-title">글로벌</div>
       <div class="nav-item">공통</div>
-      <div class="nav-item" style="font-weight:600; color:#ddd;">
+      <div class="nav-item" style="font-weight:600; color:#222;">
         글로벌번장
         <span class="badge">NEW</span>
       </div>
       <div class="nav-item active" style="padding-left:40px;">쿠폰 관리</div>
-      <div class="nav-item" style="padding-left:40px;">상품 관리</div>
-      <div class="nav-item" style="padding-left:40px;">주문 관리</div>
-      <div class="nav-item" style="padding-left:40px;">회원 관리</div>
       <div class="nav-item" style="padding-left:40px;">정산 관리</div>
       <div class="nav-item">해외역직구(아웃바운드)</div>
       <div class="nav-item">해외직구(인바운드)</div>
@@ -180,12 +245,13 @@
       <!-- VIEW: Coupon List -->
       <div id="view-list" class="view active">
         <div class="page-header">
-          <h1 class="page-title">쿠폰 조회</h1>
-          <button class="btn btn-primary" onclick="showView('create')">쿠폰 만들기</button>
+          <h1 class="page-title">쿠폰 목록</h1>
+          <button class="btn btn-primary" onclick="showView('create')">쿠폰 생성</button>
         </div>
 
         <div class="table-wrapper">
           <!-- Search filters -->
+          <div id="coupon-filters">
           <div class="table-toolbar" style="flex-wrap:wrap; gap:12px 16px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:13px; color:#555; white-space:nowrap;">상태 필터</span>
@@ -196,10 +262,6 @@
               </select>
             </div>
             <div style="display:flex; align-items:center; gap:4px;">
-              <input type="text" class="search-input" placeholder="쿠폰 ID" style="width:120px;">
-              <span style="color:#aaa;">🔍</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:4px;">
               <input type="text" class="search-input" placeholder="정책명" style="width:140px;">
               <span style="color:#aaa;">🔍</span>
             </div>
@@ -208,13 +270,24 @@
               <span style="color:#aaa;">🔍</span>
             </div>
           </div>
-          <div class="table-toolbar" style="border-bottom:1px solid #eee;">
+          <div class="table-toolbar" style="border-bottom:1px solid #eee; justify-content:space-between;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:13px; color:#555; white-space:nowrap;">등록 일시</span>
-              <input type="datetime-local" class="input" style="width:190px; padding:6px 10px; font-size:12px;">
+              <div class="dp-wrap">
+                <input type="text" class="input dp-input" style="width:140px; padding:6px 10px; font-size:12px;" id="filter-start" data-date-only="1" placeholder="YYYY/MM/DD" readonly>
+                <div class="dp-dropdown" id="filter-start-dd"></div>
+              </div>
               <span style="color:#888;">→</span>
-              <input type="datetime-local" class="input" style="width:190px; padding:6px 10px; font-size:12px;">
+              <div class="dp-wrap">
+                <input type="text" class="input dp-input" style="width:140px; padding:6px 10px; font-size:12px;" id="filter-end" data-date-only="1" placeholder="YYYY/MM/DD" readonly>
+                <div class="dp-dropdown" id="filter-end-dd"></div>
+              </div>
             </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary btn-sm" onclick="resetCouponFilters()">초기화</button>
+              <button class="btn btn-primary btn-sm" onclick="applyCouponFilters()">조회</button>
+            </div>
+          </div>
           </div>
 
           <!-- Pagination info -->
@@ -223,7 +296,7 @@
               <span style="font-size:13px; color:#555;">총 <strong>4개</strong></span>
               <div style="display:flex; gap:2px; margin-left:12px;">
                 <span style="color:#aaa; cursor:pointer;">&lt;</span>
-                <span style="background:#7c7cf7; color:#fff; padding:2px 8px; border-radius:4px; font-size:12px;">1</span>
+                <span style="background:#ff4757; color:#fff; padding:2px 8px; border-radius:4px; font-size:12px;">1</span>
                 <span style="color:#aaa; cursor:pointer;">&gt;</span>
               </div>
             </div>
@@ -254,7 +327,7 @@
             <tbody>
               <tr>
                 <td>8</td>
-                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_welcome_2025</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_welcome_2025</a></td>
                 <td>Welcome $5 OFF</td>
                 <td>
                   <span style="color:#555">WELCOME5</span><br>
@@ -267,14 +340,14 @@
                 <td style="font-size:12px;">2025.04.01 00:00<br>~ 2026.01.31 23:59</td>
                 <td style="font-size:12px;">Hazel / Hazel</td>
                 <td>
-                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
+                  <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
+                  <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>7</td>
-                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_spring_promo</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_spring_promo</a></td>
                 <td>Spring 10% OFF</td>
                 <td>
                   <span style="color:#555">SPRING10</span><br>
@@ -287,14 +360,14 @@
                 <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.05.31 23:59</td>
                 <td style="font-size:12px;">Hazel / Jayden</td>
                 <td>
-                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
+                  <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
+                  <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>6</td>
-                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_launch_flat</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_launch_flat</a></td>
                 <td>Launch $10 OFF</td>
                 <td>
                   <span style="color:#555">LAUNCH10</span><br>
@@ -307,14 +380,14 @@
                 <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.04.30 23:59</td>
                 <td style="font-size:12px;">Jayden / Jayden</td>
                 <td>
-                  <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
+                  <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
+                  <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>5</td>
-                <td><a href="#" style="color:#7c7cf7;" onclick="showView('detail'); return false;">gb_vip_test</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_vip_test</a></td>
                 <td>VIP $20 OFF</td>
                 <td><span style="color:#ccc">-</span></td>
                 <td>$20.00</td>
@@ -324,8 +397,8 @@
                 <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.03.31 23:59</td>
                 <td style="font-size:12px;">Hazel / Hazel</td>
                 <td>
-                  <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:#999; font-weight:600;">OFF</span>
+                  <label class="toggle"><input type="checkbox" onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
+                  <span class="active-label" style="font-size:11px; color:#999; font-weight:600;">OFF</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm">수정하기</button></td>
               </tr>
@@ -337,7 +410,7 @@
       <!-- VIEW: Create Coupon -->
       <div id="view-create" class="view">
         <div class="page-header">
-          <h1 class="page-title">쿠폰 만들기</h1>
+          <h1 class="page-title">쿠폰 생성</h1>
         </div>
 
         <!-- Basic Info -->
@@ -346,41 +419,46 @@
 
           <div class="form-group">
             <label class="form-label">정책명 <span class="required">*</span></label>
-            <input type="text" class="input input-md" placeholder="예: gb_welcome_2025">
+            <input type="text" class="input input-md" placeholder="예: gb_welcome_2025" id="policy-name" data-label="정책명">
             <div class="form-hint">내부 관리용 정책명입니다.</div>
+            <div class="form-error" id="err-policy-name"></div>
           </div>
 
           <div class="form-group">
             <label class="form-label">
               공통 쿠폰 코드
             </label>
-            <input type="text" class="input input-md" placeholder="예: GDpromotion2025" maxlength="25">
-            <div class="form-hint">유저에게 공통으로 지급하기 위한 시크릿 코드로, 쿠폰 생성 후 시크릿 코드를 기반으로 쿠폰 발급 링크가 생성됩니다.</div>
+            <input type="text" class="input input-md" placeholder="예: GDpromotion2025" maxlength="25" id="coupon-code-input" oninput="validateCouponCode(this)">
+            <div class="form-hint">공통 코드로, 쿠폰 생성 후 이를 기반으로 발급 링크가 생성됩니다. 영문 대소문자·숫자만 가능하며 <strong>공백 불가</strong>, 최대 25자.</div>
+            <div class="form-error" id="coupon-code-error">영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)</div>
           </div>
 
           <div class="form-group">
             <label class="form-label">쿠폰명 <span class="required">*</span></label>
-            <input type="text" class="input input-md" placeholder="예: Welcome $5 OFF" maxlength="25">
+            <input type="text" class="input input-md" placeholder="예: Welcome $5 OFF" maxlength="25" id="coupon-name" data-label="쿠폰명">
+            <div class="form-error" id="err-coupon-name"></div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">쿠폰유형 <span class="required">*</span></label>
-              <select class="input input-sm" id="coupon-type" onchange="toggleAutoSection()">
+              <select class="input input-sm" id="coupon-type" data-label="쿠폰유형" onchange="toggleAutoSection()">
                 <option value="">선택하세요</option>
                 <option value="NORMAL">기본 쿠폰</option>
                 <option value="AUTO">자동 쿠폰</option>
               </select>
+              <div class="form-error" id="err-coupon-type"></div>
             </div>
 
             <div class="form-group" id="auto-criteria-section" style="display:none">
               <label class="form-label">
                 자동 쿠폰 발급 기준 <span class="required">*</span>
               </label>
-              <select class="input input-sm">
+              <select class="input input-sm" id="auto-criteria" data-label="자동 쿠폰 발급 기준">
                 <option value="">선택하세요</option>
                 <option value="SIGNUP">회원가입 시 발급</option>
               </select>
+              <div class="form-error" id="err-auto-criteria"></div>
             </div>
           </div>
 
@@ -388,10 +466,10 @@
 
         <!-- Issuance Condition -->
         <div class="form-card">
-          <div class="form-card-title">발급 조건</div>
+          <div class="form-card-title">사용 조건</div>
 
           <div class="form-group">
-            <label class="form-label">발급 조건</label>
+            <label class="form-label">사용 조건</label>
             <div class="form-hint" style="margin-bottom:8px;">쿠폰 적용 대상을 설정합니다. 미선택 시 전체 상품 대상.</div>
             <div style="display:flex; gap:20px; flex-wrap:wrap;">
               <label class="checkbox-item"><input type="radio" name="issuance-cond" value="" checked onchange="toggleIssuanceCond(this.value)"> 전체 (조건 없음)</label>
@@ -453,7 +531,7 @@
               쿠폰 발급 기준 통화 <span class="required">*</span>
             </label>
             <div class="checkbox-group">
-              <label class="checkbox-item"><input type="checkbox" checked> USD ($)</label>
+              <label class="checkbox-item"><input type="checkbox" checked onclick="return false;"> USD ($)</label>
             </div>
             <div class="form-hint">현재는 USD만 선택 가능합니다.</div>
           </div>
@@ -464,7 +542,7 @@
             </label>
             <select class="input input-sm" id="discount-type" onchange="toggleDiscountFields()">
               <option value="">선택하세요</option>
-              <option value="FIXED">정액할인</option>
+              <option value="FIXED" selected>정액할인</option>
               <option value="PERCENT">정률할인</option>
             </select>
           </div>
@@ -473,20 +551,25 @@
             <div class="form-group">
               <label class="form-label">할인율 <span class="required">*</span></label>
               <div class="input-with-unit">
-                <input type="text" class="input input-sm" placeholder="0" style="width:120px" inputmode="numeric">
+                <input type="text" class="input input-sm" placeholder="0" style="width:120px" inputmode="numeric" id="discount-rate-input" data-label="할인율" oninput="checkDiscountRate(this)">
                 <span class="input-unit">%</span>
               </div>
+              <div class="form-error show" id="discount-rate-warning" style="display:none; color:#e65100;">
+                할인율이 30% 이상입니다. 의도한 값이 맞는지 다시 확인해 주세요.
+              </div>
+              <div class="form-error" id="err-discount-rate"></div>
             </div>
           </div>
 
-          <div id="discount-fixed-section" style="display:none" class="conditional-section">
+          <div id="discount-fixed-section" class="conditional-section">
             <div class="form-group">
               <label class="form-label">
                 할인금액 <span class="required">*</span>              </label>
               <div class="input-with-unit">
                 <span class="input-unit">$</span>
-                <input type="text" class="input" placeholder="0.00" style="width:150px" inputmode="decimal">
+                <input type="text" class="input" placeholder="0.00" style="width:150px" inputmode="decimal" id="discount-amount" data-label="할인금액">
               </div>
+              <div class="form-error" id="err-discount-amount"></div>
             </div>
           </div>
 
@@ -496,8 +579,9 @@
             </label>
             <div class="input-with-unit">
               <span class="input-unit">$</span>
-              <input type="text" class="input" placeholder="0.00" inputmode="decimal" style="width:180px">
+              <input type="text" class="input" placeholder="0.00" inputmode="decimal" style="width:180px" id="min-amount" data-label="최소상품금액">
             </div>
+            <div class="form-error" id="err-min-amount"></div>
           </div>
         </div>
 
@@ -510,30 +594,52 @@
               쿠폰 발급기간 (UTC) <span class="required">*</span>
             </label>
             <div class="date-range">
-              <input type="text" class="input" style="width:220px" id="issue-start" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('issue')">
+              <div class="dp-wrap">
+                <input type="text" class="input dp-input" style="width:220px" id="issue-start" data-label="쿠폰 발급 시작일" data-default-time="00:00:00" placeholder="YYYY/MM/DD, HH:MM AM/PM" readonly>
+                <div class="dp-dropdown" id="issue-start-dd"></div>
+              </div>
               <span class="separator">~</span>
-              <input type="text" class="input" style="width:220px" id="issue-end" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('issue')">
+              <div class="dp-wrap">
+                <input type="text" class="input dp-input" style="width:220px" id="issue-end" data-label="쿠폰 발급 종료일" data-default-time="23:59:59" placeholder="YYYY/MM/DD, HH:MM AM/PM" readonly>
+                <div class="dp-dropdown" id="issue-end-dd"></div>
+              </div>
             </div>
+            <div class="form-error" id="err-issue-date"></div>
             <div class="kst-display" id="issue-kst">KST: 시간을 입력하면 KST 기준 시간이 표시됩니다.</div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">
-              쿠폰 사용기한 (UTC) <span class="required">*</span>
-            </label>
-            <div class="date-range">
-              <input type="text" class="input" style="width:220px" id="valid-start" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('valid')">
-              <span class="separator">~</span>
-              <input type="text" class="input" style="width:220px" id="valid-end" placeholder="YYYY/MM/DD, HH:MM AM" onfocus="this.type='datetime-local'" onchange="updateKST('valid')">
+            <label class="form-label">쿠폰 만료 방식 <span class="required">*</span></label>
+            <div style="display:flex; gap:20px; margin-bottom:16px;">
+              <label class="checkbox-item"><input type="radio" name="expiry-mode" value="DATE" checked onchange="toggleExpiryMode('DATE')"> 날짜 기준</label>
+              <label class="checkbox-item"><input type="radio" name="expiry-mode" value="PERIOD" onchange="toggleExpiryMode('PERIOD')"> 발급일 기준</label>
             </div>
-            <div class="kst-display" id="valid-kst">KST: 시간을 입력하면 KST 기준 시간이 표시됩니다.</div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">발급일 기준 사용기간 만료조건</label>
-            <div class="input-with-unit">
-              <input type="text" class="input" placeholder="0" inputmode="numeric" style="width:100px">
-              <span class="input-unit">일</span>
+            <div id="expiry-date-section">
+              <label class="form-label" style="font-weight:500; color:#555; font-size:12px;">쿠폰 사용기한 (UTC) <span class="required">*</span></label>
+              <div class="date-range">
+                <div class="dp-wrap">
+                  <input type="text" class="input dp-input" style="width:220px" id="valid-start" data-label="쿠폰 사용 시작일" data-default-time="00:00:00" placeholder="YYYY/MM/DD, HH:MM AM/PM" readonly>
+                  <div class="dp-dropdown" id="valid-start-dd"></div>
+                </div>
+                <span class="separator">~</span>
+                <div class="dp-wrap">
+                  <input type="text" class="input dp-input" style="width:220px" id="valid-end" data-label="쿠폰 사용 종료일" data-default-time="23:59:59" placeholder="YYYY/MM/DD, HH:MM AM/PM" readonly>
+                  <div class="dp-dropdown" id="valid-end-dd"></div>
+                </div>
+              </div>
+              <div class="form-error" id="err-valid-date"></div>
+              <div class="kst-display" id="valid-kst">KST: 시간을 입력하면 KST 기준 시간이 표시됩니다.</div>
+            </div>
+
+            <div id="expiry-period-section" style="display:none">
+              <label class="form-label" style="font-weight:500; color:#555; font-size:12px;">발급 후 사용 가능 기간 <span class="required">*</span></label>
+              <div class="input-with-unit">
+                <input type="text" class="input" placeholder="0" inputmode="numeric" style="width:100px" id="expiry-days" data-label="발급 후 사용 가능 기간">
+                <span class="input-unit">일</span>
+              </div>
+              <div class="form-hint">발급일로부터 입력한 일수 후 만료. 0~90일 설정 가능.</div>
+              <div class="form-error" id="err-expiry-days"></div>
             </div>
           </div>
         </div>
@@ -546,17 +652,19 @@
             <div class="form-group">
               <label class="form-label">인당 발급 가능 횟수 <span class="required">*</span></label>
               <div class="input-with-unit">
-                <input type="text" class="input" value="1" inputmode="numeric" style="width:100px">
+                <input type="text" class="input" value="1" inputmode="numeric" style="width:100px" id="per-user-limit" data-label="인당 발급 가능 횟수">
                 <span class="input-unit">회</span>
               </div>
+              <div class="form-error" id="err-per-user-limit"></div>
             </div>
 
             <div class="form-group">
               <label class="form-label">총 발급 가능 개수 <span class="required">*</span></label>
               <div class="input-with-unit">
-                <input type="text" class="input" value="10000" inputmode="numeric" style="width:180px">
+                <input type="text" class="input" value="10000" inputmode="numeric" style="width:180px" id="total-limit" data-label="총 발급 가능 개수">
                 <span class="input-unit">회</span>
               </div>
+              <div class="form-error" id="err-total-limit"></div>
             </div>
           </div>
         </div>
@@ -591,7 +699,7 @@
 
         <div class="form-actions">
           <button class="btn btn-secondary" onclick="showView('list')">취소</button>
-          <button class="btn btn-primary" onclick="showView('list')">쿠폰 만들기</button>
+          <button class="btn btn-primary" onclick="if (validateCreateForm()) showView('list')">쿠폰 생성</button>
         </div>
       </div>
 
@@ -652,7 +760,7 @@
               </div>
             </div>
             <div class="meta-item">
-              <div class="meta-label">발급 조건</div>
+              <div class="meta-label">사용 조건</div>
               <div class="meta-value">전체 (조건 없음)</div>
             </div>
             <div class="meta-item">
@@ -672,13 +780,85 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  toggleDiscountFields();
+  initDatePickers();
+});
+
 function showView(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
 
-  const titles = { list: '쿠폰 목록', create: '쿠폰 만들기', detail: '쿠폰 상세' };
+  const titles = { list: '쿠폰 목록', create: '쿠폰 생성', detail: '쿠폰 상세' };
   document.getElementById('breadcrumb-page').textContent = titles[view] || '';
+
+  // Sync top-nav active button
+  document.querySelectorAll('.proto-nav-btn').forEach(b => b.classList.remove('active'));
+  const navMap = { list: 0, create: 1, detail: 2 };
+  const navBtns = document.querySelectorAll('.proto-nav-btn');
+  if (navBtns[navMap[view]]) navBtns[navMap[view]].classList.add('active');
+
+  window.scrollTo(0, 0);
 }
+
+// ─── Changelog ──────────────────────────────────
+const ADMIN_CHANGELOG = [
+  {
+    version: 'v0.2',
+    date: '2026-05-07',
+    changes: [
+      '쿠폰 목록: 헤딩 "쿠폰 조회" → "쿠폰 목록"으로 변경',
+      '쿠폰 목록 필터에서 \'쿠폰 ID\' 제거 (상태/정책명/생성자/등록 일시로 단순화)',
+      '등록 일시 필터를 YYYY/MM/DD 커스텀 캘린더로 교체',
+      '쿠폰 목록에 [조회] / [초기화] 버튼 추가 — 정책명은 부분 일치, 생성자는 정확 일치 매칭',
+      '쿠폰 생성 폼: 발급기간/사용기한 입력을 YYYY/MM/DD, HH:MM AM/PM 커스텀 picker로 통일 (UTC + KST 동시 노출, Start 00:00:00 / End 23:59:59 자동 채움)',
+      '쿠폰 생성 폼: PRD 기반 입력 검증 — 필수/범위(할인율 0~30 등)/발급-사용 기간 cross-field 정책 적용',
+      '할인기준 디폴트 \'정액할인\' 명시',
+      "'쿠폰 만들기' → '쿠폰 생성'으로 용어 통일 (헤딩·버튼·사이드바)",
+      '사이드바를 \'쿠폰 관리/정산 관리\' 두 메뉴로 정리 (상품/주문/회원 관리 제거)',
+    ]
+  },
+  {
+    version: 'v0.1',
+    date: '2026-05-06',
+    changes: [
+      '글로벌번장 쿠폰 어드민 프로토타입 초기 릴리즈 — 목록/생성/상세 3개 뷰',
+      '상단 네비게이션 + 우측 정책 가이드라인 패널 추가',
+      '생성 폼: 정액/정률 할인, 자동/기본 쿠폰, 사용 조건 5종, 만료방식 2종 지원',
+      '상세 페이지: 활성/비활성/만료 상태 시뮬레이션',
+    ]
+  }
+];
+
+function openChangelog() {
+  const body = document.getElementById('changelog-body');
+  body.innerHTML = ADMIN_CHANGELOG.map((entry, i) => `
+    <div class="changelog-entry">
+      <div class="changelog-entry-head">
+        <span class="changelog-entry-version">${entry.version}</span>
+        ${i === 0 ? '<span class="changelog-entry-latest">LATEST</span>' : ''}
+        <span class="changelog-entry-date">${entry.date}</span>
+      </div>
+      <ul class="changelog-entry-list">
+        ${entry.changes.map(c => `<li>${c}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  document.getElementById('changelog-overlay').classList.add('show');
+}
+
+function closeChangelog() {
+  document.getElementById('changelog-overlay').classList.remove('show');
+}
+
+// Adjust body padding-top to actual nav height (handles wrap on narrow widths)
+function adjustBodyTop() {
+  const nav = document.querySelector('.proto-nav');
+  if (!nav) return;
+  document.body.style.paddingTop = nav.offsetHeight + 'px';
+}
+adjustBodyTop();
+window.addEventListener('resize', adjustBodyTop);
 
 function toggleAutoSection() {
   const type = document.getElementById('coupon-type').value;
@@ -689,6 +869,19 @@ function toggleDiscountFields() {
   const type = document.getElementById('discount-type').value;
   document.getElementById('discount-fixed-section').style.display = type === 'FIXED' ? '' : 'none';
   document.getElementById('discount-percent-section').style.display = type === 'PERCENT' ? '' : 'none';
+  if (type !== 'PERCENT') {
+    document.getElementById('discount-rate-warning').style.display = 'none';
+  }
+}
+
+function checkDiscountRate(input) {
+  let val = parseInt(input.value, 10);
+  if (!isNaN(val) && val > 30) {
+    input.value = 30;
+    val = 30;
+  }
+  const warning = document.getElementById('discount-rate-warning');
+  warning.style.display = (!isNaN(val) && val >= 30) ? '' : 'none';
 }
 
 function formatDateTime(d) {
@@ -702,19 +895,40 @@ function formatDateTime(d) {
   return yyyy + '/' + mm + '/' + dd + ', ' + String(hh).padStart(2, '0') + ':' + min + ' ' + ampm;
 }
 
+// Parse the input value. Prefer the precise ISO timestamp stored in dataset
+// (set by DatePicker.pick), fall back to the displayed string if not present.
+function parseInputUTC(input) {
+  if (!input || !input.value) return null;
+  if (input.dataset.iso) return new Date(input.dataset.iso);
+  const m = input.value.match(/^(\d{4})\/(\d{2})\/(\d{2}),\s*(\d{2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!m) return null;
+  let h = parseInt(m[4], 10);
+  const ampm = m[7].toUpperCase();
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], h, +m[5], +(m[6] || 0)));
+}
+
 function updateKST(prefix) {
-  const start = document.getElementById(prefix + '-start').value;
-  const end = document.getElementById(prefix + '-end').value;
+  const startEl = document.getElementById(prefix + '-start');
+  const endEl = document.getElementById(prefix + '-end');
   const el = document.getElementById(prefix + '-kst');
 
-  if (start || end) {
-    const formatKST = (utcStr) => {
-      if (!utcStr) return '—';
-      const d = new Date(utcStr + 'Z');
-      d.setHours(d.getHours() + 9);
-      return formatDateTime(d);
+  if (startEl.value || endEl.value) {
+    const formatKST = (input) => {
+      const d = parseInputUTC(input);
+      if (!d) return '—';
+      d.setUTCHours(d.getUTCHours() + 9);
+      const yyyy = d.getUTCFullYear();
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      let hh = d.getUTCHours();
+      const min = String(d.getUTCMinutes()).padStart(2, '0');
+      const ampm = hh >= 12 ? 'PM' : 'AM';
+      hh = hh % 12 || 12;
+      return yyyy + '/' + mm + '/' + dd + ', ' + String(hh).padStart(2, '0') + ':' + min + ' ' + ampm;
     };
-    el.textContent = 'KST: ' + formatKST(start) + ' ~ ' + formatKST(end);
+    el.textContent = 'KST: ' + formatKST(startEl) + ' ~ ' + formatKST(endEl);
   }
 }
 
@@ -734,6 +948,371 @@ function copyLink(code) {
   }).catch(() => {
     prompt('발급 링크:', url);
   });
+}
+
+function validateCouponCode(input) {
+  const val = input.value;
+  const isValid = /^[A-Za-z0-9]*$/.test(val);
+  const errEl = document.getElementById('coupon-code-error');
+  if (!isValid) {
+    input.value = val.replace(/[^A-Za-z0-9]/g, '');
+    errEl.classList.add('show');
+    setTimeout(() => errEl.classList.remove('show'), 2500);
+  }
+}
+
+// ─── Custom Date Picker ─────────────────────────
+const _datePickers = [];
+
+function initDatePickers() {
+  const specs = [
+    { id: 'issue-start',  kstPrefix: 'issue' },
+    { id: 'issue-end',    kstPrefix: 'issue' },
+    { id: 'valid-start',  kstPrefix: 'valid' },
+    { id: 'valid-end',    kstPrefix: 'valid' },
+    { id: 'filter-start', dateOnly: true },
+    { id: 'filter-end',   dateOnly: true },
+  ];
+  specs.forEach(s => _datePickers.push(new DatePicker(s.id, s.id + '-dd', s.kstPrefix, s.dateOnly)));
+
+  document.addEventListener('click', (e) => {
+    _datePickers.forEach(dp => {
+      if (!dp.input.contains(e.target) && !dp.dd.contains(e.target)) dp.close();
+    });
+  });
+}
+
+class DatePicker {
+  constructor(inputId, ddId, kstPrefix, dateOnly) {
+    this.input = document.getElementById(inputId);
+    this.dd = document.getElementById(ddId);
+    this.kstPrefix = kstPrefix;
+    this.dateOnly = !!dateOnly;
+    this.defaultTime = this.input.dataset.defaultTime || '00:00:00';
+    const today = new Date();
+    this.viewYear = today.getFullYear();
+    this.viewMonth = today.getMonth();
+    this.selected = null;
+    this.input.addEventListener('click', (e) => { e.stopPropagation(); this.toggle(); });
+    this.render();
+  }
+  toggle() {
+    const isOpen = this.dd.classList.contains('show');
+    _datePickers.forEach(dp => dp.close());
+    if (!isOpen) {
+      this.dd.classList.add('show');
+      this.render();
+    }
+  }
+  close() { this.dd.classList.remove('show'); }
+  render() {
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const firstDay = new Date(this.viewYear, this.viewMonth, 1).getDay();
+    const daysInMonth = new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
+    const today = new Date();
+    const isToday = (d) => today.getFullYear() === this.viewYear && today.getMonth() === this.viewMonth && today.getDate() === d;
+    const isSelected = (d) => this.selected && this.selected.y === this.viewYear && this.selected.m === this.viewMonth && this.selected.d === d;
+
+    let html = '<div class="dp-header">';
+    html += '<button type="button" class="dp-nav" data-nav="prev">&lt;</button>';
+    html += '<span>' + this.viewYear + ' ' + monthNames[this.viewMonth] + '</span>';
+    html += '<button type="button" class="dp-nav" data-nav="next">&gt;</button>';
+    html += '</div>';
+    html += '<div class="dp-grid">';
+    ['S','M','T','W','T','F','S'].forEach(w => html += '<div class="dp-weekday">' + w + '</div>');
+    for (let i = 0; i < firstDay; i++) html += '<div></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cls = ['dp-day'];
+      if (isToday(d)) cls.push('today');
+      if (isSelected(d)) cls.push('selected');
+      html += '<button type="button" class="' + cls.join(' ') + '" data-day="' + d + '">' + d + '</button>';
+    }
+    html += '</div>';
+    if (!this.dateOnly) {
+      const timeVal = this.defaultTime.slice(0, 5);
+      html += '<div class="dp-time-row"><span>Time</span><input type="time" class="dp-time-input" step="60" value="' + timeVal + '"></div>';
+    }
+    this.dd.innerHTML = html;
+
+    this.dd.querySelectorAll('.dp-nav').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (btn.dataset.nav === 'prev') {
+          if (--this.viewMonth < 0) { this.viewMonth = 11; this.viewYear--; }
+        } else {
+          if (++this.viewMonth > 11) { this.viewMonth = 0; this.viewYear++; }
+        }
+        this.render();
+      });
+    });
+    this.dd.querySelectorAll('.dp-day').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const day = parseInt(btn.dataset.day, 10);
+        this.pick(day);
+      });
+    });
+    const timeInput = this.dd.querySelector('.dp-time-input');
+    if (timeInput) {
+      timeInput.addEventListener('click', (e) => e.stopPropagation());
+      timeInput.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const v = timeInput.value || '00:00';
+        this.defaultTime = v + ':00';
+        if (this.selected) {
+          this.applySelection();
+        }
+      });
+    }
+  }
+  applySelection() {
+    if (!this.selected) return;
+    const { y, m, d } = this.selected;
+    const yyyy = y;
+    const mo = String(m + 1).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    const [hh, mm, ss] = this.defaultTime.split(':');
+    const h24 = parseInt(hh, 10);
+    const ampm = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = (h24 % 12) || 12;
+    this.input.value = yyyy + '/' + mo + '/' + dd + ', ' + String(h12).padStart(2, '0') + ':' + mm + ' ' + ampm;
+    this.input.dataset.iso = new Date(Date.UTC(y, m, d, h24, +mm, +(ss || 0))).toISOString();
+    updateKST(this.kstPrefix);
+    checkDateRangeErrors();
+  }
+  pick(day) {
+    this.selected = { y: this.viewYear, m: this.viewMonth, d: day };
+    const yyyy = this.viewYear;
+    const mo = String(this.viewMonth + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    if (this.dateOnly) {
+      this.input.value = yyyy + '/' + mo + '/' + dd;
+      this.input.dataset.iso = new Date(Date.UTC(yyyy, this.viewMonth, day)).toISOString();
+    } else {
+      const [hh, mm, ss] = this.defaultTime.split(':');
+      const h24 = parseInt(hh, 10);
+      const ampm = h24 >= 12 ? 'PM' : 'AM';
+      const h12 = (h24 % 12) || 12;
+      this.input.value = yyyy + '/' + mo + '/' + dd + ', ' + String(h12).padStart(2, '0') + ':' + mm + ' ' + ampm;
+      this.input.dataset.iso = new Date(Date.UTC(yyyy, this.viewMonth, day, h24, +mm, +(ss || 0))).toISOString();
+      updateKST(this.kstPrefix);
+      checkDateRangeErrors();
+    }
+    this.render();
+    setTimeout(() => this.close(), 150);
+  }
+}
+
+// ─── Cross-field Date Range Validation ──────────
+// Only acts when both endpoints of a period are populated.
+// Empty-state errors are owned by validateCreateForm.
+function checkDateRangeErrors() {
+  const issueStart = parseInputUTC(document.getElementById('issue-start'));
+  const issueEnd   = parseInputUTC(document.getElementById('issue-end'));
+  const validStart = parseInputUTC(document.getElementById('valid-start'));
+  const validEnd   = parseInputUTC(document.getElementById('valid-end'));
+
+  const setErr = (errId, msg) => {
+    const el = document.getElementById(errId);
+    if (!el) return;
+    if (msg) { el.textContent = msg; el.classList.add('show'); }
+    else { el.textContent = ''; el.classList.remove('show'); }
+  };
+
+  let issueErr = null, validErr = null;
+
+  if (issueStart && issueEnd) {
+    if (issueEnd < issueStart) issueErr = '종료시간은 시작시간 이후여야 합니다.';
+    setErr('err-issue-date', issueErr);
+  }
+
+  const expiryMode = (document.querySelector('input[name="expiry-mode"]:checked') || {}).value;
+  if (expiryMode === 'DATE' && validStart && validEnd) {
+    if (validEnd < validStart) {
+      validErr = '종료시간은 시작시간 이후여야 합니다.';
+    } else if (issueEnd && validEnd < issueEnd) {
+      validErr = '쿠폰 사용(유효) 종료기간은 쿠폰 발급 종료기간 이후여야 합니다.';
+    }
+    setErr('err-valid-date', validErr);
+  }
+
+  return { issueErr, validErr };
+}
+
+// ─── Form Validation ────────────────────────────
+function showFieldError(errId, label) {
+  const el = document.getElementById(errId);
+  if (!el) return;
+  el.textContent = label + ' 값을 입력해 주세요.';
+  el.classList.add('show');
+}
+function clearFieldError(errId) {
+  const el = document.getElementById(errId);
+  if (el) { el.textContent = ''; el.classList.remove('show'); }
+}
+
+function validateCreateForm() {
+  ['err-policy-name','err-coupon-name','err-coupon-type','err-auto-criteria',
+   'err-discount-rate','err-discount-amount','err-min-amount',
+   'err-issue-date','err-valid-date','err-expiry-days',
+   'err-per-user-limit','err-total-limit'].forEach(clearFieldError);
+
+  let firstInvalid = null;
+  const fail = (id, errId) => {
+    const el = document.getElementById(id);
+    showFieldError(errId, el.dataset.label);
+    if (!firstInvalid) firstInvalid = el;
+  };
+  const checkText = (id, errId) => {
+    const el = document.getElementById(id);
+    if (!el || el.offsetParent === null) return;
+    if (!el.value.trim()) fail(id, errId);
+  };
+  const intRange = (min, max) => v => /^-?\d+$/.test(v) && +v >= min && +v <= max;
+  const moneyRange = (min, max) => v => /^\d+(\.\d{1,2})?$/.test(v) && parseFloat(v) >= min && parseFloat(v) <= max;
+  const setMsg = (errId, msg) => {
+    const el = document.getElementById(errId);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+  };
+  const checkRange = (id, errId, validator, errMsg) => {
+    const el = document.getElementById(id);
+    if (!el || el.offsetParent === null) return;
+    const v = el.value.trim();
+    if (!v) { fail(id, errId); return; }
+    if (!validator(v)) {
+      setMsg(errId, errMsg);
+      if (!firstInvalid) firstInvalid = el;
+    }
+  };
+
+  checkText('policy-name', 'err-policy-name');
+  checkText('coupon-name', 'err-coupon-name');
+  checkText('coupon-type', 'err-coupon-type');
+
+  if (document.getElementById('coupon-type').value === 'AUTO') {
+    checkText('auto-criteria', 'err-auto-criteria');
+  }
+
+  // Discount fields (range + empty)
+  const discountType = document.getElementById('discount-type').value;
+  if (discountType === 'PERCENT') {
+    checkRange('discount-rate-input', 'err-discount-rate',
+      intRange(0, 30), '0에서 최대 30까지 입력 가능합니다.');
+  } else if (discountType === 'FIXED') {
+    checkRange('discount-amount', 'err-discount-amount',
+      moneyRange(0.01, 999.99), '0.01에서 최대 999.99까지 입력 가능합니다.');
+  }
+
+  checkRange('min-amount', 'err-min-amount',
+    moneyRange(0.01, 999999.99), '0.01에서 최대 999,999.99까지 입력 가능합니다.');
+
+  // Issue period (empty check; range check is in checkDateRangeErrors)
+  const issueStart = document.getElementById('issue-start');
+  const issueEnd = document.getElementById('issue-end');
+  if (!issueStart.value.trim() || !issueEnd.value.trim()) {
+    showFieldError('err-issue-date', '쿠폰 발급기간');
+    if (!firstInvalid) firstInvalid = issueStart;
+  }
+
+  // Expiry mode
+  const expiryMode = (document.querySelector('input[name="expiry-mode"]:checked') || {}).value;
+  if (expiryMode === 'DATE') {
+    const vs = document.getElementById('valid-start');
+    const ve = document.getElementById('valid-end');
+    if (!vs.value.trim() || !ve.value.trim()) {
+      showFieldError('err-valid-date', '쿠폰 사용기한');
+      if (!firstInvalid) firstInvalid = vs;
+    }
+  } else if (expiryMode === 'PERIOD') {
+    checkRange('expiry-days', 'err-expiry-days',
+      intRange(0, 90), '0에서 90까지 입력 가능합니다.');
+  }
+
+  checkRange('per-user-limit', 'err-per-user-limit',
+    intRange(1, 5), '1에서 5까지 입력 가능합니다.');
+  checkRange('total-limit', 'err-total-limit',
+    intRange(1, 999999999), '1에서 999,999,999까지 입력 가능합니다.');
+
+  // Cross-field date range checks (only act when both endpoints filled).
+  const rangeErrs = checkDateRangeErrors();
+  if (rangeErrs.issueErr && !firstInvalid) firstInvalid = document.getElementById('issue-end');
+  if (rangeErrs.validErr && !firstInvalid) firstInvalid = document.getElementById('valid-end');
+
+  // Cross-field: 최소상품금액 vs 할인금액/할인율 ($1 floor)
+  // Skip when either side already has an error from individual checks above.
+  const minAmtEl = document.getElementById('min-amount');
+  const minVal = parseFloat(minAmtEl.value);
+  const minHasErr = document.getElementById('err-min-amount').classList.contains('show');
+  if (!isNaN(minVal) && !minHasErr) {
+    if (discountType === 'FIXED') {
+      const discAmtEl = document.getElementById('discount-amount');
+      const discVal = parseFloat(discAmtEl.value);
+      const discHasErr = document.getElementById('err-discount-amount').classList.contains('show');
+      if (!isNaN(discVal) && !discHasErr && (minVal - discVal) < 1) {
+        setMsg('err-discount-amount', '최소상품금액 - 할인금액이 최소 $1 이상이어야 합니다.');
+        if (!firstInvalid) firstInvalid = discAmtEl;
+      }
+    } else if (discountType === 'PERCENT') {
+      const rateEl = document.getElementById('discount-rate-input');
+      const rateVal = parseFloat(rateEl.value);
+      const rateHasErr = document.getElementById('err-discount-rate').classList.contains('show');
+      if (!isNaN(rateVal) && !rateHasErr && (minVal * (1 - rateVal / 100)) < 1) {
+        setMsg('err-min-amount', '최소상품금액 기준 할인 후 금액이 최소 $1 이상이어야 합니다.');
+        if (!firstInvalid) firstInvalid = minAmtEl;
+      }
+    }
+  }
+
+  if (firstInvalid) {
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
+}
+
+function toggleExpiryMode(mode) {
+  document.getElementById('expiry-date-section').style.display = mode === 'DATE' ? '' : 'none';
+  document.getElementById('expiry-period-section').style.display = mode === 'PERIOD' ? '' : 'none';
+}
+
+function resetCouponFilters() {
+  const root = document.getElementById('coupon-filters');
+  if (!root) return;
+  root.querySelectorAll('select').forEach(s => { s.selectedIndex = 0; });
+  root.querySelectorAll('input').forEach(i => {
+    i.value = '';
+    delete i.dataset.iso;
+  });
+  _datePickers.forEach(dp => {
+    if (dp.input.id === 'filter-start' || dp.input.id === 'filter-end') {
+      dp.selected = null;
+    }
+  });
+}
+
+function applyCouponFilters() {
+  // Prototype: data is static, so no actual filtering. Brief visual feedback only.
+  const btn = event && event.currentTarget;
+  if (!btn) return;
+  const orig = btn.textContent;
+  btn.textContent = '조회 중…';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 400);
+}
+
+function updateActiveLabel(input) {
+  const cell = input.closest('td') || input.parentElement.parentElement;
+  const label = cell && cell.querySelector('.active-label');
+  if (!label) return;
+  if (input.checked) {
+    label.textContent = 'ON';
+    label.style.color = '#2e7d32';
+  } else {
+    label.textContent = 'OFF';
+    label.style.color = '#999';
+  }
 }
 </script>
 
