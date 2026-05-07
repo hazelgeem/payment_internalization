@@ -845,7 +845,7 @@
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">프록시 SSO 연동</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.13</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.14</button>
     <span>Updated 2026-05-07</span>
   </span>
 </div>
@@ -884,8 +884,8 @@
     <div class="sidebar-section">
       <div class="sidebar-section-title">프록시 노출 기준</div>
       <div class="sidebar-chips">
-        <button id="sb-proxy-multi" class="sidebar-chip" onclick="setProxyMode('multi')">Multi (3)</button>
-        <button id="sb-proxy-single" class="sidebar-chip active" onclick="setProxyMode('single')">Single (DK only)</button>
+        <button id="sb-proxy-single" class="sidebar-chip active" onclick="setProxyMode('single')">PH 1: Single (DK only)</button>
+        <button id="sb-proxy-multi" class="sidebar-chip" onclick="setProxyMode('multi')">PH 2: Multi (3)</button>
       </div>
     </div>
     <div class="sidebar-section">
@@ -1865,7 +1865,6 @@
           <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="dana"> <span>DANA</span><span class="alipay-sub-option-region">ID</span></label>
           <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="rabbit-linepay"> <span>Rabbit LINE Pay</span><span class="alipay-sub-option-region">TH</span></label>
           <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="bpi"> <span>BPI</span><span class="alipay-sub-option-region">PH</span></label>
-          <label class="alipay-sub-option" style="opacity:0.55;cursor:not-allowed;"><input type="radio" name="alipay-wallet" value="shopeepay" disabled> <span>ShopeePay</span><span class="alipay-sub-option-region">SEA</span><span style="font-size:10px;color:#e07b00;font-weight:600;margin-left:auto;">(under review)</span></label>
         </div>
 
         <label class="payment-option">
@@ -3360,7 +3359,7 @@
     <!-- ── 구매확정 ───────────────────────────────────────── -->
     <div id="diag-confirmation" class="diag-section">
       <div class="diag-section-title">구매확정 시퀀스</div>
-      <div class="diag-section-sub">Shop &amp; Ship Partner 창고 입고·검수 후 수동 확정, 또는 배송완료 5일 후 자동 확정. 구매확정 + 6영업일 후 정산 배치 트리거.</div>
+      <div class="diag-section-sub">Shop &amp; Ship Partner 창고 입고·검수 후 수동 확정, 또는 배송완료 5일 후 자동 확정. 구매확정 + 6영업일 후 정산 배치 트리거. <strong>영업일 기준: 한국 공휴일 + 결제국가 공휴일 + PG사 본사 공휴일 제외.</strong></div>
       <div class="diag-render">
         <div class="sq">
           <div class="sq-legend">
@@ -4579,6 +4578,15 @@ window.addEventListener('resize', closeAllInfoTooltips);
 
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
+  {
+    version: 'v1.14',
+    date: '2026-05-07',
+    changes: [
+      'Alipay+ 하위 지갑 목록에서 ShopeePay 제거',
+      '구매확정 시퀀스에 정산 영업일 기준 명시 (한국 공휴일 + 결제국가 공휴일 + PG사 본사 공휴일 제외)',
+      '프록시 노출 기준을 PH 1: Single (DK only) / PH 2: Multi (3) 페이즈 구조로 정리',
+    ]
+  },
   {
     version: 'v1.13',
     date: '2026-05-07',
