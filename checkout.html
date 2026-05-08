@@ -1592,7 +1592,6 @@
         <div class="modal-item-img"></div>
         <div class="modal-item-name" data-spec="{Product Name(EN)}">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
         <div class="modal-item-price" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-          <span data-spec="{usd_old_price}" style="font-size:11px;color:#aaa;text-decoration:line-through;font-weight:500;">USD 32.10</span>
           <span data-spec="{usd_new_price}">USD 34.62</span>
         </div>
       </div>
@@ -4721,7 +4720,7 @@ function openChangelog() {
       <div class="changelog-entry-head">
         <span class="changelog-entry-version">${entry.version}</span>
         ${i === 0 ? '<span class="changelog-entry-latest">LATEST</span>' : ''}
-        <span class="changelog-entry-date">${entry.date}</span>
+        <span class="changelog-entry-date">${entry.date}${entry.author ? ' · ' + entry.author : ''}</span>
       </div>
       <ul class="changelog-entry-list">
         ${entry.changes.map(c => `<li>${c}</li>`).join('')}

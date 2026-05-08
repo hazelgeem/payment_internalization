@@ -1,0 +1,6 @@
+# Internal documents — not for public repo
+/*.md
+!/nancy_onboarding.md
+
+# OS
+.DS_Store

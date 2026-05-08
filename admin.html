@@ -177,8 +177,15 @@
   .dp-day.today { background: #f5f5f5; font-weight: 700; }
   .dp-day.selected { background: #ff4757; color: #fff; }
   .dp-day.selected:hover { background: #e63946; color: #fff; }
-  .dp-time-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee; font-size: 12px; color: #555; }
-  .dp-time-input { font-size: 12px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; color: #333; background: #fff; font-family: inherit; }
+  .dp-time-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #555; }
+  .dp-time-label { font-weight: 600; color: #333; margin-right: 4px; }
+  .dp-time-input { width: 36px; text-align: center; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; font-family: inherit; }
+  .dp-time-input:focus { outline: none; border-color: #ff4757; }
+  .dp-time-sep { color: #888; }
+  .dp-ampm-btn { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-weight: 600; color: #333; margin-left: 4px; }
+  .dp-ampm-btn:hover { background: #f5f5f5; border-color: #ff4757; color: #ff4757; }
+  .dp-done-btn { margin-left: auto; background: #ff4757; color: #fff; border: none; border-radius: 4px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .dp-done-btn:hover { background: #e63946; }
 
   /* Responsive */
   @media (max-width: 1200px) {
@@ -989,6 +996,9 @@ class DatePicker {
     this.kstPrefix = kstPrefix;
     this.dateOnly = !!dateOnly;
     this.defaultTime = this.input.dataset.defaultTime || '00:00:00';
+    const [dh, dm] = this.defaultTime.split(':');
+    this.timeH24 = parseInt(dh, 10);
+    this.timeM = parseInt(dm, 10);
     const today = new Date();
     this.viewYear = today.getFullYear();
     this.viewMonth = today.getMonth();
@@ -1029,8 +1039,16 @@ class DatePicker {
     }
     html += '</div>';
     if (!this.dateOnly) {
-      const timeVal = this.defaultTime.slice(0, 5);
-      html += '<div class="dp-time-row"><span>Time</span><input type="time" class="dp-time-input" step="60" value="' + timeVal + '"></div>';
+      const ampm = this.timeH24 >= 12 ? 'PM' : 'AM';
+      const h12 = (this.timeH24 % 12) || 12;
+      html += '<div class="dp-time-row">';
+      html += '<span class="dp-time-label">Time</span>';
+      html += '<input type="text" class="dp-time-input" data-time="hour" maxlength="2" value="' + String(h12).padStart(2, '0') + '">';
+      html += '<span class="dp-time-sep">:</span>';
+      html += '<input type="text" class="dp-time-input" data-time="minute" maxlength="2" value="' + String(this.timeM).padStart(2, '0') + '">';
+      html += '<button type="button" class="dp-ampm-btn" data-time="ampm">' + ampm + '</button>';
+      html += '<button type="button" class="dp-done-btn" data-time="done">확인</button>';
+      html += '</div>';
     }
     this.dd.innerHTML = html;
 
@@ -1052,54 +1070,70 @@ class DatePicker {
         this.pick(day);
       });
     });
-    const timeInput = this.dd.querySelector('.dp-time-input');
-    if (timeInput) {
-      timeInput.addEventListener('click', (e) => e.stopPropagation());
-      timeInput.addEventListener('change', (e) => {
-        e.stopPropagation();
-        const v = timeInput.value || '00:00';
-        this.defaultTime = v + ':00';
-        if (this.selected) {
-          this.applySelection();
+    this.dd.querySelectorAll('.dp-time-input').forEach(inp => {
+      inp.addEventListener('click', (e) => e.stopPropagation());
+      inp.addEventListener('change', () => {
+        const raw = inp.value.replace(/\D/g, '');
+        let v = parseInt(raw, 10);
+        if (isNaN(v)) { this.render(); return; }
+        if (inp.dataset.time === 'hour') {
+          if (v < 1) v = 1;
+          if (v > 12) v = 12;
+          const isPM = this.timeH24 >= 12;
+          this.timeH24 = (v % 12) + (isPM ? 12 : 0);
+        } else {
+          if (v < 0) v = 0;
+          if (v > 59) v = 59;
+          this.timeM = v;
         }
+        this.applyTime();
+        this.render();
+      });
+    });
+    const ampmBtn = this.dd.querySelector('.dp-ampm-btn');
+    if (ampmBtn) {
+      ampmBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.timeH24 = (this.timeH24 + 12) % 24;
+        this.applyTime();
+        this.render();
+      });
+    }
+    const doneBtn = this.dd.querySelector('.dp-done-btn');
+    if (doneBtn) {
+      doneBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.close();
       });
     }
   }
-  applySelection() {
-    if (!this.selected) return;
-    const { y, m, d } = this.selected;
-    const yyyy = y;
-    const mo = String(m + 1).padStart(2, '0');
-    const dd = String(d).padStart(2, '0');
-    const [hh, mm, ss] = this.defaultTime.split(':');
-    const h24 = parseInt(hh, 10);
-    const ampm = h24 >= 12 ? 'PM' : 'AM';
-    const h12 = (h24 % 12) || 12;
+  applyTime() {
+    if (this.dateOnly || !this.selected) return;
+    const yyyy = this.selected.y;
+    const mo = String(this.selected.m + 1).padStart(2, '0');
+    const dd = String(this.selected.d).padStart(2, '0');
+    const ampm = this.timeH24 >= 12 ? 'PM' : 'AM';
+    const h12 = (this.timeH24 % 12) || 12;
+    const mm = String(this.timeM).padStart(2, '0');
     this.input.value = yyyy + '/' + mo + '/' + dd + ', ' + String(h12).padStart(2, '0') + ':' + mm + ' ' + ampm;
-    this.input.dataset.iso = new Date(Date.UTC(y, m, d, h24, +mm, +(ss || 0))).toISOString();
+    this.input.dataset.iso = new Date(Date.UTC(yyyy, this.selected.m, this.selected.d, this.timeH24, this.timeM, 0)).toISOString();
     updateKST(this.kstPrefix);
     checkDateRangeErrors();
   }
   pick(day) {
     this.selected = { y: this.viewYear, m: this.viewMonth, d: day };
-    const yyyy = this.viewYear;
-    const mo = String(this.viewMonth + 1).padStart(2, '0');
-    const dd = String(day).padStart(2, '0');
     if (this.dateOnly) {
+      const yyyy = this.viewYear;
+      const mo = String(this.viewMonth + 1).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
       this.input.value = yyyy + '/' + mo + '/' + dd;
       this.input.dataset.iso = new Date(Date.UTC(yyyy, this.viewMonth, day)).toISOString();
+      this.render();
+      setTimeout(() => this.close(), 150);
     } else {
-      const [hh, mm, ss] = this.defaultTime.split(':');
-      const h24 = parseInt(hh, 10);
-      const ampm = h24 >= 12 ? 'PM' : 'AM';
-      const h12 = (h24 % 12) || 12;
-      this.input.value = yyyy + '/' + mo + '/' + dd + ', ' + String(h12).padStart(2, '0') + ':' + mm + ' ' + ampm;
-      this.input.dataset.iso = new Date(Date.UTC(yyyy, this.viewMonth, day, h24, +mm, +(ss || 0))).toISOString();
-      updateKST(this.kstPrefix);
-      checkDateRangeErrors();
+      this.applyTime();
+      this.render();
     }
-    this.render();
-    setTimeout(() => this.close(), 150);
   }
 }
 
