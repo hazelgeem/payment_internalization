@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Global Bunjang — Checkout Flow Prototype</title>
+<link rel="stylesheet" href="../bunjang-gds/tokens.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f0f0; color: #222; font-size: 14px; }
@@ -18,7 +19,8 @@
 
   /* Header */
   .header { position: sticky; top: 0; z-index: 100; background: #fff; height: 48px; padding: 0 16px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
-  .header-back { font-size: 20px; cursor: pointer; color: #222; background: none; border: none; padding: 4px; line-height: 1; }
+  .header-back { cursor: pointer; color: var(--fg-neutral); background: none; border: none; padding: 4px; display: flex; align-items: center; justify-content: center; }
+  .gds-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
   .header-title { font-size: 16px; font-weight: 600; line-height: 1; }
   .header-icons { display: flex; gap: 16px; }
   .header-icons button { background: none; border: none; font-size: 18px; cursor: pointer; color: #222; }
@@ -38,7 +40,7 @@
   .section { background: #fff; margin-bottom: 8px; }
   .section-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
   .section-title { font-size: 15px; font-weight: 700; }
-  .section-toggle { font-size: 18px; color: #999; transition: transform 0.2s; }
+  .section-toggle { color: var(--fg-neutral-light); transition: transform 0.2s; display: flex; align-items: center; }
   .section-body { padding: 0 16px 16px; }
 
   /* Cart items */
@@ -93,20 +95,23 @@
   .coupon-download { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px dashed #ccc; border-radius: 8px; cursor: pointer; margin-top: 8px; }
   .coupon-download-text { font-size: 13px; color: #666; }
 
-  /* Payment methods */
-  .payment-option { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; gap: 10px; }
-  .payment-option:last-child { border-bottom: none; }
-  .payment-radio { accent-color: #222; }
-  .payment-name { flex: 1; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-  .alipay-sub-list { display: none; flex-direction: column; gap: 2px; padding: 4px 0 12px 30px; border-bottom: 1px solid #f5f5f5; }
+  /* Payment methods — card style */
+  .pm-card { border: 1px solid var(--ds-gray-100); border-radius: var(--ds-radius-8); padding: 14px 16px; display: flex; align-items: center; cursor: pointer; background: #fff; transition: border-color 0.15s; gap: 12px; }
+  .pm-card.selected { border: 1.5px solid var(--fg-neutral); }
+  .pm-card-col { display: flex; flex-direction: column; align-items: stretch; }
+  .pm-card-col .pm-row { display: flex; align-items: center; gap: 12px; }
+  .pm-off-badge { font-size: 10px; font-weight: 700; color: var(--bg-brand-solid); background: #fff0f0; border: 1px solid #ffd0d0; border-radius: 4px; padding: 1px 5px; white-space: nowrap; flex-shrink: 0; }
+  .pm-logo-chip { font-size: 10px; font-weight: 700; color: var(--fg-neutral-muted); border: 1px solid var(--ds-gray-100); border-radius: 4px; padding: 2px 6px; background: var(--ds-gray-10); }
+  .pm-logo-pill { font-size: 11px; font-weight: 700; border: 1px solid var(--ds-gray-100); border-radius: 5px; padding: 3px 8px; white-space: nowrap; background: var(--ds-gray-10); }
+  /* Alipay sub-wallet */
+  .alipay-sub-list { display: none; flex-direction: column; gap: 0; padding: 10px 0 2px 0; border-top: 1px solid var(--ds-gray-100); margin-top: 10px; }
   .alipay-sub-list.show { display: flex; }
-  .alipay-sub-list-label { font-size: 11px; color: #888; margin-bottom: 4px; letter-spacing: 0.02em; }
-  .alipay-sub-option { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer; font-size: 13px; color: #333; }
-  .alipay-sub-option input { accent-color: #222; }
-  .alipay-sub-option-region { color: #999; font-size: 11px; margin-left: 4px; }
-  .payment-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #e8f5e9; color: #2e7d32; font-weight: 600; }
-  .payment-icons { display: flex; gap: 4px; align-items: center; }
-  .payment-icon { height: 20px; padding: 2px 6px; border: 1px solid #eee; border-radius: 4px; font-size: 10px; font-weight: 600; display: flex; align-items: center; background: #fafafa; }
+  .alipay-sub-list-label { font-size: 12px; color: var(--fg-neutral-muted); margin-bottom: 8px; }
+  .alipay-sub-option { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; font-size: 13px; color: var(--fg-neutral); border-bottom: 1px solid var(--ds-gray-100); }
+  .alipay-sub-option:last-child { border-bottom: none; padding-bottom: 0; }
+  .alipay-sub-option input[type="radio"] { accent-color: var(--bg-brand-solid); width: 16px; height: 16px; flex-shrink: 0; }
+  /* legacy — kept for JS compat */
+  .payment-option { display: none; }
   .billing-check { padding: 12px 0; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; }
   .billing-check input { accent-color: #222; }
 
@@ -137,6 +142,12 @@
   .bottom-btn.primary:hover { background: #333; }
   .bottom-btn.disabled { background: #ddd; color: #999; cursor: not-allowed; }
   .bottom-note { text-align: center; font-size: 11px; color: #999; margin-top: 6px; }
+
+  /* GDS Action Button — login-screen.html 기준 */
+  .btn-primary { width: 100%; height: 50px; background: var(--bg-neutral-solid); color: var(--fg-neutral-inverse); border: none; border-radius: var(--ds-radius-8); font-family: inherit; font-feature-settings: 'case' 1, 'cpsp' 1, 'ss03' 1; font-size: 15px; font-weight: 700; line-height: 120%; letter-spacing: 0; cursor: pointer; transition: background 0.2s ease, transform 0.1s ease; }
+  .btn-primary:hover { filter: brightness(1.2); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { background: var(--bg-neutral-weak); color: var(--fg-neutral-disabled); cursor: not-allowed; }
   .bottom-price-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
   .bottom-price-label { font-size: 13px; color: #666; }
   .bottom-price-amount { font-size: 18px; font-weight: 800; }
@@ -408,16 +419,16 @@
   .sidebar-hint code { background: rgba(255,255,255,0.1); color: #c5c5ff; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; }
 
   /* Skeleton for images */
-  /* Per-item coupon */
-  .item-coupon-area { padding: 8px 12px; border-top: 1px solid #f0f0f0; }
-  .item-coupon-row { display: flex; justify-content: space-between; align-items: center; }
-  .item-coupon-label { font-size: 13px; color: #555; }
-  .item-coupon-select { font-size: 12px; color: #1565c0; background: none; border: 1px solid #bbdefb; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
-  .item-coupon-select:hover { background: #e3f2fd; }
-  .item-coupon-applied { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 6px 10px; background: #fff3e0; border-radius: 6px; }
-  .item-coupon-name { font-size: 12px; color: #e65100; font-weight: 600; flex: 1; }
-  .item-coupon-value { font-size: 12px; color: #e74c3c; font-weight: 700; }
-  .item-coupon-remove { background: none; border: none; font-size: 14px; color: #999; cursor: pointer; padding: 0 2px; }
+  /* Per-item coupon — GDS blue banner */
+  .item-coupon-area { background: #f2f8ff; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 0; }
+  .item-coupon-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .item-coupon-label { font-size: 13px; font-weight: 500; color: var(--fg-neutral-deep); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-coupon-select { font-size: 12px; font-weight: 400; color: var(--fg-informative); text-decoration: underline; background: none; border: none; cursor: pointer; flex-shrink: 0; white-space: nowrap; padding: 0; }
+  .item-coupon-select:hover { opacity: 0.8; }
+  .item-coupon-applied { display: flex; align-items: center; gap: 12px; }
+  .item-coupon-name { font-size: 13px; font-weight: 500; color: var(--fg-neutral-deep); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-coupon-value { font-size: 12px; font-weight: 400; color: var(--fg-informative); flex-shrink: 0; white-space: nowrap; }
+  .item-coupon-remove { background: none; border: none; font-size: 14px; color: var(--fg-neutral-placeholder); cursor: pointer; padding: 0; flex-shrink: 0; }
 
   /* Coupon bottom sheet */
   .coupon-sheet-overlay { position: fixed; top: 0; left: 0; right: 210px; bottom: 0; background: rgba(0,0,0,0.4); z-index: 500; display: flex; align-items: flex-end; justify-content: center; }
@@ -426,7 +437,7 @@
   .coupon-sheet-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; }
   .coupon-sheet-header { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
   .coupon-sheet-title { font-size: 16px; font-weight: 700; }
-  .coupon-sheet-close { background: #f0f0f0; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 15px; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .coupon-sheet-close { background: var(--bg-neutral-weak); border: none; width: 28px; height: 28px; border-radius: 50%; color: var(--fg-neutral-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .coupon-sheet-body { overflow-y: auto; padding: 16px 20px; flex: 1; }
   .coupon-code-row { display: flex; gap: 8px; margin-bottom: 6px; }
   .coupon-code-input { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 11px 14px; font-size: 13px; outline: none; }
@@ -487,17 +498,25 @@
   .order-card-btn { width: 100%; padding: 12px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; }
   .order-card-btn.outline { background: #fff; color: #555; border: 1px solid #ddd; }
 
-  /* Order item card */
-  .order-item-card { background: #f9f9f9; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-  .order-item-card .order-item { padding: 0; border-bottom: none; }
-  .order-item-card .order-item-img { width: 56px; height: 56px; }
-  .order-item-shipping { display: flex; justify-content: space-between; font-size: 12px; color: #888; padding: 6px 0 4px; margin-top: 4px; border-top: 1px solid #eee; }
-  .order-item-card .add-request-area { padding: 4px 0 0; }
+  /* Order item card — Figma GDS */
+  .order-item-card { border: 1px solid var(--ds-gray-100); border-radius: var(--ds-radius-12); padding: 16px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-neutral-inverse); }
+  /* Product info row */
+  .oc-product-info { display: flex; gap: 12px; align-items: flex-start; }
+  .oc-thumb { width: 56px; height: 56px; border-radius: var(--ds-radius-8); flex-shrink: 0; background: var(--ds-gray-70); }
+  .oc-meta { flex: 1; display: flex; flex-direction: column; gap: 6px; padding-top: 2px; min-width: 0; }
+  .order-item-card .order-item-name { font-size: 14px; font-weight: 500; color: var(--fg-neutral); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0; }
+  .oc-prices { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
+  .order-item-card .order-item-price { font-size: 15px; font-weight: 700; color: var(--fg-neutral); white-space: nowrap; text-align: left; }
+  .oc-price-original { font-size: 12px; font-weight: 700; color: var(--fg-neutral-placeholder); text-decoration: line-through; white-space: nowrap; }
+  .oc-price-discount { font-size: 12px; font-weight: 700; color: var(--fg-informative); white-space: nowrap; }
+  .order-item-shipping { font-size: 12px; font-weight: 400; color: var(--fg-neutral-muted); }
 
   /* Add Request */
   .add-request-area { padding: 0 0 8px; }
-  .add-request-btn { display: block; width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; color: #555; cursor: pointer; text-align: center; font-weight: 500; }
-  .add-request-btn:hover { background: #f8f8f8; }
+  /* neutralLight / small — button-spec.md */
+  .add-request-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; background: var(--bg-neutral-weak); color: var(--fg-neutral-deep); border: none; border-radius: var(--ds-radius-8); font-size: 12px; font-weight: 700; line-height: 120%; letter-spacing: 0; cursor: pointer; transition: filter 0.15s ease, transform 0.1s ease; }
+  .add-request-btn:hover { filter: brightness(0.96); }
+  .add-request-btn:active { transform: scale(0.98); }
   .request-panel { padding: 12px 0 4px; }
   .request-textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 12px; resize: none; height: 60px; font-family: inherit; }
   .request-textarea:focus { outline: none; border-color: #999; }
@@ -509,9 +528,16 @@
   .upload-thumb-remove { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #333; color: #fff; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
   .upload-icon { font-size: 24px; color: #bbb; }
   .request-save { display: block; width: 100%; margin-top: 10px; padding: 8px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
-  .request-saved { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 10px 12px; background: #f8f8f8; border-radius: 8px; margin-bottom: 8px; }
-  .request-saved-text { font-size: 12px; color: #444; flex: 1; line-height: 1.5; }
-  .request-saved-edit { flex-shrink: 0; font-size: 12px; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+  /* Request saved box — Figma gray section */
+  .request-saved { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; background: var(--bg-neutral-weak); border-radius: 10px; padding: 12px; }
+  .oc-request-left { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .request-saved-text { font-size: 13px; font-weight: 500; color: var(--fg-neutral-deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .request-saved-edit { font-size: 12px; font-weight: 400; color: var(--fg-neutral-muted); text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0; text-align: left; }
+  .oc-request-thumbs { display: flex; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
+  .oc-request-thumb-wrap { width: 36px; height: 36px; border-radius: var(--ds-radius-4); overflow: hidden; flex-shrink: 0; position: relative; background: var(--ds-gray-70); }
+  .oc-request-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: var(--ds-radius-4); }
+  .oc-request-more { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; background: rgba(0,0,0,0.4); border-radius: var(--ds-radius-2); display: flex; align-items: center; justify-content: center; }
+  .oc-request-more span { font-size: 9px; font-weight: 600; color: #fff; }
 
   /* SSO Bottom Sheet */
   .bottomsheet-overlay { position: fixed; top: 0; left: 0; right: 210px; bottom: 0; background: rgba(0,0,0,0.4); z-index: 500; display: flex; align-items: flex-end; justify-content: center; }
@@ -845,8 +871,8 @@
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">프록시 SSO 연동</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.14</button>
-    <span>Updated 2026-05-07</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.15</button>
+    <span>Updated 2026-05-11</span>
   </span>
 </div>
 
@@ -855,7 +881,7 @@
   <div class="changelog-modal">
     <div class="changelog-header">
       <span class="changelog-title">Changelog</span>
-      <button class="changelog-close" onclick="closeChangelog()">×</button>
+      <button class="changelog-close" onclick="closeChangelog()"><svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
     </div>
     <div class="changelog-body" id="changelog-body"></div>
   </div>
@@ -983,7 +1009,7 @@
 <!-- ============================================ -->
 <div id="screen-pdp" class="screen active">
   <div class="header">
-    <button class="header-back" style="color:#191919;padding:0 8px 0 0;">‹</button>
+    <button class="header-back" style="color:#191919;padding:0 8px 0 0;"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <a href="#" onclick="event.preventDefault();" style="display:inline-flex;align-items:center;text-decoration:none;">
       <svg width="98" height="17" viewBox="0 0 122 21" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="BUNJANG">
         <path d="M71.5366 3.22998C71.5088 3.22998 71.4861 3.25271 71.4861 3.28048V12.1984C71.4861 14.0357 70.6432 15.664 68.5957 15.664C66.9084 15.664 65.9524 14.2832 65.5883 13.7964C65.5706 13.7731 65.5372 13.7696 65.515 13.7888L63.1924 15.7913C63.1727 15.8084 63.1691 15.8372 63.1838 15.8584C64.2868 17.4422 65.8478 18.9275 68.7473 18.9275C73.0815 18.9275 74.8193 15.6306 74.8193 12.1989V3.28099C74.8193 3.25321 74.7966 3.23049 74.7688 3.23049H71.5366V3.22998Z" fill="black"/>
@@ -1253,7 +1279,7 @@
 <!-- ============================================ -->
 <div id="screen-cart" class="screen">
   <div class="header">
-    <button class="header-back">‹</button>
+    <button class="header-back"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title">Cart</span>
     <div class="header-icons">
       <button>⌂</button>
@@ -1278,7 +1304,7 @@
           <div class="cart-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
           <div class="cart-item-price">USD 4.08</div>
         </div>
-        <button class="cart-item-remove">×</button>
+        <button class="cart-item-remove"><svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
       </div>
 
       <div class="cart-item">
@@ -1288,7 +1314,7 @@
           <div class="cart-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
           <div class="cart-item-price">USD 34.62</div>
         </div>
-        <button class="cart-item-remove">×</button>
+        <button class="cart-item-remove"><svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
       </div>
 
       <div class="cart-item" style="opacity:0.5;">
@@ -1300,7 +1326,7 @@
           <div class="cart-item-name">Nct Dream Haechan Glitch Mode Photocard</div>
           <div class="cart-item-price" style="color:#999;">USD 2.31</div>
         </div>
-        <button class="cart-item-remove">×</button>
+        <button class="cart-item-remove"><svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
       </div>
 
       <div class="cart-summary">
@@ -1317,31 +1343,26 @@
 </div>
 
 <!-- ============================================ -->
-<!-- SCREEN 2: CHECKOUT -->
+<!-- SCREEN: SHIPPING FEE ESTIMATOR             -->
 <!-- ============================================ -->
-<div id="screen-checkout" class="screen">
+<div id="screen-shipping-calc" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="showScreen('checkout', false)"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
+    <span class="header-title">Shipping Fee Estimator</span>
+    <div style="width:28px;"></div>
+  </div>
 
-  <!-- Shipping Calculator Bottom Sheet -->
-  <div id="shipping-calc-sheet" class="coupon-sheet-overlay hidden">
-    <div class="coupon-sheet" style="max-height:92vh;">
-      <div class="coupon-sheet-handle"></div>
-      <div class="coupon-sheet-header">
-        <div>
-          <div class="coupon-sheet-title">Shipping Fee Estimator</div>
-          <div id="calc-subtitle" style="font-size:12px;color:#999;margin-top:2px;">Compare Paysable &amp; Kfriday rates at once</div>
-        </div>
-        <button class="coupon-sheet-close" onclick="closeShippingCalc()">×</button>
-      </div>
-      <div class="coupon-sheet-body">
+  <div class="content" style="padding: 20px 16px 110px;">
 
-        <!-- Estimates disclaimer -->
-        <div style="font-size:11px;color:#888;margin-bottom:14px;line-height:1.6;padding:10px 12px;background:#fafafa;border-radius:8px;">* Estimates only. Final fee calculated at the warehouse. Processing fees not included.</div>
+    <!-- INPUT SECTION -->
+    <div id="sc-input-section">
 
-        <!-- Country -->
-        <div style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:600;color:#333;display:block;margin-bottom:7px;">Destination Country</label>
-          <select id="calc-country" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;background:#fff;outline:none;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path d=%22M1 1l5 5 5-5%22 stroke=%22%23999%22 stroke-width=%221.5%22 fill=%22none%22/></svg>');background-repeat:no-repeat;background-position:right 14px center;">
-            <option value="">Select Country</option>
+      <!-- Destination Country -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;color:var(--fg-neutral-muted);margin-bottom:8px;">Destination Country</div>
+        <div style="position:relative;">
+          <select id="calc-country" style="width:100%;border:1.5px solid var(--ds-gray-100);border-radius:var(--ds-radius-8);padding:14px 44px 14px 14px;font-size:15px;color:var(--fg-neutral);background:#fff;outline:none;appearance:none;font-family:inherit;box-sizing:border-box;">
+            <option value="" style="color:var(--fg-neutral-placeholder);">Select Country</option>
             <option value="US">United States</option>
             <option value="UK">United Kingdom</option>
             <option value="AU">Australia</option>
@@ -1355,86 +1376,89 @@
             <option value="TH">Thailand</option>
             <option value="TW">Taiwan</option>
           </select>
+          <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--fg-neutral-light);display:flex;align-items:center;"><svg class="gds-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(180deg);"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
         </div>
-
-        <!-- Weight -->
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
-            <label style="font-size:13px;font-weight:600;color:#333;">Weight</label>
-            <div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;font-size:12px;">
-              <button id="unit-weight-kg" onclick="setWeightUnit('kg')" style="padding:4px 12px;border:none;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;">kg</button>
-              <button id="unit-weight-lbs" onclick="setWeightUnit('lbs')" style="padding:4px 12px;border:none;background:#222;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">lbs</button>
-            </div>
-          </div>
-          <input id="calc-weight" type="number" min="0" step="0.1" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;outline:none;background:#fafafa;">
-        </div>
-
-        <!-- Dimensions -->
-        <div style="margin-bottom:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
-            <label style="font-size:13px;font-weight:600;color:#333;">Package Size</label>
-            <div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-              <button id="unit-dim-cm" onclick="setDimUnit('cm')" style="padding:4px 12px;border:none;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;">cm</button>
-              <button id="unit-dim-in" onclick="setDimUnit('in')" style="padding:4px 12px;border:none;background:#222;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">in</button>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:11px;color:#888;margin-bottom:5px;">Width</div>
-              <input id="calc-width" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
-            </div>
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:11px;color:#888;margin-bottom:5px;">Length</div>
-              <input id="calc-length" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
-            </div>
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:11px;color:#888;margin-bottom:5px;">Height</div>
-              <input id="calc-height" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
-            </div>
-          </div>
-        </div>
-
-        <!-- Comparison results -->
-        <div id="calc-compare-result" style="display:none;margin-bottom:16px;">
-          <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Estimated Shipping Fee</div>
-          <div style="display:flex;gap:10px;margin-bottom:10px;">
-            <!-- Paysable -->
-            <div id="calc-paysable-card" onclick="selectCalcProxy('paysable')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:8px;" data-spec="{Proxy Name}">Paysable</div>
-              <div id="calc-paysable-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;" data-spec="{usd_estimated_shipping}"></div>
-              <div id="calc-paysable-detail" style="font-size:10px;color:#aaa;line-height:1.5;" data-spec="Vol. weight: {Vol Weight} kg ({W}×{L}×{H} ÷ {Divisor})"></div>
-            </div>
-            <!-- Kfriday -->
-            <div id="calc-kfriday-card" onclick="selectCalcProxy('kfriday')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:8px;" data-spec="{Proxy Name}">Kfriday</div>
-              <div id="calc-kfriday-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;" data-spec="{usd_estimated_shipping}"></div>
-              <div id="calc-kfriday-detail" style="font-size:10px;color:#aaa;line-height:1.5;" data-spec="Vol. weight: {Vol Weight} kg ({W}×{L}×{H} ÷ {Divisor})"></div>
-            </div>
-          </div>
-          <!-- Delivered Korea -->
-          <div id="calc-dk-card" style="border:1px solid #eee;border-radius:12px;padding:14px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-              <div style="width:32px;height:32px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;flex-shrink:0;">D</div>
-              <div>
-                <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:2px;" data-spec="{Proxy Name}">Delivered Korea</div>
-                <div style="font-size:11px;color:#999;line-height:1.4;" data-spec="Check the rate on {Proxy Name}'s website">Check the rate on DK's website</div>
-              </div>
-            </div>
-            <a href="https://www.deliveredkorea.com" target="_blank" onclick="event.stopPropagation()" style="flex-shrink:0;font-size:12px;font-weight:600;color:#e65100;background:#fff;border:1.5px solid #e65100;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;">Visit site ↗</a>
-          </div>
-          <div style="background:#f3f8ff;border:1px solid #d6e4f5;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#1565c0;line-height:1.6;">
-            <div style="font-weight:700;margin-bottom:4px;">📦 These rates are for shipping a single item.</div>
-            <div>If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
-          </div>
-          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
-        </div>
-
       </div>
-      <div class="coupon-sheet-footer">
-        <button id="calc-cta-btn" class="coupon-apply-btn" onclick="calcCtaAction()">Calculate</button>
+
+      <!-- Unit Toggle -->
+      <div style="display:flex;background:var(--bg-neutral-weak);border-radius:var(--ds-radius-8);padding:3px;margin-bottom:20px;gap:3px;">
+        <button id="sc-unit-imperial" onclick="setCalcUnit('imperial')" style="flex:1;padding:9px 6px;border:1.5px solid var(--fg-neutral);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--fg-neutral);font-family:inherit;">Imperial (lbs · in)</button>
+        <button id="sc-unit-metric" onclick="setCalcUnit('metric')" style="flex:1;padding:9px 6px;border:1.5px solid transparent;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--fg-neutral-muted);font-family:inherit;">Metric (kg · cm)</button>
+      </div>
+
+      <!-- Weight -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;color:var(--fg-neutral-muted);margin-bottom:8px;">Weight</div>
+        <div style="position:relative;">
+          <input id="calc-weight" type="number" min="0" step="0.1" placeholder="0" style="width:100%;border:1.5px solid var(--ds-gray-100);border-radius:var(--ds-radius-8);padding:14px 52px 14px 14px;font-size:16px;color:var(--fg-neutral);background:var(--bg-neutral-weak);outline:none;box-sizing:border-box;font-family:inherit;">
+          <span id="sc-weight-unit" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--fg-neutral-placeholder);pointer-events:none;">lbs</span>
+        </div>
+      </div>
+
+      <!-- Package Size -->
+      <div>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--fg-neutral-muted);margin-bottom:8px;text-align:center;">Width</div>
+            <div style="position:relative;">
+              <input id="calc-width" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid var(--ds-gray-100);border-radius:var(--ds-radius-8);padding:14px 26px 14px 10px;font-size:16px;color:var(--fg-neutral);background:var(--bg-neutral-weak);outline:none;box-sizing:border-box;font-family:inherit;text-align:center;">
+              <span class="sc-dim-unit" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--fg-neutral-placeholder);pointer-events:none;">in</span>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--fg-neutral-muted);margin-bottom:8px;text-align:center;">Length</div>
+            <div style="position:relative;">
+              <input id="calc-length" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid var(--ds-gray-100);border-radius:var(--ds-radius-8);padding:14px 26px 14px 10px;font-size:16px;color:var(--fg-neutral);background:var(--bg-neutral-weak);outline:none;box-sizing:border-box;font-family:inherit;text-align:center;">
+              <span class="sc-dim-unit" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--fg-neutral-placeholder);pointer-events:none;">in</span>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--fg-neutral-muted);margin-bottom:8px;text-align:center;">Height</div>
+            <div style="position:relative;">
+              <input id="calc-height" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid var(--ds-gray-100);border-radius:var(--ds-radius-8);padding:14px 26px 14px 10px;font-size:16px;color:var(--fg-neutral);background:var(--bg-neutral-weak);outline:none;box-sizing:border-box;font-family:inherit;text-align:center;">
+              <span class="sc-dim-unit" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--fg-neutral-placeholder);pointer-events:none;">in</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- /INPUT SECTION -->
+
+    <!-- RESULT SECTION -->
+    <div id="sc-result-section" style="display:none;">
+      <div style="font-size:17px;font-weight:700;color:var(--fg-neutral);margin-bottom:14px;">Select Shipping Agent</div>
+      <div id="sc-agent-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;"></div>
+      <!-- Disclaimer -->
+      <div style="display:flex;align-items:flex-start;gap:8px;background:#fff5f5;border-radius:var(--ds-radius-8);padding:12px 14px;margin-bottom:16px;">
+        <svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--fg-negative);flex-shrink:0;margin-top:1px;"><path d="M2.9248 2.92383C6.82774 -0.973954 13.1723 -0.974963 17.0742 2.92383C20.9751 6.82464 20.9751 13.1695 17.0742 17.0693C15.1844 18.9595 12.6719 20 10 20C7.32805 20 4.8156 18.9596 2.9248 17.0693C-0.975057 13.1696 -0.974979 6.82465 2.9248 2.92383ZM10 1.81641C7.90402 1.81641 5.80765 2.61468 4.21191 4.20996C1.02053 7.40053 1.02047 12.5917 4.21191 15.7822C5.75711 17.3279 7.81312 18.1797 10 18.1797C12.1867 18.1796 14.242 17.3278 15.7871 15.7822C18.9786 12.5917 18.9786 7.40052 15.7871 4.20996C14.1915 2.61481 12.0958 1.81649 10 1.81641Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10.0024 6.77685C10.5641 6.77685 11.0177 6.3222 11.0177 5.76147C11.0177 5.20074 10.5641 4.74609 10.0024 4.74609C9.44169 4.74609 8.98706 5.20074 8.98706 5.76147C8.98706 6.3222 9.44169 6.77685 10.0024 6.77685Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8.35653 9.84205H9.09303V13.1266C9.09303 13.1296 9.09404 13.1327 9.09404 13.1367V14.6158C9.09404 15.118 9.5022 15.5251 10.0043 15.5251C10.5064 15.5251 10.9136 15.118 10.9136 14.6158L10.9126 8.93276C10.9126 8.43063 10.5054 8.02246 10.0033 8.02246H8.35653C7.85441 8.02246 7.44727 8.43063 7.44727 8.93276C7.44727 9.43489 7.85441 9.84205 8.35653 9.84205Z" fill="currentColor"/></svg>
+        <span style="font-size:12px;color:var(--fg-neutral-deep);line-height:1.5;">Estimates only. Final fee calculated at the warehouse. Processing fees not included.</span>
       </div>
     </div>
+    <!-- /RESULT SECTION -->
+
   </div>
+
+  <!-- Sticky footer CTA -->
+  <div style="position:sticky;bottom:0;background:#fff;border-top:1px solid var(--ds-gray-100);padding:16px;">
+    <button id="sc-cta-btn" class="btn-primary t3-bold" onclick="scCtaAction()">Calculate</button>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="modal-agent-confirm" class="modal-overlay hidden">
+    <div class="modal" style="text-align:center;">
+      <div class="modal-title">Estimated fee, not final</div>
+      <div class="modal-body" style="text-align:center;">The actual fee is calculated after your items arrive in Korea and may differ from this estimate.</div>
+      <button class="btn-primary t3-bold" onclick="scGotIt()">Got it</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN 2: CHECKOUT -->
+<!-- ============================================ -->
+<div id="screen-checkout" class="screen">
 
   <!-- Coupon Selection Bottom Sheet -->
   <div id="coupon-sheet" class="coupon-sheet-overlay hidden">
@@ -1442,7 +1466,7 @@
       <div class="coupon-sheet-handle"></div>
       <div class="coupon-sheet-header">
         <span class="coupon-sheet-title">Select Coupon</span>
-        <button class="coupon-sheet-close" onclick="closeCouponSheet()">×</button>
+        <button class="coupon-sheet-close" onclick="closeCouponSheet()"><svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
       </div>
       <div class="coupon-sheet-body">
 
@@ -1641,7 +1665,7 @@
   </div>
 
   <div class="header">
-    <button class="header-back" onclick="showScreen('cart')">‹</button>
+    <button class="header-back" onclick="showScreen('cart')"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title">Check Out</span>
     <span></span>
   </div>
@@ -1652,49 +1676,54 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <span class="section-title" id="order-summary-title" data-spec="Order Summary ({Item Count})">Order Summary (2)</span>
-        <span class="section-toggle">^</span>
+        <span class="section-toggle"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
       </div>
       <div class="section-body">
         <div class="order-item-card" id="order-card-item1">
-          <div class="order-item">
-            <div class="order-item-img img-placeholder hat"></div>
-            <div class="order-item-info">
+          <!-- Product Info -->
+          <div class="oc-product-info">
+            <div class="oc-thumb img-placeholder hat"></div>
+            <div class="oc-meta">
               <div class="order-item-name" data-spec="{Product Name(EN)}">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
-              <div class="order-item-qty" data-spec="Qty: {Qty}">Qty: 1</div>
+              <div class="oc-prices">
+                <span class="order-item-price" data-spec="{usd_price_raw}">USD 4.08</span>
+              </div>
+              <div class="order-item-shipping" data-spec="+ {USD_shipping_fee_domestic} domestic shipping">+ USD 2.50 domestic shipping</div>
             </div>
-            <div class="order-item-price" data-spec="{usd_price_raw}">USD 4.08</div>
           </div>
+          <!-- Coupon Banner -->
           <div class="item-coupon-area" id="coupon-area-item1">
             <div class="item-coupon-row">
-              <span class="item-coupon-label">🎫 Coupon</span>
-              <button class="item-coupon-select" onclick="openCouponSheet('item1', [1,2], 4.08)">Select Coupon ›</button>
+              <span class="item-coupon-label">Available coupon</span>
+              <button class="item-coupon-select" onclick="openCouponSheet('item1', [1,2], 4.08)" style="display:inline-flex;align-items:center;gap:2px;">Select <svg class="gds-icon" width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.67021 15.84C6.78428 15.9467 6.93399 16 7.08371 16C7.23212 16 7.38184 15.9473 7.49526 15.8406L13.3283 10.4012C13.4378 10.2988 13.4994 10.16 13.5 10.0158C13.5 9.87091 13.4384 9.73212 13.3295 9.6297L7.49655 4.16061C7.26906 3.94727 6.89964 3.94606 6.67151 4.1594C6.44337 4.37212 6.44272 4.71758 6.67021 4.93091L12.0917 10.0139L6.67151 15.0685C6.44337 15.2812 6.44272 15.6267 6.67021 15.84Z" fill="currentColor"/></svg></button>
             </div>
             <div class="item-coupon-applied" style="display:none;">
               <span class="item-coupon-name"></span>
               <span class="item-coupon-value"></span>
-              <button class="item-coupon-remove" onclick="removeCoupon('item1')">✕</button>
+              <button class="item-coupon-remove" onclick="removeCoupon('item1')"><svg class="gds-icon" width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
             </div>
           </div>
-          <div class="order-item-shipping">
-            <span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 2.50</span>
-          </div>
+          <!-- Request Area -->
           <div class="add-request-area">
-            <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
+            <button class="add-request-btn" onclick="toggleRequest(this)">Add Request to Seller</button>
             <div class="request-saved" style="display:none;">
-              <span class="request-saved-text"></span>
-              <button class="request-saved-edit" onclick="
-                const area = this.closest('.add-request-area');
-                area.querySelector('.request-saved').style.display='none';
-                area.querySelector('.request-panel').style.display='block';
-              ">Edit</button>
+              <div class="oc-request-left">
+                <div class="request-saved-text"></div>
+                <button class="request-saved-edit" onclick="
+                  const area = this.closest('.add-request-area');
+                  area.querySelector('.request-saved').style.display='none';
+                  area.querySelector('.request-panel').style.display='block';
+                ">Edit Request</button>
+              </div>
+              <div class="oc-request-thumbs"></div>
             </div>
             <div class="request-panel" style="display:none;">
-              <div style="font-size:12px;color:#888;margin-bottom:6px;">Message to Seller</div>
+              <div style="font-size:12px;color:var(--fg-neutral-muted);margin-bottom:6px;">Message to Seller</div>
               <textarea class="request-textarea" placeholder="e.g. Could you provide additional photos?"></textarea>
-              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images</div>
+              <div style="font-size:12px;color:var(--fg-neutral-muted);margin:10px 0 6px;">Additional Images</div>
               <div class="request-upload" data-max="5">
                 <div class="upload-box upload-add-btn" onclick="triggerImageUpload(this)">
-                  <span class="upload-icon" style="font-size:20px;color:#bbb;">+</span>
+                  <span class="upload-icon" style="font-size:20px;color:var(--fg-neutral-disabled);">+</span>
                   <input type="file" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
                 </div>
               </div>
@@ -1704,45 +1733,52 @@
         </div>
 
         <div class="order-item-card">
-          <div class="order-item">
-            <div class="order-item-img img-placeholder hat"></div>
-            <div class="order-item-info">
+          <!-- Product Info -->
+          <div class="oc-product-info">
+            <div class="oc-thumb img-placeholder hat"></div>
+            <div class="oc-meta">
               <div class="order-item-name" data-spec="{Product Name(EN)}">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
-              <div class="order-item-qty" data-spec="Qty: {Qty}">Qty: 1</div>
+              <div class="oc-prices">
+                <span class="order-item-price" data-spec="{usd_price_raw}">USD 34.62</span>
+                <span class="oc-price-original">USD 43.27</span>
+                <span class="oc-price-discount">20% OFF</span>
+              </div>
+              <div class="order-item-shipping" data-spec="+ {USD_shipping_fee_domestic} domestic shipping">+ USD 2.50 domestic shipping</div>
             </div>
-            <div class="order-item-price" data-spec="{usd_price_raw}">USD 34.62</div>
           </div>
+          <!-- Coupon Banner -->
           <div class="item-coupon-area" id="coupon-area-item2">
             <div class="item-coupon-row">
-              <span class="item-coupon-label">🎫 Coupon</span>
-              <button class="item-coupon-select" onclick="openCouponSheet('item2', [1,2], 34.62)">Select Coupon ›</button>
+              <span class="item-coupon-label">Available coupon</span>
+              <button class="item-coupon-select" onclick="openCouponSheet('item2', [1,2], 34.62)" style="display:inline-flex;align-items:center;gap:2px;">Select <svg class="gds-icon" width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.67021 15.84C6.78428 15.9467 6.93399 16 7.08371 16C7.23212 16 7.38184 15.9473 7.49526 15.8406L13.3283 10.4012C13.4378 10.2988 13.4994 10.16 13.5 10.0158C13.5 9.87091 13.4384 9.73212 13.3295 9.6297L7.49655 4.16061C7.26906 3.94727 6.89964 3.94606 6.67151 4.1594C6.44337 4.37212 6.44272 4.71758 6.67021 4.93091L12.0917 10.0139L6.67151 15.0685C6.44337 15.2812 6.44272 15.6267 6.67021 15.84Z" fill="currentColor"/></svg></button>
             </div>
             <div class="item-coupon-applied" style="display:none;">
               <span class="item-coupon-name"></span>
               <span class="item-coupon-value"></span>
-              <button class="item-coupon-remove" onclick="removeCoupon('item2')">✕</button>
+              <button class="item-coupon-remove" onclick="removeCoupon('item2')"><svg class="gds-icon" width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
             </div>
           </div>
-          <div class="order-item-shipping">
-            <span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 2.50</span>
-          </div>
+          <!-- Request Area -->
           <div class="add-request-area">
-            <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
+            <button class="add-request-btn" onclick="toggleRequest(this)">Add Request to Seller</button>
             <div class="request-saved" style="display:none;">
-              <span class="request-saved-text"></span>
-              <button class="request-saved-edit" onclick="
-                const area = this.closest('.add-request-area');
-                area.querySelector('.request-saved').style.display='none';
-                area.querySelector('.request-panel').style.display='block';
-              ">Edit</button>
+              <div class="oc-request-left">
+                <div class="request-saved-text"></div>
+                <button class="request-saved-edit" onclick="
+                  const area = this.closest('.add-request-area');
+                  area.querySelector('.request-saved').style.display='none';
+                  area.querySelector('.request-panel').style.display='block';
+                ">Edit Request</button>
+              </div>
+              <div class="oc-request-thumbs"></div>
             </div>
             <div class="request-panel" style="display:none;">
-              <div style="font-size:12px;color:#888;margin-bottom:6px;">Message to Seller</div>
+              <div style="font-size:12px;color:var(--fg-neutral-muted);margin-bottom:6px;">Message to Seller</div>
               <textarea class="request-textarea" placeholder="e.g. Could you provide additional photos?"></textarea>
-              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images</div>
+              <div style="font-size:12px;color:var(--fg-neutral-muted);margin:10px 0 6px;">Additional Images</div>
               <div class="request-upload" data-max="5">
                 <div class="upload-box upload-add-btn" onclick="triggerImageUpload(this)">
-                  <span class="upload-icon" style="font-size:20px;color:#bbb;">+</span>
+                  <span class="upload-icon" style="font-size:20px;color:var(--fg-neutral-disabled);">+</span>
                   <input type="file" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
                 </div>
               </div>
@@ -1757,20 +1793,33 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <div>
-          <span class="section-title">Shop & Ship Partner</span>
-          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally. Service policies (returns, consolidation, fees) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
+          <span class="section-title">Shipping Agent</span>
+          <div style="font-size:12px;color:var(--fg-neutral-light);margin-top:3px;line-height:1.5;">Receives your items in Korea, communicates with sellers, and ships internationally on your behalf.</div>
         </div>
-        <span class="section-toggle">^</span>
+        <span class="section-toggle"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
       </div>
       <div class="section-body">
-        <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
+        <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;align-items:center;gap:8px;">
           <span style="font-size:14px;flex-shrink:0;">🔴</span>
-          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Shop & Ship Partner.</span>
+          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Shipping Agent.</span>
         </div>
         <div id="proxy-section-container"></div>
-        <div class="shipping-fee-note" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <span>ℹ️ International shipping fee will be paid on the Shop & Ship Partner's website after items arrive at the warehouse</span>
-          <button id="estimate-btn-proxy" onclick="openShippingCalc()" style="font-size:12px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;">Estimate</button>
+        <!-- FAQ Accordion -->
+        <div style="border:1px solid var(--ds-gray-100);border-radius:var(--ds-radius-8);overflow:hidden;margin-top:4px;">
+          <button onclick="this.classList.toggle('faq-open');this.nextElementSibling.style.display=this.classList.contains('faq-open')?'block':'none';this.querySelector('.faq-chevron').style.transform=this.classList.contains('faq-open')?'rotate(180deg)':'rotate(0deg)';" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:none;border:none;cursor:pointer;text-align:left;">
+            <span style="font-size:13px;font-weight:500;color:var(--fg-neutral);">When do I enter my delivery address?</span>
+            <span class="faq-chevron" style="color:var(--fg-neutral-light);transition:transform 0.2s;display:flex;align-items:center;flex-shrink:0;"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(180deg);"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
+          </button>
+          <div style="display:none;padding:0 14px 12px;font-size:13px;color:var(--fg-neutral-muted);line-height:1.6;border-top:1px solid var(--ds-gray-100);">
+            After your items arrive at the Shipping Agent's Korean warehouse, you'll receive a notification to log in to their site and enter your international delivery address.
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#ebf5ff;border-radius:var(--ds-radius-8);padding:12px 14px;margin-top:8px;">
+          <svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--fg-informative);flex-shrink:0;margin-top:1px;"><path d="M2.9248 2.92383C6.82774 -0.973954 13.1723 -0.974963 17.0742 2.92383C20.9751 6.82464 20.9751 13.1695 17.0742 17.0693C15.1844 18.9595 12.6719 20 10 20C7.32805 20 4.8156 18.9596 2.9248 17.0693C-0.975057 13.1696 -0.974979 6.82465 2.9248 2.92383ZM10 1.81641C7.90402 1.81641 5.80765 2.61468 4.21191 4.20996C1.02053 7.40053 1.02047 12.5917 4.21191 15.7822C5.75711 17.3279 7.81312 18.1797 10 18.1797C12.1867 18.1796 14.242 17.3278 15.7871 15.7822C18.9786 12.5917 18.9786 7.40052 15.7871 4.20996C14.1915 2.61481 12.0958 1.81649 10 1.81641Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10.0024 6.77685C10.5641 6.77685 11.0177 6.3222 11.0177 5.76147C11.0177 5.20074 10.5641 4.74609 10.0024 4.74609C9.44169 4.74609 8.98706 5.20074 8.98706 5.76147C8.98706 6.3222 9.44169 6.77685 10.0024 6.77685Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8.35653 9.84205H9.09303V13.1266C9.09303 13.1296 9.09404 13.1327 9.09404 13.1367V14.6158C9.09404 15.118 9.5022 15.5251 10.0043 15.5251C10.5064 15.5251 10.9136 15.118 10.9136 14.6158L10.9126 8.93276C10.9126 8.43063 10.5054 8.02246 10.0033 8.02246H8.35653C7.85441 8.02246 7.44727 8.43063 7.44727 8.93276C7.44727 9.43489 7.85441 9.84205 8.35653 9.84205Z" fill="currentColor"/></svg>
+          <div style="flex:1;">
+            <div style="font-size:12px;color:var(--fg-neutral-deep);line-height:1.5;">International shipping fee is billed separately after items arrive in Korea.</div>
+            <button id="estimate-btn-proxy" onclick="openShippingCalc()" style="font-size:12px;color:var(--fg-informative);background:none;border:none;cursor:pointer;padding:0;font-weight:500;display:inline-flex;align-items:center;gap:2px;margin-top:4px;">Estimate fee <svg class="gds-icon" width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.67021 15.84C6.78428 15.9467 6.93399 16 7.08371 16C7.23212 16 7.38184 15.9473 7.49526 15.8406L13.3283 10.4012C13.4378 10.2988 13.4994 10.16 13.5 10.0158C13.5 9.87091 13.4384 9.73212 13.3295 9.6297L7.49655 4.16061C7.26906 3.94727 6.89964 3.94606 6.67151 4.1594C6.44337 4.37212 6.44272 4.71758 6.67021 4.93091L12.0917 10.0139L6.67151 15.0685C6.44337 15.2812 6.44272 15.6267 6.67021 15.84Z" fill="currentColor"/></svg></button>
+          </div>
         </div>
       </div>
     </div>
@@ -1779,7 +1828,7 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <span class="section-title">Shipping &amp; Delivery</span>
-        <span class="section-toggle">^</span>
+        <span class="section-toggle"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
       </div>
       <div class="section-body">
 
@@ -1811,68 +1860,80 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <span class="section-title">Payment</span>
-        <span class="section-toggle">^</span>
+        <span class="section-toggle"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
       </div>
-      <div class="section-body" style="padding-bottom:8px;">
+      <div class="section-body" style="display:flex;flex-direction:column;gap:8px;padding-bottom:8px;">
 
-        <!-- Quick Pay -->
-        <div class="quick-pay-section" style="padding:0 0 4px;">
-          <div class="quick-pay-buttons">
-            <button id="qp-apple-btn" class="quick-pay-btn apple" onclick="selectQuickPayMethod('apple')" style="background:#fff;color:#222;border:1px solid #ddd;font-size:13px;padding:10px;">Apple Pay</button>
-            <button id="qp-google-btn" class="quick-pay-btn google" onclick="selectQuickPayMethod('google')" style="font-size:13px;padding:10px;"><span style="color:#4285f4;font-weight:800;">G</span> Pay</button>
+        <!-- Apple Pay -->
+        <div class="pm-card" id="pm-apple" onclick="selectPmCard('apple')">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+            <span style="font-size:14px;font-weight:600;color:var(--fg-neutral);">Apple Pay</span>
+            <span class="pm-off-badge">5% OFF</span>
           </div>
-          <div class="quick-pay-divider">or pay with</div>
+          <span class="pm-logo-pill" style="background:#000;color:#fff;border-color:#000;">&#xf8ff; Pay</span>
         </div>
 
-        <label class="payment-option">
-          <input type="radio" name="payment" class="payment-radio" checked onchange="onPaymentMethodChange('card')">
-          <span class="payment-name">Credit Card</span>
-          <div class="payment-icons">
-            <span class="payment-icon">VISA</span>
-            <span class="payment-icon">MC</span>
-            <span class="payment-icon">AMEX</span>
+        <!-- Google Pay -->
+        <div class="pm-card" id="pm-google" onclick="selectPmCard('google')">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+            <span style="font-size:14px;font-weight:600;color:var(--fg-neutral);">Google Pay</span>
+            <span class="pm-off-badge">5% OFF</span>
           </div>
-        </label>
+          <span class="pm-logo-pill"><span style="color:#4285f4;font-weight:800;">G</span> Pay</span>
+        </div>
 
-        <label class="payment-option" style="align-items:flex-start;padding:14px 0;">
-          <input type="radio" name="payment" class="payment-radio" style="margin-top:3px;" onchange="onPaymentMethodChange('paypal')">
-          <div style="flex:1;">
-            <span class="payment-name">PayPal</span>
-            <div style="font-size:11px;color:#e07b00;margin-top:3px;font-weight:500;">
-              Not eligible for payment promotions
+        <!-- Credit Card -->
+        <div class="pm-card selected" id="pm-card" onclick="selectPmCard('card')">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+            <span style="font-size:14px;font-weight:600;color:var(--fg-neutral);">Credit Card</span>
+            <span class="pm-off-badge">5% OFF</span>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <span class="pm-logo-chip" style="color:#1a1f71;">VISA</span>
+            <span class="pm-logo-chip" style="color:#eb001b;">MC</span>
+            <span class="pm-logo-chip" style="color:#003087;">JCB</span>
+          </div>
+        </div>
+
+        <!-- Alipay+ (expands on select) -->
+        <div class="pm-card pm-card-col" id="pm-alipay" onclick="selectPmCard('alipay')">
+          <div class="pm-row">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+              <span style="font-size:14px;font-weight:600;color:var(--fg-neutral);">Alipay+</span>
+              <span class="pm-off-badge">5% OFF</span>
             </div>
+            <span class="pm-logo-pill" style="color:#1677ff;border-color:#cce0ff;background:#e8f4ff;">&#xF3E0; Alipay</span>
           </div>
-          <div class="payment-icons">
-            <span class="payment-icon" style="color:#003087;font-weight:800;">Pay<span style="color:#0070ba;">Pal</span></span>
+          <div id="alipay-sub-list" class="alipay-sub-list">
+            <div class="alipay-sub-list-label">Choose your wallet</div>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="alipay-cn" checked> <span>Alipay</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="alipay-hk"> <span>AlipayHK</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="gcash"> <span>GCash</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="truemoney"> <span>TrueMoney</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="touchngo"> <span>Touch 'n Go eWallet</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="dana"> <span>DANA</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="rabbit-linepay"> <span>Rabbit LINE Pay</span></label>
+            <label class="alipay-sub-option" onclick="event.stopPropagation()"><input type="radio" name="alipay-wallet" value="bpi"> <span>BPI</span></label>
           </div>
-        </label>
-
-        <label class="payment-option" style="border-bottom:none;">
-          <input type="radio" name="payment" class="payment-radio" id="payment-alipay" onchange="onPaymentMethodChange('alipay')">
-          <span class="payment-name">Alipay+</span>
-          <div class="payment-icons">
-            <span class="payment-icon" style="color:#1677ff;">Alipay+</span>
-          </div>
-        </label>
-        <div id="alipay-sub-list" class="alipay-sub-list">
-          <div class="alipay-sub-list-label">Choose your wallet</div>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="alipay-cn" checked> <span>Alipay</span><span class="alipay-sub-option-region">CN</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="alipay-hk"> <span>AlipayHK</span><span class="alipay-sub-option-region">HK</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="gcash"> <span>GCash</span><span class="alipay-sub-option-region">PH</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="truemoney"> <span>TrueMoney</span><span class="alipay-sub-option-region">TH</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="touchngo"> <span>Touch 'n Go</span><span class="alipay-sub-option-region">MY</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="dana"> <span>DANA</span><span class="alipay-sub-option-region">ID</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="rabbit-linepay"> <span>Rabbit LINE Pay</span><span class="alipay-sub-option-region">TH</span></label>
-          <label class="alipay-sub-option"><input type="radio" name="alipay-wallet" value="bpi"> <span>BPI</span><span class="alipay-sub-option-region">PH</span></label>
         </div>
 
-        <label class="payment-option">
-          <input type="radio" name="payment" class="payment-radio" onchange="onPaymentMethodChange('wechat')">
-          <span class="payment-name">WeChat Pay</span>
-          <div class="payment-icons">
-            <span class="payment-icon" style="color:#07c160;">WeChat</span>
+        <!-- WeChat Pay -->
+        <div class="pm-card" id="pm-wechat" onclick="selectPmCard('wechat')">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+            <span style="font-size:14px;font-weight:600;color:var(--fg-neutral);">WeChat Pay</span>
+            <span class="pm-off-badge">5% OFF</span>
           </div>
-        </label>
+          <span class="pm-logo-pill" style="color:#07c160;border-color:#b7ecd0;background:#e8f9ee;">✓ WeChat Pay</span>
+        </div>
+
+        <!-- PayPal — no badge, note, bottom -->
+        <div class="pm-card pm-card-col" id="pm-paypal" onclick="selectPmCard('paypal')">
+          <div class="pm-row">
+            <span style="font-size:14px;font-weight:600;color:var(--fg-neutral);flex:1;">PayPal</span>
+            <span class="pm-logo-pill"><span style="color:#003087;font-weight:800;">Pay</span><span style="color:#009cde;font-weight:800;">Pal</span></span>
+          </div>
+          <div style="font-size:11px;color:#e07b00;font-weight:500;margin-top:6px;">Not eligible for payment promotions</div>
+        </div>
 
       </div>
     </div>
@@ -1881,7 +1942,7 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <span class="section-title">Price Details</span>
-        <span class="section-toggle">^</span>
+        <span class="section-toggle"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.53763 14.536L9.87763 6.173L18.2646 14.537C18.4396 14.713 18.6706 14.8 18.8996 14.8C19.1306 14.8 19.3616 14.712 19.5376 14.536C19.8886 14.184 19.8876 13.614 19.5356 13.263L10.5116 4.263C10.3426 4.095 10.1136 4 9.87563 4H9.87463C9.63563 4 9.40663 4.096 9.23763 4.265L0.262626 13.265C-0.0883738 13.617 -0.0873738 14.186 0.264626 14.537C0.616626 14.889 1.18663 14.888 1.53763 14.536Z" fill="currentColor"/></svg></span>
       </div>
       <div class="section-body">
         <div class="price-box">
@@ -1973,7 +2034,7 @@
         <div class="coupon-sheet-handle"></div>
         <div class="coupon-sheet-header">
           <span class="coupon-sheet-title">Terms & Conditions</span>
-          <button class="coupon-sheet-close" onclick="document.getElementById('terms-sheet').classList.add('hidden')">×</button>
+          <button class="coupon-sheet-close" onclick="document.getElementById('terms-sheet').classList.add('hidden')"><svg class="gds-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
         </div>
         <div class="coupon-sheet-body" style="font-size:13px;color:#444;line-height:1.8;">
 
@@ -2010,7 +2071,7 @@
       <span class="trust-logo"> Pay</span>
       <span class="trust-logo" style="color:#4285f4;">G Pay</span>
     </div>
-    <button id="checkout-place-order-btn" class="bottom-btn primary" onclick="goToSSORedirect()" data-spec="{usd_total} — Place Order">USD 43.70 — Place Order</button>
+    <button id="checkout-place-order-btn" class="btn-primary t3-bold" onclick="goToSSORedirect()" data-spec="{usd_total} — Place Order">USD 43.70 — Place Order</button>
     <div class="bottom-note">ⓘ Customs & duties are paid by the recipient.</div>
   </div>
 </div>
@@ -2021,7 +2082,7 @@
 <!-- ============================================ -->
 <div id="screen-pg-quickpay" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <button class="header-back" onclick="showScreen('checkout')"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title" id="quickpay-header-title">Apple Pay</span>
     <span></span>
   </div>
@@ -2059,8 +2120,8 @@
 <!-- ============================================ -->
 <div id="screen-sso-redirect" class="screen">
   <div id="sso-top-toolbar" class="header" style="justify-content:space-between;">
-    <button id="sso-back-btn" class="header-back" onclick="ssoBack()">‹</button>
-    <button id="sso-close-btn" class="header-back" onclick="completeSSOAndProceed()" style="display:none;font-size:18px;">×</button>
+    <button id="sso-back-btn" class="header-back" onclick="ssoBack()"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
+    <button id="sso-close-btn" class="header-back" onclick="completeSSOAndProceed()" style="display:none;"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26074 2.26074C1.91309 2.60741 1.91309 3.17037 2.26074 3.51704L8.74261 10L2.26074 16.483C1.91309 16.8296 1.91309 17.3926 2.26074 17.7393C2.43456 17.9131 2.66172 18 2.88986 18C3.11702 18 3.34516 17.9131 3.518 17.7393L10.0009 11.2573L16.4818 17.7393C16.6556 17.9131 16.8837 18 17.1109 18C17.339 18 17.5662 17.9131 17.74 17.7393C18.0867 17.3926 18.0867 16.8296 17.74 16.483L11.2571 10L17.74 3.51704C18.0867 3.17037 18.0867 2.60741 17.74 2.26074C17.3924 1.91309 16.8294 1.91309 16.4818 2.26074L10.0009 8.74272L3.518 2.26074C3.17134 1.91309 2.60839 1.91309 2.26074 2.26074Z" fill="currentColor"/></svg></button>
   </div>
   <div class="content" style="padding:8px 20px 80px;">
 
@@ -2211,7 +2272,7 @@
 <!-- ============================================ -->
 <div id="screen-pg-card" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <button class="header-back" onclick="showScreen('checkout')"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title">Credit Card Payment</span>
     <span></span>
   </div>
@@ -2255,7 +2316,7 @@
 <!-- ============================================ -->
 <div id="screen-pg-paypal" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <button class="header-back" onclick="showScreen('checkout')"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title">PayPal Checkout</span>
     <span></span>
   </div>
@@ -2579,7 +2640,7 @@
 <!-- ============================================ -->
 <div id="screen-order-detail" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('order-summary')">‹</button>
+    <button class="header-back" onclick="showScreen('order-summary')"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title">Order Detail</span>
     <span></span>
   </div>
@@ -2731,7 +2792,7 @@
 <!-- ==================== MY ORDERS ==================== -->
 <div id="screen-my-orders" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('cart')">‹</button>
+    <button class="header-back" onclick="showScreen('cart')"><svg class="gds-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.265 19.5375C14.441 19.7125 14.671 19.8005 14.901 19.8005C15.131 19.8005 15.363 19.7125 15.538 19.5365C15.889 19.1835 15.888 18.6145 15.536 18.2635L7.173 9.9225L15.538 1.5365C15.889 1.1835 15.888 0.614501 15.536 0.263501C15.184 -0.0884995 14.614 -0.0874995 14.263 0.264501L5.263 9.2885C5.095 9.4585 5 9.6875 5 9.9255C5.001 10.1645 5.096 10.3935 5.265 10.5615L14.265 19.5375Z" fill="currentColor"/></svg></button>
     <span class="header-title">Orders</span>
     <div class="header-icons">
       <button>🛒</button>
@@ -3880,14 +3941,14 @@ function confirmPartialSoldout() {
 
 // ─── Proxy Data & State ──────────────────────────
 const proxyData = {
-  dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',  calcType: 'external',
-              promo: '🎁 New members get a 10% off coupon on international shipping',
+  dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',              calcType: 'external',
+              promo: 'New members get a 10% off coupon on international shipping',
               warehouse: { recipient: 'Delivered Korea Warehouse', line: '123 Mapo-daero, Mapo-gu, Seoul, 04144, Korea', suite: 'DK-018472' } },
-  paysable: { name: 'Paysable',        icon: 'P', color: '#1565c0', price: 25.00, rating: 4.9, reviews: 588, days: '7–10',  badge: null,     calcType: 'modal',
-              promo: '🔥 Handling fee FREE this month',
+  paysable: { name: 'Paysable',        icon: 'P', color: '#1565c0', price: 25.00, rating: 4.9, reviews: 588, days: '7–10',  badge: 'Free Handling Fee', calcType: 'modal',
+              promo: 'Handling fee FREE this month',
               warehouse: { recipient: 'Paysable Warehouse', line: '88 Gukjegeumyung-ro, Yeongdeungpo-gu, Seoul, 07327, Korea', suite: 'PSB-205914' } },
-  kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,     calcType: 'modal',
-              promo: '✨ Free consolidation for orders over $150',
+  kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,                calcType: 'modal',
+              promo: 'Free consolidation for orders over $150',
               warehouse: { recipient: 'Kfriday Warehouse', line: '36 Teheran-ro, Gangnam-gu, Seoul, 06234, Korea', suite: 'KF-770285' } },
 };
 const proxyOrder = ['dk', 'paysable', 'kfriday'];
@@ -3925,7 +3986,7 @@ function applyProxyModeToShippingCalc() {
     if (dkCard) dkCard.style.display = '';
     if (sub) sub.textContent = 'Check rates on Delivered Korea';
     if (estProxy) {
-      estProxy.textContent = 'Check on Delivered Korea →';
+      estProxy.innerHTML = 'Check on Delivered Korea <svg class="gds-icon" width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.67021 15.84C6.78428 15.9467 6.93399 16 7.08371 16C7.23212 16 7.38184 15.9473 7.49526 15.8406L13.3283 10.4012C13.4378 10.2988 13.4994 10.16 13.5 10.0158C13.5 9.87091 13.4384 9.73212 13.3295 9.6297L7.49655 4.16061C7.26906 3.94727 6.89964 3.94606 6.67151 4.1594C6.44337 4.37212 6.44272 4.71758 6.67021 4.93091L12.0917 10.0139L6.67151 15.0685C6.44337 15.2812 6.44272 15.6267 6.67021 15.84Z" fill="currentColor"/></svg>';
       estProxy.onclick = () => window.open(DK_CALC_URL, '_blank');
     }
     if (estPrice) {
@@ -3938,7 +3999,7 @@ function applyProxyModeToShippingCalc() {
     if (dkCard) dkCard.style.display = 'none';
     if (sub) sub.textContent = 'Compare Paysable & Kfriday rates at once';
     if (estProxy) {
-      estProxy.textContent = 'Estimate';
+      estProxy.innerHTML = 'Estimate fee <svg class="gds-icon" width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.67021 15.84C6.78428 15.9467 6.93399 16 7.08371 16C7.23212 16 7.38184 15.9473 7.49526 15.8406L13.3283 10.4012C13.4378 10.2988 13.4994 10.16 13.5 10.0158C13.5 9.87091 13.4384 9.73212 13.3295 9.6297L7.49655 4.16061C7.26906 3.94727 6.89964 3.94606 6.67151 4.1594C6.44337 4.37212 6.44272 4.71758 6.67021 4.93091L12.0917 10.0139L6.67151 15.0685C6.44337 15.2812 6.44272 15.6267 6.67021 15.84Z" fill="currentColor"/></svg>';
       estProxy.onclick = () => openShippingCalc();
     }
     if (estPrice) {
@@ -3974,37 +4035,29 @@ function renderProxySection() {
     const pConnected = _proxyConnected[id];
     const connDot = pConnected
       ? `<span style="color:#2e7d32;font-size:11px;">● Connected</span>`
-      : isSelected
-        ? `<span style="color:#e53935;font-size:11px;">● Not connected &nbsp;·&nbsp; <span style="font-weight:600;">Required</span></span>`
-        : `<span style="color:#bbb;font-size:11px;">● Not connected</span>`;
-    const radioDot = isSingleMode
-      ? ''
-      : `<div style="width:18px;height:18px;border-radius:50%;border:2px solid ${isSelected ? '#222' : '#ccc'};background:${isSelected ? '#222' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${isSelected ? '<div style="width:7px;height:7px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
-
-    const pCalcLabel = p.calcType === 'external' ? `Check on ${p.name} →` : `Compare shipping fees →`;
-    const pCalcOnclick = p.calcType === 'external'
-      ? `window.open('https://www.delivered.co.kr/en/calculator', '_blank')`
-      : `openShippingCalc()`;
+      : `<span style="color:var(--fg-neutral-disabled);font-size:11px;">● Not connected</span>`;
+    const radioDot = `<div style="width:20px;height:20px;border-radius:50%;border:2px solid ${isSelected ? 'var(--bg-brand-solid)' : 'var(--ds-gray-100)'};background:${isSelected ? 'var(--bg-brand-solid)' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">${isSelected ? '<div style="width:8px;height:8px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
 
     const cardOnclick = isSingleMode ? '' : `onclick="selectProxy('${id}')"`;
     const cardCursor = isSingleMode ? 'default' : 'pointer';
-    const cardBorder = isSingleMode ? '1px solid #eee' : (isSelected ? '1.5px solid #222' : '1px solid #eee');
-    const cardBg = isSingleMode ? '#fff' : (isSelected ? '#fafafa' : '#fff');
+    const cardBorder = isSelected ? '1.5px solid var(--bg-brand-solid)' : '1px solid var(--ds-gray-100)';
 
     html += `
-    <div ${cardOnclick} style="border:${cardBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:${cardCursor};background:${cardBg};">
+    <div ${cardOnclick} style="border:${cardBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:${cardCursor};background:#fff;">
       <div style="display:flex;align-items:flex-start;gap:12px;">
         ${radioDot}
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:14px;font-weight:700;color:#222;" data-spec="{Proxy Name}">${p.name}</span>
-            ${isSingleMode ? `<span style="font-size:9px;font-weight:700;color:#555;background:#f0f0f0;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;">YOUR PROXY</span>` : ''}
+            <span style="font-size:14px;font-weight:700;color:var(--fg-neutral);" data-spec="{Proxy Name}">${p.name}</span>
+            ${p.badge === 'BEST' ? `<span style="font-size:10px;font-weight:700;color:var(--fg-informative);background:#e8f2ff;padding:2px 7px;border-radius:3px;letter-spacing:0.3px;">BEST</span>` : ''}
+            ${p.badge === 'Free Handling Fee' ? `<span style="font-size:10px;font-weight:600;color:var(--fg-neutral-muted);background:var(--ds-gray-70);padding:2px 7px;border-radius:3px;">Free Handling Fee</span>` : ''}
           </div>
-          ${p.promo ? `<div style="font-size:11px;color:#222;margin-top:4px;line-height:1.4;" data-spec="{Proxy's Promotional Message}">${p.promo}</div>` : ''}
+          ${p.promo ? `<div style="font-size:12px;color:var(--fg-neutral-deep);margin-top:4px;line-height:1.4;" data-spec="{Proxy's Promotional Message}">${p.promo}</div>` : ''}
           <div style="margin-top:6px;">${connDot}</div>
           ${isSelected && !pConnected ? `
-          <div style="border-top:1px solid #f0f0f0;margin-top:12px;padding-top:10px;">
-            <button onclick="event.stopPropagation();startSSOConnect()" style="font-size:12px;color:#222;background:none;border:none;cursor:pointer;padding:0;font-weight:600;text-decoration:underline;">Connect account →</button>
+          <div style="border-top:1px solid var(--ds-gray-100);margin-top:12px;padding-top:12px;">
+            <div style="font-size:12px;color:var(--fg-neutral-muted);margin-bottom:10px;line-height:1.4;">To use this agent, connect your account first.</div>
+            <button onclick="event.stopPropagation();startSSOConnect()" style="width:100%;height:44px;background:var(--bg-neutral-solid);color:var(--fg-neutral-inverse);border:none;border-radius:var(--ds-radius-8);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Quick Connect in 3s</button>
           </div>` : ''}
         </div>
       </div>
@@ -4089,59 +4142,110 @@ const calcConfig = {
   }
 };
 
-let _weightUnit = 'kg';
-let _dimUnit = 'cm';
+let _weightUnit = 'lbs';
+let _dimUnit = 'in';
 
-function setWeightUnit(unit) {
-  _weightUnit = unit;
-  document.getElementById('unit-weight-kg').style.background = unit === 'kg' ? '#222' : '#fff';
-  document.getElementById('unit-weight-kg').style.color = unit === 'kg' ? '#fff' : '#888';
-  document.getElementById('unit-weight-lbs').style.background = unit === 'lbs' ? '#222' : '#fff';
-  document.getElementById('unit-weight-lbs').style.color = unit === 'lbs' ? '#fff' : '#888';
-}
+function setWeightUnit(unit) { _weightUnit = unit; }
 
-function setDimUnit(unit) {
-  _dimUnit = unit;
-  document.getElementById('unit-dim-cm').style.background = unit === 'cm' ? '#222' : '#fff';
-  document.getElementById('unit-dim-cm').style.color = unit === 'cm' ? '#fff' : '#888';
-  document.getElementById('unit-dim-in').style.background = unit === 'in' ? '#222' : '#fff';
-  document.getElementById('unit-dim-in').style.color = unit === 'in' ? '#fff' : '#888';
-}
+function setDimUnit(unit) { _dimUnit = unit; } // legacy stub — unused
 
 let _calcSelectedProxy = null;
+let _lastCalcPFee = null;
+let _lastCalcKFee = null;
+
+function setCalcUnit(unit) {
+  const isImperial = unit === 'imperial';
+  _weightUnit = isImperial ? 'lbs' : 'kg';
+  _dimUnit = isImperial ? 'in' : 'cm';
+  const impBtn = document.getElementById('sc-unit-imperial');
+  const metBtn = document.getElementById('sc-unit-metric');
+  if (impBtn) {
+    impBtn.style.background = isImperial ? '#fff' : 'transparent';
+    impBtn.style.color = isImperial ? 'var(--fg-neutral)' : 'var(--fg-neutral-muted)';
+    impBtn.style.fontWeight = isImperial ? '600' : '500';
+    impBtn.style.border = isImperial ? '1.5px solid var(--fg-neutral)' : '1.5px solid transparent';
+  }
+  if (metBtn) {
+    metBtn.style.background = !isImperial ? '#fff' : 'transparent';
+    metBtn.style.color = !isImperial ? 'var(--fg-neutral)' : 'var(--fg-neutral-muted)';
+    metBtn.style.fontWeight = !isImperial ? '600' : '500';
+    metBtn.style.border = !isImperial ? '1.5px solid var(--fg-neutral)' : '1.5px solid transparent';
+  }
+  const wUnit = document.getElementById('sc-weight-unit');
+  if (wUnit) wUnit.textContent = _weightUnit;
+  document.querySelectorAll('.sc-dim-unit').forEach(el => el.textContent = _dimUnit);
+}
 
 function openShippingCalc() {
   ['calc-weight','calc-width','calc-length','calc-height'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('calc-country').value = '';
-  document.getElementById('calc-compare-result').style.display = 'none';
   _calcSelectedProxy = null;
-  document.getElementById('calc-cta-btn').textContent = 'Calculate';
-  setWeightUnit('lbs');
-  setDimUnit('in');
-  document.getElementById('shipping-calc-sheet').classList.remove('hidden');
+  _lastCalcPFee = null;
+  _lastCalcKFee = null;
+  document.getElementById('sc-input-section').style.display = '';
+  document.getElementById('sc-result-section').style.display = 'none';
+  document.getElementById('sc-cta-btn').textContent = 'Calculate';
+  setCalcUnit('imperial');
+  showScreen('shipping-calc', false);
 }
 
 function selectCalcProxy(id) {
   _calcSelectedProxy = id;
-  const proxyNames = { paysable: 'Paysable', kfriday: 'Kfriday' };
-  // Update card borders
-  document.getElementById('calc-paysable-card').style.border = id === 'paysable' ? '2px solid #1565c0' : '1.5px solid #eee';
-  document.getElementById('calc-kfriday-card').style.border = id === 'kfriday' ? '2px solid #6a1b9a' : '1.5px solid #eee';
-  // Update CTA
-  document.getElementById('calc-cta-btn').textContent = `Select ${proxyNames[id]}`;
+  document.getElementById('sc-cta-btn').textContent = `Select ${proxyData[id].name}`;
+  renderCalcAgentList(_lastCalcPFee, _lastCalcKFee);
 }
 
-function calcCtaAction() {
+function scCtaAction() {
   if (!_calcSelectedProxy) {
     runShippingCalc();
   } else {
-    selectProxy(_calcSelectedProxy);
-    closeShippingCalc();
+    document.getElementById('modal-agent-confirm').classList.remove('hidden');
   }
 }
 
-function closeShippingCalc() {
-  document.getElementById('shipping-calc-sheet').classList.add('hidden');
+function calcCtaAction() { scCtaAction(); } // legacy alias
+
+function scRecalculate() {
+  _calcSelectedProxy = null;
+  document.getElementById('sc-input-section').style.display = '';
+  document.getElementById('sc-result-section').style.display = 'none';
+  document.getElementById('sc-cta-btn').textContent = 'Calculate';
+}
+
+function scGotIt() {
+  document.getElementById('modal-agent-confirm').classList.add('hidden');
+  showScreen('checkout', false);
+  if (_calcSelectedProxy) selectProxy(_calcSelectedProxy);
+}
+
+function closeShippingCalc() { showScreen('checkout', false); }
+
+function renderCalcAgentList(pFee, kFee) {
+  const list = document.getElementById('sc-agent-list');
+  if (!list) return;
+  const agents = [
+    { id: 'paysable', name: 'Paysable', fee: pFee },
+    { id: 'kfriday',  name: 'Kfriday',  fee: kFee },
+    { id: 'dk',       name: 'Delivered Korea', fee: null },
+  ];
+  const sel = _calcSelectedProxy;
+  const infoCircleSvg = `<svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;color:var(--fg-neutral-placeholder);"><path d="M2.9248 2.92383C6.82774 -0.973954 13.1723 -0.974963 17.0742 2.92383C20.9751 6.82464 20.9751 13.1695 17.0742 17.0693C15.1844 18.9595 12.6719 20 10 20C7.32805 20 4.8156 18.9596 2.9248 17.0693C-0.975057 13.1696 -0.974979 6.82465 2.9248 2.92383ZM10 1.81641C7.90402 1.81641 5.80765 2.61468 4.21191 4.20996C1.02053 7.40053 1.02047 12.5917 4.21191 15.7822C5.75711 17.3279 7.81312 18.1797 10 18.1797C12.1867 18.1796 14.242 17.3278 15.7871 15.7822C18.9786 12.5917 18.9786 7.40052 15.7871 4.20996C14.1915 2.61481 12.0958 1.81649 10 1.81641Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10.0024 6.77685C10.5641 6.77685 11.0177 6.3222 11.0177 5.76147C11.0177 5.20074 10.5641 4.74609 10.0024 4.74609C9.44169 4.74609 8.98706 5.20074 8.98706 5.76147C8.98706 6.3222 9.44169 6.77685 10.0024 6.77685Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8.35653 9.84205H9.09303V13.1266C9.09303 13.1296 9.09404 13.1327 9.09404 13.1367V14.6158C9.09404 15.118 9.5022 15.5251 10.0043 15.5251C10.5064 15.5251 10.9136 15.118 10.9136 14.6158L10.9126 8.93276C10.9126 8.43063 10.5054 8.02246 10.0033 8.02246H8.35653C7.85441 8.02246 7.44727 8.43063 7.44727 8.93276C7.44727 9.43489 7.85441 9.84205 8.35653 9.84205Z" fill="currentColor"/></svg>`;
+  list.innerHTML = agents.map(a => {
+    const isSelected = a.id === sel;
+    const isUnavailable = a.id === 'dk';
+    const radio = isUnavailable
+      ? `<div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--ds-gray-100);background:var(--bg-neutral-weak);flex-shrink:0;"></div>`
+      : `<div style="width:20px;height:20px;border-radius:50%;border:2px solid ${isSelected ? 'var(--bg-brand-solid)' : 'var(--ds-gray-100)'};background:${isSelected ? 'var(--bg-brand-solid)' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${isSelected ? '<div style="width:8px;height:8px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
+    const cardBorder = isSelected ? '1.5px solid var(--bg-brand-solid)' : '1px solid var(--ds-gray-100)';
+    const nameColor = isUnavailable ? 'var(--fg-neutral-placeholder)' : 'var(--fg-neutral)';
+    const right = isUnavailable
+      ? `<span style="font-size:13px;color:var(--fg-neutral-placeholder);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">Not available ${infoCircleSvg}</span>`
+      : `<span style="font-size:15px;font-weight:700;color:var(--fg-neutral);">USD ${a.fee}</span>`;
+    return `<div ${isUnavailable ? '' : `onclick="selectCalcProxy('${a.id}')"`} style="border:${cardBorder};border-radius:var(--ds-radius-12);padding:14px 16px;cursor:${isUnavailable ? 'default' : 'pointer'};background:#fff;display:flex;align-items:center;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">${radio}<span style="font-size:14px;font-weight:700;color:${nameColor};">${a.name}</span></div>
+      ${right}
+    </div>`;
+  }).join('');
 }
 
 function calcFee(cfg, country, weight, w, l, h) {
@@ -4175,22 +4279,18 @@ function runShippingCalc() {
   const p = calcFee(calcConfig.paysable, country, weight, w, l, h);
   const k = calcFee(calcConfig.kfriday, country, weight, w, l, h);
 
-  // Reset selection state on new calculation
-  _calcSelectedProxy = null;
-  document.getElementById('calc-cta-btn').textContent = 'Calculate';
+  _lastCalcPFee = p.fee;
+  _lastCalcKFee = k.fee;
 
-  // Highlight cheaper option (subtle, not selection state)
-  const pCheaper = parseFloat(p.fee) <= parseFloat(k.fee);
-  document.getElementById('calc-paysable-card').style.border = pCheaper ? '1.5px solid #1565c0' : '1.5px solid #eee';
-  document.getElementById('calc-kfriday-card').style.border = !pCheaper ? '1.5px solid #6a1b9a' : '1.5px solid #eee';
+  // Auto-select cheapest
+  const cheapest = parseFloat(p.fee) <= parseFloat(k.fee) ? 'paysable' : 'kfriday';
+  _calcSelectedProxy = cheapest;
 
-  // Use _setUiText so spec mode keeps showing placeholders after recalculation.
-  _setUiText('calc-paysable-price', `USD ${p.fee}`);
-  _setUiText('calc-paysable-detail', p.detail);
-  _setUiText('calc-kfriday-price', `USD ${k.fee}`);
-  _setUiText('calc-kfriday-detail', k.detail);
+  renderCalcAgentList(p.fee, k.fee);
 
-  document.getElementById('calc-compare-result').style.display = 'block';
+  document.getElementById('sc-input-section').style.display = 'none';
+  document.getElementById('sc-result-section').style.display = '';
+  document.getElementById('sc-cta-btn').textContent = `Select ${proxyData[cheapest].name}`;
 }
 
 // Set the UI-mode text on a [data-spec] element while preserving spec-mode display.
@@ -4245,21 +4345,19 @@ function onPaymentMethodChange(method) {
   }
 }
 
+// ─── Payment card selection ──────────────────────
+function selectPmCard(method) {
+  document.querySelectorAll('.pm-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('pm-' + method);
+  if (card) card.classList.add('selected');
+  const aliSub = document.getElementById('alipay-sub-list');
+  if (aliSub) aliSub.classList.toggle('show', method === 'alipay');
+  onPaymentMethodChange(method);
+}
+
 // ─── Quick Pay Method Select (no immediate payment) ──
 function selectQuickPayMethod(type) {
-  // Deselect all radios
-  document.querySelectorAll('input[name="payment"]').forEach(r => r.checked = false);
-  // Highlight selected QP button, reset other
-  const appleBtn = document.getElementById('qp-apple-btn');
-  const googleBtn = document.getElementById('qp-google-btn');
-  if (type === 'apple') {
-    appleBtn.style.background = '#000'; appleBtn.style.color = '#fff'; appleBtn.style.border = 'none';
-    googleBtn.style.background = '#fff'; googleBtn.style.color = '#222'; googleBtn.style.border = '1px solid #ddd';
-  } else {
-    googleBtn.style.background = '#4285f4'; googleBtn.style.color = '#fff'; googleBtn.style.border = 'none';
-    appleBtn.style.background = '#fff'; appleBtn.style.color = '#222'; appleBtn.style.border = '1px solid #ddd';
-  }
-  onPaymentMethodChange(type);
+  selectPmCard(type);
 }
 
 // ─── Quick Pay ───────────────────────────────────
@@ -4577,6 +4675,25 @@ window.addEventListener('resize', closeAllInfoTooltips);
 
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
+  {
+    version: 'v1.15',
+    date: '2026-05-11',
+    changes: [
+      'Shipping Agent 섹션 리뉴얼: 섹션명 "Shop & Ship Partner" → "Shipping Agent", 서브타이틀 업데이트, FAQ 아코디언 추가',
+      'Shipping Agent 카드 디자인 개편: 브랜드 빨강 라디오 버튼 도입, 선택 시 빨강 테두리, BEST / Free Handling Fee 배지 추가',
+      '미연결 업체 선택 시 "Quick Connect in 3s" 전체폭 버튼 + 안내 문구 노출 (기존 텍스트 링크 대체)',
+      '배송비 안내 배너: 회색 → 하늘색 배경 + InfoCircle 아이콘, "Estimate fee ›" 링크 별도 행으로 분리',
+      'Shipping Fee Estimator 바텀시트 → 독립 전체 화면(screen-shipping-calc)으로 전환',
+      'Estimator 단위 토글 개편: kg/lbs, cm/in 별도 → "Imperial (lbs · in) / Metric (kg · cm)" 단일 세그먼트로 통합, 단위 표기 인풋 내부로 이동',
+      'Estimator 결과 화면: 업체별 예상 배송비 라디오 카드 리스트, 최저가 자동 선택, "Select [업체명]" CTA 버튼',
+      'Estimator 업체 선택 확인 모달 추가: "Estimated fee, not final" → Got it 클릭 시 체크아웃 복귀 + 해당 업체 자동 선택',
+      'Payment 섹션 레이아웃 전면 개편: Apple Pay / Google Pay 별도 버튼 + 라디오 리스트 → 전체 카드 행 방식으로 통일',
+      'Payment 카드 순서 재정렬: Apple Pay, Google Pay, Credit Card, Alipay+, WeChat Pay, PayPal (최하단)',
+      'Payment 카드 선택 상태: 두꺼운 진한 테두리로 표시 (기존 라디오 버튼 대체)',
+      'Payment 각 수단에 "5% OFF" 배지 + 우측 로고 pill 추가 (PayPal 제외, "Not eligible" 문구 유지)',
+      'Alipay+ 선택 시 카드 내부에서 서브지갑 라디오 목록 펼침 (기존 별도 드롭다운 대체)',
+    ]
+  },
   {
     version: 'v1.14',
     date: '2026-05-07',
