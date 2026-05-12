@@ -18,7 +18,12 @@
   .nav-item { padding: 10px 16px 10px 24px; cursor: pointer; font-size: 13px; color: #555; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
   .nav-item:hover { background: #f5f5f7; color: #222; }
   .nav-item.active { background: #fff0f1; color: #ff4757; border-left: 3px solid #ff4757; padding-left: 21px; }
+  .nav-item.nav-stub { color: #bbb; }
+  .nav-item.nav-stub:hover { background: #fafafa; color: #999; }
   .nav-item .badge { background: #ff4757; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
+  /* Stub toast */
+  .stub-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .stub-toast.show { opacity: 0.95; }
 
   .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
@@ -214,15 +219,15 @@
 <!-- Prototype Navigation (top) -->
 <div class="proto-nav">
   <span class="proto-nav-title">쿠폰</span>
-  <button class="proto-nav-btn active" onclick="showView('list')">쿠폰 목록</button>
-  <button class="proto-nav-btn" onclick="showView('create')">쿠폰 생성</button>
-  <button class="proto-nav-btn" onclick="showCouponDetail('WELCOME5')">쿠폰 상세</button>
+  <button class="proto-nav-btn active" onclick="navigateTo('list')">쿠폰 목록</button>
+  <button class="proto-nav-btn" onclick="navigateTo('create')">쿠폰 생성</button>
+  <button class="proto-nav-btn" onclick="navigateToCoupon('WELCOME5')">쿠폰 상세</button>
   <span class="proto-nav-extras" id="proto-nav-extras" style="display:none;">
     <span class="proto-nav-sep">|</span>
     <button class="proto-nav-chip" onclick="openErrorCases()" title="View all possible coupon-create errors">[에러 케이스]</button>
   </span>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.5</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.6</button>
     <span>Updated 2026-05-12</span>
   </span>
 </div>
@@ -257,15 +262,15 @@
     </div>
     <div class="nav-group">
       <div class="nav-group-title">글로벌</div>
-      <div class="nav-item">공통</div>
-      <div class="nav-item" style="font-weight:600; color:#222;">
+      <div class="nav-item nav-stub" onclick="showStub('공통')">공통</div>
+      <div class="nav-item" style="font-weight:600; color:#222;" onclick="showStub('글로벌번장')">
         글로벌번장
         <span class="badge">NEW</span>
       </div>
-      <div class="nav-item active" style="padding-left:40px;">쿠폰 관리</div>
-      <div class="nav-item" style="padding-left:40px;">정산 관리</div>
-      <div class="nav-item">해외역직구(아웃바운드)</div>
-      <div class="nav-item">해외직구(인바운드)</div>
+      <div class="nav-item active" id="nav-coupon" style="padding-left:40px;" onclick="navigateTo('list')">쿠폰 관리</div>
+      <div class="nav-item nav-stub" style="padding-left:40px;" onclick="showStub('정산 관리')">정산 관리</div>
+      <div class="nav-item nav-stub" onclick="showStub('해외역직구(아웃바운드)')">해외역직구(아웃바운드)</div>
+      <div class="nav-item nav-stub" onclick="showStub('해외직구(인바운드)')">해외직구(인바운드)</div>
     </div>
   </aside>
 
@@ -284,7 +289,7 @@
       <div id="view-list" class="view active">
         <div class="page-header">
           <h1 class="page-title">쿠폰 관리</h1>
-          <button class="btn btn-primary" onclick="showView('create')">쿠폰 생성</button>
+          <button class="btn btn-primary" onclick="navigateTo('create')">쿠폰 생성</button>
         </div>
 
         <div class="table-wrapper">
@@ -365,7 +370,7 @@
             <tbody>
               <tr>
                 <td>8</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('WELCOME5'); return false;">gb_welcome_2025</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('WELCOME5'); return false;">gb_welcome_2025</a></td>
                 <td>Welcome $5 OFF</td>
                 <td>
                   <span style="color:#555">WELCOME5</span><br>
@@ -381,11 +386,11 @@
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('WELCOME5')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigateToCoupon('WELCOME5')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>7</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('SPRING10'); return false;">gb_spring_promo</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('SPRING10'); return false;">gb_spring_promo</a></td>
                 <td>Spring 10% OFF</td>
                 <td>
                   <span style="color:#555">SPRING10</span><br>
@@ -401,11 +406,11 @@
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('SPRING10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigateToCoupon('SPRING10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>6</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('LAUNCH10'); return false;">gb_launch_flat</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('LAUNCH10'); return false;">gb_launch_flat</a></td>
                 <td>Launch $10 OFF</td>
                 <td>
                   <span style="color:#555">LAUNCH10</span><br>
@@ -421,11 +426,11 @@
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('LAUNCH10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigateToCoupon('LAUNCH10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>5</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('VIP20'); return false;">gb_vip_test</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('VIP20'); return false;">gb_vip_test</a></td>
                 <td>VIP $20 OFF</td>
                 <td><span style="color:#ccc">-</span></td>
                 <td>$20.00</td>
@@ -438,7 +443,7 @@
                   <label class="toggle"><input type="checkbox" onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#999; font-weight:600;">OFF</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('VIP20')">상세</button> <button class="btn btn-secondary btn-sm">수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigateToCoupon('VIP20')">상세</button> <button class="btn btn-secondary btn-sm">수정하기</button></td>
               </tr>
             </tbody>
           </table>
@@ -757,8 +762,8 @@
         </div>
 
         <div class="form-actions">
-          <button class="btn btn-secondary" onclick="showView('list')">취소</button>
-          <button class="btn btn-primary" onclick="if (validateCreateForm()) showView('list')">쿠폰 생성</button>
+          <button class="btn btn-secondary" onclick="navigateTo('list')">취소</button>
+          <button class="btn btn-primary" onclick="if (validateCreateForm()) navigateTo('list')">쿠폰 생성</button>
         </div>
       </div>
 
@@ -770,7 +775,7 @@
             <div style="margin-top:4px; color:#888; font-size:13px;">정책명: <span id="detail-policy">—</span></div>
           </div>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-secondary" onclick="showView('list')">목록으로</button>
+            <button class="btn btn-secondary" onclick="navigateTo('list')">목록으로</button>
           </div>
         </div>
 
@@ -855,7 +860,71 @@
 document.addEventListener('DOMContentLoaded', function() {
   toggleDiscountFields();
   initDatePickers();
+  initHistoryNav();
 });
+
+// ─── Sidebar stub navigation ────────────────────
+let __stubToastTimer = null;
+function showStub(menuName) {
+  let toast = document.getElementById('stub-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'stub-toast';
+    toast.className = 'stub-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = '"' + menuName + '" 메뉴는 이번 프로토타입 범위 밖이에요.';
+  toast.classList.add('show');
+  if (__stubToastTimer) clearTimeout(__stubToastTimer);
+  __stubToastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ─── History-aware navigation ───────────────────
+// navigateTo / navigateToCoupon push a history entry so browser back works.
+// showView / showCouponDetail directly manipulate the DOM (called by popstate too).
+function navigateTo(view) {
+  showView(view);
+  const hash = '#' + view;
+  if (location.hash !== hash) {
+    history.pushState({ view: view }, '', hash);
+  }
+}
+
+function navigateToCoupon(key) {
+  showCouponDetail(key);
+  const hash = '#detail/' + key;
+  if (location.hash !== hash) {
+    history.pushState({ view: 'detail', coupon: key }, '', hash);
+  }
+}
+
+function initHistoryNav() {
+  // Restore view from hash on initial load
+  const hash = location.hash.replace(/^#/, '');
+  if (hash.startsWith('detail/')) {
+    const key = hash.split('/')[1];
+    if (COUPON_DATA[key]) showCouponDetail(key);
+  } else if (hash === 'create') {
+    showView('create');
+  } else if (hash === 'detail') {
+    showCouponDetail('WELCOME5');
+  } else {
+    showView('list');
+  }
+  // Replace initial state so back can return to it
+  history.replaceState({ view: hash || 'list' }, '', location.hash || '#list');
+
+  window.addEventListener('popstate', (e) => {
+    const state = e.state || { view: 'list' };
+    if (state.view === 'detail' && state.coupon) {
+      showCouponDetail(state.coupon);
+    } else if (state.view === 'create') {
+      showView('create');
+    } else {
+      showView('list');
+    }
+  });
+}
 
 // ─── Coupon detail data (mock) ──────────────────
 const COUPON_DATA = {
@@ -1005,6 +1074,15 @@ function showView(view) {
 
 // ─── Changelog ──────────────────────────────────
 const ADMIN_CHANGELOG = [
+  {
+    version: 'v0.6',
+    date: '2026-05-12',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '사이드바 메뉴 네비게이션 활성화 — "쿠폰 관리" 클릭 시 목록 뷰로 복귀. 프로토타입 범위 밖 메뉴(공통/정산 관리/해외역직구/해외직구)는 회색 처리 + 클릭 시 안내 토스트 노출',
+      '브라우저 뒤로가기/앞으로가기 지원 — 쿠폰 목록 ↔ 생성 ↔ 상세 간 이동이 history에 기록되어 뒤로가기로 직전 화면 복귀 가능. URL 해시 기반 직접 진입(#detail/WELCOME5 등)도 지원',
+    ]
+  },
   {
     version: 'v0.5',
     date: '2026-05-12',
