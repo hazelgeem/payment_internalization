@@ -227,8 +227,8 @@
     <button class="proto-nav-chip" onclick="openErrorCases()" title="View all possible coupon-create errors">[에러 케이스]</button>
   </span>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.6</button>
-    <span>Updated 2026-05-12</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.7</button>
+    <span>Updated 2026-05-13</span>
   </span>
 </div>
 
@@ -476,7 +476,7 @@
               </label>
               <span id="common-code-toggle-label" style="font-size:13px; color:#999; font-weight:500;">발급 안 함</span>
             </div>
-            <div class="form-hint">ON 시, 입력한 공통 코드를 기반으로 쿠폰 발급 링크 및 수동 코드 입력 경로가 활성화됩니다.</div>
+            <div class="form-hint">발급 시, 입력한 공통 코드를 기반으로 쿠폰 발급 링크 및 수동 코드 입력 경로가 활성화됩니다.</div>
           </div>
 
           <div class="form-group" id="common-code-input-group" style="display:none;">
@@ -1074,6 +1074,14 @@ function showView(view) {
 
 // ─── Changelog ──────────────────────────────────
 const ADMIN_CHANGELOG = [
+  {
+    version: 'v0.7',
+    date: '2026-05-13',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '쿠폰 생성 폼 [공통 쿠폰 발급 여부] 토글의 ON/OFF 표기를 "발급" / "발급 안 함"으로 변경. 하위 안내 문구 및 에러 메시지("공통 쿠폰 코드 값을 입력해 주세요. 사용하지 않으려면 공통 쿠폰 발급 여부를 발급 안 함으로 처리해 주세요.")도 동일하게 정리',
+    ]
+  },
   {
     version: 'v0.6',
     date: '2026-05-12',
@@ -1674,7 +1682,7 @@ function validateCreateForm() {
     const codeErrEl = document.getElementById('coupon-code-error');
     const val = codeEl.value.trim();
     if (!val) {
-      codeErrEl.textContent = '공통 쿠폰 코드 값을 입력해 주세요. 사용하지 않으려면 공통 쿠폰 발급 여부를 OFF 처리해 주세요.';
+      codeErrEl.textContent = '공통 쿠폰 코드 값을 입력해 주세요. 사용하지 않으려면 공통 쿠폰 발급 여부를 발급 안 함으로 처리해 주세요.';
       codeErrEl.classList.add('show');
       if (!firstInvalid) firstInvalid = codeEl;
     } else if (RESERVED_COUPON_CODES.includes(val.toUpperCase())) {
