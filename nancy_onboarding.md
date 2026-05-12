@@ -8,10 +8,16 @@ status: active
 
 ## 안녕하세요 Nancy!
 
-이 문서는 Nancy가 [checkout prototype](https://hazelgeem.github.io/payment_internalization/)을 직접 편집·반영하기 위한 가이드예요. **Claude Code로 로컬에서 편집하고 한 줄 명령으로 GitHub에 push**하는 흐름입니다.
+이 문서는 Nancy가 [checkout prototype](https://hazelgeem.github.io/payment_internalization/)을 직접 편집·반영하기 위한 가이드예요. **Claude Code로 로컬에서 편집 → staging URL에서 검증 → 프로덕션 반영** 흐름입니다.
 
 워크플로 한 줄 요약:
-**Claude Code에서 `checkout.html` 편집 → `/push-prototype` 실행 → 1-2분 안에 라이브 사이트 업데이트**
+**Claude Code에서 `checkout.html` 편집 → `/push-prototype` (staging 배포) → staging URL 확인 → `/promote-prototype` (프로덕션 반영)**
+
+두 개의 URL이 있어요:
+- **Staging (검증용)**: https://hazelgeem.github.io/payment_internalization/staging/checkout.html
+- **Production (라이브)**: https://hazelgeem.github.io/payment_internalization/checkout.html
+
+`/push-prototype`은 staging만 갱신해요. staging에서 깨진 게 발견되면 라이브엔 영향 X, 추가로 수정한 뒤 다시 push해서 재확인하면 됩니다. 확인 끝나면 `/promote-prototype`으로 한 번에 라이브 반영.
 
 (중요한 변경은 미리 Hazel과 슬랙으로 한번 합의하고 진행하는 걸 권장해요. 형상관리는 GitHub이 다 해주니까 잘못해도 되돌릴 수 있어요.)
 
@@ -93,7 +99,7 @@ Claude Code에 자연어로 요청하면 됩니다. 예시:
 
 **큰 변경은 슬랙으로 Hazel과 먼저 합의** 후 진행하는 걸 권장해요. (정책/스펙 변경, 새 컴포넌트, 결제 수단 변경 등)
 
-### 2-4. 라이브 사이트에 반영
+### 2-4. Staging에 먼저 배포
 
 Claude Code 안에서 그대로:
 
@@ -102,13 +108,41 @@ Claude Code 안에서 그대로:
 ```
 
 실행하면 스킬이 자동으로:
-1. 원격(remote)이랑 동기화 체크 (필요시 `git pull --rebase`)
+1. `staging` 브랜치로 이동 + 원격 동기화 체크 (필요시 `git pull --rebase`)
 2. 버전 자동 bump (`v1.14` → `v1.15`)
 3. 변경 내용 정리해서 CHANGELOG 항목 초안 보여줌 — 작성자는 `nancy.lee@bunjang.co.kr` 자동 기입
-4. **확인 받으면** 그때 commit + push
-5. 완료 후 commit SHA + 라이브 URL 알려줌
+4. **확인 받으면** 그때 commit + push (staging 브랜치로)
+5. 완료 후 staging URL 안내
 
-1-2분 안에 https://hazelgeem.github.io/payment_internalization/ 에 반영돼요. 우상단 버전 태그 클릭 → CHANGELOG 모달에서 본인 이메일 노출 확인 가능.
+### 2-5. Staging URL에서 검증
+
+1-2분 후 다음 URL 열기:
+**https://hazelgeem.github.io/payment_internalization/staging/checkout.html**
+
+확인 포인트:
+- 의도한 변경이 보이는지
+- 디자인 시스템(폰트, 색상, 컴포넌트)이 안 깨졌는지
+- 다른 영역이 의도치 않게 영향받지 않았는지
+
+이상하면 다시 코드 수정 후 `/push-prototype` 재실행 → 같은 URL에서 재확인. 프로덕션엔 영향 X.
+
+**큰 변경이면 슬랙으로 Hazel에게 "staging 한번 봐줘" 가볍게 ping** 권장.
+
+### 2-6. 프로덕션 반영
+
+검증 OK면 Claude Code에서:
+
+```
+/promote-prototype
+```
+
+실행하면 스킬이:
+1. staging의 commit들을 main으로 가져옴 (fast-forward merge)
+2. promote 전에 어떤 commit이 들어가는지 미리 보여주고 확인 받음
+3. 확인 후 push → 1-2분 후 프로덕션 URL에 반영
+4. 완료 후 프로덕션 URL 안내
+
+이때 라이브 사이트 https://hazelgeem.github.io/payment_internalization/checkout.html 에서 본인 변경 확인 + CHANGELOG 모달에서 이메일 노출 확인.
 
 ---
 
@@ -126,7 +160,10 @@ Claude Code 안에서 그대로:
 ## 4. 자주 하는 실수 / 주의사항
 
 ### 편집 후 push를 까먹음
-로컬에서 편집만 하고 `/push-prototype`을 안 돌리면 라이브 사이트엔 반영이 안 돼요. 매번 push까지 해야 끝.
+로컬에서 편집만 하고 `/push-prototype`을 안 돌리면 staging URL에도 반영이 안 돼요. 매번 push까지 해야 끝.
+
+### Staging만 보고 promote를 까먹음
+**가장 흔한 실수.** `/push-prototype`은 staging URL만 갱신해요. 라이브 사이트(`/checkout.html`, `/staging/` 없는 URL)에 반영하려면 `/promote-prototype` 별도 실행 필요. staging URL 확인 후 OK면 promote 꼭 하기.
 
 ### Pull 먼저 안 하고 편집 시작
 스킬이 push 단계에서 자동으로 pull --rebase를 해주긴 하지만, 충돌(conflict)이 나면 자동 해결 안 함. 작업 시작 전에 `git pull origin main` 한 번 돌리는 습관을 들이면 충돌 가능성이 줄어요.
@@ -150,6 +187,8 @@ Claude Code 안에서 그대로:
 ## 6. 빠른 참고 링크
 
 - Repo: https://github.com/hazelgeem/payment_internalization
-- 라이브 사이트: https://hazelgeem.github.io/payment_internalization/
-- 내가 만든 commit 목록: https://github.com/hazelgeem/payment_internalization/commits/main?author=nancylee-bunjang
-- `/push-prototype` 스킬 정의 (참고용, 수정할 일은 거의 없음): `.claude/skills/push-prototype/SKILL.md`
+- **Staging URL** (검증용): https://hazelgeem.github.io/payment_internalization/staging/checkout.html
+- **Production URL** (라이브): https://hazelgeem.github.io/payment_internalization/checkout.html
+- 내가 만든 staging commit 목록: https://github.com/hazelgeem/payment_internalization/commits/staging?author=nancylee-bunjang
+- 내가 만든 main commit 목록: https://github.com/hazelgeem/payment_internalization/commits/main?author=nancylee-bunjang
+- 스킬 정의 (참고용, 수정할 일은 거의 없음): `.claude/skills/push-prototype/SKILL.md`, `.claude/skills/promote-prototype/SKILL.md`

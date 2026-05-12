@@ -1,0 +1,61 @@
+name: Deploy Pages (main + staging)
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (production source)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: prod
+
+      - name: Checkout staging (preview source)
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+          path: stage
+        continue-on-error: true
+
+      - name: Assemble _site
+        run: |
+          mkdir -p _site
+          # Production at root
+          cp prod/*.html _site/ 2>/dev/null || true
+          # Staging under /staging/
+          if [ -d stage ]; then
+            mkdir -p _site/staging
+            cp stage/*.html _site/staging/ 2>/dev/null || true
+          fi
+          echo "--- _site tree ---"
+          find _site -maxdepth 2 -type f
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
