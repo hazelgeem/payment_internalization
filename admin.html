@@ -144,6 +144,22 @@
   .proto-nav-version { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
   .proto-nav-version-tag { background: rgba(124,124,247,0.25); color: #c5c5ff; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; letter-spacing: 0.3px; cursor: pointer; transition: background 0.15s; border: none; }
   .proto-nav-version-tag:hover { background: rgba(124,124,247,0.45); color: #fff; }
+  .proto-nav-extras { display: inline-flex; align-items: center; gap: 8px; }
+  .proto-nav-sep { color: rgba(255,255,255,0.35); font-size: 12px; user-select: none; }
+  .proto-nav-chip { background: rgba(255,165,80,0.18); color: #ffd28a; border: 1px solid rgba(255,165,80,0.35); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .proto-nav-chip:hover { background: rgba(255,165,80,0.35); color: #fff; border-color: rgba(255,165,80,0.6); }
+
+  /* Error cases modal — reuses changelog modal layout via shared classes */
+  .err-cases-group { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #f0f0f0; }
+  .err-cases-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .err-cases-group-title { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .err-cases-group-title::before { content: ""; width: 3px; height: 14px; background: #ff4757; border-radius: 2px; }
+  .err-cases-list { list-style: none; padding-left: 0; margin: 0; font-size: 12px; color: #444; line-height: 1.55; }
+  .err-cases-list li { padding: 6px 0 6px 14px; position: relative; }
+  .err-cases-list li::before { content: "•"; position: absolute; left: 2px; color: #ff4757; }
+  .err-cases-msg { color: #c43847; font-weight: 500; }
+  .err-cases-tag { display: inline-block; background: #fff3e0; color: #e65100; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-left: 6px; letter-spacing: 0.3px; }
+  .err-cases-hint { font-size: 12px; color: #666; background: #f9f9fb; padding: 10px 12px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #7c7cf7; }
 
   /* Changelog modal */
   .changelog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; }
@@ -200,10 +216,14 @@
   <span class="proto-nav-title">쿠폰</span>
   <button class="proto-nav-btn active" onclick="showView('list')">쿠폰 목록</button>
   <button class="proto-nav-btn" onclick="showView('create')">쿠폰 생성</button>
-  <button class="proto-nav-btn" onclick="showView('detail')">쿠폰 상세</button>
+  <button class="proto-nav-btn" onclick="showCouponDetail('WELCOME5')">쿠폰 상세</button>
+  <span class="proto-nav-extras" id="proto-nav-extras" style="display:none;">
+    <span class="proto-nav-sep">|</span>
+    <button class="proto-nav-chip" onclick="openErrorCases()" title="View all possible coupon-create errors">[에러 케이스]</button>
+  </span>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.2</button>
-    <span>Updated 2026-05-07</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.5</button>
+    <span>Updated 2026-05-12</span>
   </span>
 </div>
 
@@ -215,6 +235,17 @@
       <button class="changelog-close" onclick="closeChangelog()">×</button>
     </div>
     <div class="changelog-body" id="changelog-body"></div>
+  </div>
+</div>
+
+<!-- Error Cases Modal -->
+<div id="error-cases-overlay" class="changelog-overlay" onclick="if(event.target===this)closeErrorCases()">
+  <div class="changelog-modal" style="max-width: 640px;">
+    <div class="changelog-header">
+      <span class="changelog-title">쿠폰 생성 — 에러 케이스</span>
+      <button class="changelog-close" onclick="closeErrorCases()">×</button>
+    </div>
+    <div class="changelog-body" id="error-cases-body"></div>
   </div>
 </div>
 
@@ -241,7 +272,7 @@
   <!-- Main -->
   <div class="main">
     <div class="topbar">
-      <div class="breadcrumb">글로벌번장 &gt; 쿠폰 관리 &gt; <span id="breadcrumb-page">쿠폰 목록</span></div>
+      <div class="breadcrumb" id="breadcrumb">글로벌번장 &gt; <span>쿠폰 관리</span></div>
       <div class="topbar-actions">
         <span class="user">Hazel Kim</span>
       </div>
@@ -252,7 +283,7 @@
       <!-- VIEW: Coupon List -->
       <div id="view-list" class="view active">
         <div class="page-header">
-          <h1 class="page-title">쿠폰 목록</h1>
+          <h1 class="page-title">쿠폰 관리</h1>
           <button class="btn btn-primary" onclick="showView('create')">쿠폰 생성</button>
         </div>
 
@@ -322,7 +353,7 @@
                 <th>쿠폰명</th>
                 <th>공통 쿠폰 코드</th>
                 <th>할인 금액</th>
-                <th>총 발급 현황</th>
+                <th>발급 및 사용 현황</th>
                 <th>등록일</th>
                 <th>쿠폰 발급기간</th>
                 <th>쿠폰 사용기간</th>
@@ -334,14 +365,14 @@
             <tbody>
               <tr>
                 <td>8</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_welcome_2025</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('WELCOME5'); return false;">gb_welcome_2025</a></td>
                 <td>Welcome $5 OFF</td>
                 <td>
                   <span style="color:#555">WELCOME5</span><br>
                   <span class="link-copy" onclick="copyLink('WELCOME5')">발급 링크 복사</span>
                 </td>
                 <td>$5.00</td>
-                <td style="font-size:13px; font-weight:500;">1,204 <span style="color:#aaa;">/</span> <span style="color:#888;">50,000</span></td>
+                <td style="font-size:12px; line-height:1.5;">발급: <strong>1,204</strong> <span style="color:#aaa;">/</span> <span style="color:#888;">50,000</span><br>사용: <strong>324</strong></td>
                 <td>2025.04.01 09:00</td>
                 <td style="font-size:12px;">2025.04.01 00:00<br>~ 2025.12.31 23:59</td>
                 <td style="font-size:12px;">2025.04.01 00:00<br>~ 2026.01.31 23:59</td>
@@ -350,18 +381,18 @@
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('WELCOME5')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>7</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_spring_promo</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('SPRING10'); return false;">gb_spring_promo</a></td>
                 <td>Spring 10% OFF</td>
                 <td>
                   <span style="color:#555">SPRING10</span><br>
                   <span class="link-copy" onclick="copyLink('SPRING10')">발급 링크 복사</span>
                 </td>
-                <td>10%</td>
-                <td style="font-size:13px; font-weight:500;">3,782 <span style="color:#aaa;">/</span> <span style="color:#888;">10,000</span></td>
+                <td>10%<br><span style="color:#888; font-size:11px;">(최대 $50)</span></td>
+                <td style="font-size:12px; line-height:1.5;">발급: <strong>3,782</strong> <span style="color:#aaa;">/</span> <span style="color:#888;">10,000</span><br>사용: <strong>1,156</strong></td>
                 <td>2025.03.20 14:00</td>
                 <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.04.30 23:59</td>
                 <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.05.31 23:59</td>
@@ -370,18 +401,18 @@
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('SPRING10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>6</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_launch_flat</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('LAUNCH10'); return false;">gb_launch_flat</a></td>
                 <td>Launch $10 OFF</td>
                 <td>
                   <span style="color:#555">LAUNCH10</span><br>
                   <span class="link-copy" onclick="copyLink('LAUNCH10')">발급 링크 복사</span>
                 </td>
                 <td>$10.00</td>
-                <td style="font-size:13px; font-weight:500;"><span style="color:#e65100;">5,000</span> <span style="color:#aaa;">/</span> <span style="color:#888;">5,000</span></td>
+                <td style="font-size:12px; line-height:1.5;">발급: <strong style="color:#e65100;">5,000</strong> <span style="color:#aaa;">/</span> <span style="color:#888;">5,000</span><br>사용: <strong>2,847</strong></td>
                 <td>2025.03.01 10:00</td>
                 <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.03.31 23:59</td>
                 <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.04.30 23:59</td>
@@ -390,15 +421,15 @@
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('LAUNCH10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
               <tr>
                 <td>5</td>
-                <td><a href="#" style="color:#ff4757;" onclick="showView('detail'); return false;">gb_vip_test</a></td>
+                <td><a href="#" style="color:#ff4757;" onclick="showCouponDetail('VIP20'); return false;">gb_vip_test</a></td>
                 <td>VIP $20 OFF</td>
                 <td><span style="color:#ccc">-</span></td>
                 <td>$20.00</td>
-                <td style="font-size:13px; font-weight:500;">0 <span style="color:#aaa;">/</span> <span style="color:#888;">1,000</span></td>
+                <td style="font-size:12px; line-height:1.5;">발급: <strong>0</strong> <span style="color:#aaa;">/</span> <span style="color:#888;">1,000</span><br>사용: <strong>0</strong></td>
                 <td>2025.02.01 15:30</td>
                 <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.02.28 23:59</td>
                 <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.03.31 23:59</td>
@@ -407,7 +438,7 @@
                   <label class="toggle"><input type="checkbox" onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#999; font-weight:600;">OFF</span>
                 </td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showView('detail')">상세</button> <button class="btn btn-secondary btn-sm">수정하기</button></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetail('VIP20')">상세</button> <button class="btn btn-secondary btn-sm">수정하기</button></td>
               </tr>
             </tbody>
           </table>
@@ -432,11 +463,23 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">공통 쿠폰 발급 여부</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label class="toggle" style="margin-right:0;">
+                <input type="checkbox" id="common-code-toggle" onchange="toggleCommonCode(this)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span id="common-code-toggle-label" style="font-size:13px; color:#999; font-weight:500;">발급 안 함</span>
+            </div>
+            <div class="form-hint">ON 시, 입력한 공통 코드를 기반으로 쿠폰 발급 링크 및 수동 코드 입력 경로가 활성화됩니다.</div>
+          </div>
+
+          <div class="form-group" id="common-code-input-group" style="display:none;">
             <label class="form-label">
-              공통 쿠폰 코드
+              공통 쿠폰 코드 <span class="required">*</span>
             </label>
             <input type="text" class="input input-md" placeholder="예: GDpromotion2025" maxlength="25" id="coupon-code-input" oninput="validateCouponCode(this)">
-            <div class="form-hint">공통 코드로, 쿠폰 생성 후 이를 기반으로 발급 링크가 생성됩니다. 영문 대소문자·숫자만 가능하며 <strong>공백 불가</strong>, 최대 25자.</div>
+            <div class="form-hint">공통 코드로, 쿠폰 생성 후 이를 기반으로 발급 링크가 생성됩니다. 영문 대소문자·숫자만 가능하며 공백 불가, 최대 25자.</div>
             <div class="form-error" id="coupon-code-error">영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)</div>
           </div>
 
@@ -538,7 +581,7 @@
               쿠폰 발급 기준 통화 <span class="required">*</span>
             </label>
             <div class="checkbox-group">
-              <label class="checkbox-item"><input type="checkbox" checked onclick="return false;"> USD ($)</label>
+              <label class="checkbox-item" style="opacity:0.6; cursor:not-allowed;"><input type="checkbox" checked disabled> USD ($)</label>
             </div>
             <div class="form-hint">현재는 USD만 선택 가능합니다.</div>
           </div>
@@ -562,9 +605,18 @@
                 <span class="input-unit">%</span>
               </div>
               <div class="form-error show" id="discount-rate-warning" style="display:none; color:#e65100;">
-                할인율이 30% 이상입니다. 의도한 값이 맞는지 다시 확인해 주세요.
+                할인율은 최대 30까지 입력 가능합니다.
               </div>
               <div class="form-error" id="err-discount-rate"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">최대 할인 금액</label>
+              <div class="input-with-unit">
+                <span class="input-unit">$</span>
+                <input type="text" class="input input-sm" placeholder="(선택)" style="width:150px" inputmode="numeric" id="max-discount-amount" data-label="최대 할인 금액">
+              </div>
+              <div class="form-hint">선택 입력. 결제 단계에서 상품가 × 할인율 적용 시, 최대 할인 금액 제한 적용. 양의 정수만 입력 가능.</div>
             </div>
           </div>
 
@@ -714,8 +766,8 @@
       <div id="view-detail" class="view">
         <div class="page-header">
           <div>
-            <h1 class="page-title">Welcome $5 OFF</h1>
-            <div style="margin-top:4px; color:#888; font-size:13px;">정책명: gb_welcome_2025</div>
+            <h1 class="page-title" id="detail-name">—</h1>
+            <div style="margin-top:4px; color:#888; font-size:13px;">정책명: <span id="detail-policy">—</span></div>
           </div>
           <div style="display:flex; gap:8px;">
             <button class="btn btn-secondary" onclick="showView('list')">목록으로</button>
@@ -727,56 +779,69 @@
           <div class="detail-meta">
             <div class="meta-item">
               <div class="meta-label">쿠폰유형</div>
-              <div class="meta-value">자동 쿠폰 (회원가입 시 발급)</div>
+              <div class="meta-value" id="detail-type">—</div>
             </div>
             <div class="meta-item">
-              <div class="meta-label">상태</div>
-              <div class="meta-value"><span class="status-badge status-active">활성화</span></div>
+              <div class="meta-label">활성화 상태</div>
+              <div class="meta-value" id="detail-status">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">할인</div>
-              <div class="meta-value">$5.00 OFF (정액할인)</div>
+              <div class="meta-value" id="detail-discount">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">최소 주문 금액</div>
-              <div class="meta-value">$20.00</div>
+              <div class="meta-value" id="detail-min-order">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">발급기간 (UTC)</div>
-              <div class="meta-value">2025-04-01T00:00 ~ 2025-12-31T23:59</div>
-              <div class="kst-display">KST: 2025-04-01 09:00 ~ 2026-01-01 08:59</div>
+              <div class="meta-value" id="detail-issue-utc">—</div>
+              <div class="kst-display" id="detail-issue-kst">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">사용기한 (UTC)</div>
-              <div class="meta-value">2025-04-01T00:00 ~ 2026-01-31T23:59</div>
-              <div class="kst-display">KST: 2025-04-01 09:00 ~ 2026-02-01 08:59</div>
+              <div class="meta-value" id="detail-use-utc">—</div>
+              <div class="kst-display" id="detail-use-kst">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">인당 발급 횟수</div>
-              <div class="meta-value">1회</div>
+              <div class="meta-value" id="detail-per-user">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">총 발급 현황</div>
-              <div class="meta-value">1,204 / 50,000</div>
+              <div class="meta-value" id="detail-issued">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">총 사용 현황</div>
+              <div class="meta-value" id="detail-used">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">공통 쿠폰 코드</div>
-              <div class="meta-value">
-                WELCOME5
-                <span class="link-copy" onclick="copyLink('WELCOME5')" style="margin-left:8px;">발급 링크 복사</span>
-              </div>
+              <div class="meta-value" id="detail-code">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">사용 조건</div>
-              <div class="meta-value">전체 (조건 없음)</div>
+              <div class="meta-value" id="detail-condition">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">PDP/리스트 노출</div>
-              <div class="meta-value">노출</div>
+              <div class="meta-value" id="detail-exposure">—</div>
             </div>
             <div class="meta-item">
               <div class="meta-label">지급사유</div>
-              <div class="meta-value">글로벌번장 론칭 웰컴 쿠폰</div>
+              <div class="meta-value" id="detail-memo">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">등록일</div>
+              <div class="meta-value" id="detail-created">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">생성자</div>
+              <div class="meta-value" id="detail-creator">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">마지막 수정자</div>
+              <div class="meta-value" id="detail-modifier">—</div>
             </div>
           </div>
         </div>
@@ -792,12 +857,138 @@ document.addEventListener('DOMContentLoaded', function() {
   initDatePickers();
 });
 
+// ─── Coupon detail data (mock) ──────────────────
+const COUPON_DATA = {
+  WELCOME5: {
+    name: 'Welcome $5 OFF',
+    policy: 'gb_welcome_2025',
+    type: '자동 쿠폰 (회원가입 시 발급)',
+    status: '<span class="status-badge status-active">활성화</span>',
+    discount: '$5.00 OFF (정액할인)',
+    minOrder: '$20.00',
+    issueUtc: '2025-04-01T00:00 ~ 2025-12-31T23:59',
+    issueKst: 'KST: 2025-04-01 09:00 ~ 2026-01-01 08:59',
+    useUtc: '2025-04-01T00:00 ~ 2026-01-31T23:59',
+    useKst: 'KST: 2025-04-01 09:00 ~ 2026-02-01 08:59',
+    perUser: '1회',
+    issued: '1,204 / 50,000',
+    used: '324 <span style="color:#888; font-size:12px;">(발급 대비 26.9%)</span>',
+    code: 'WELCOME5 <span class="link-copy" onclick="copyLink(\'WELCOME5\')" style="margin-left:8px;">발급 링크 복사</span>',
+    condition: '전체 (조건 없음)',
+    exposure: '노출',
+    memo: '글로벌번장 론칭 웰컴 쿠폰',
+    created: '2025-04-01 09:00 (KST)',
+    creator: 'Hazel',
+    modifier: 'Hazel <span style="color:#888; font-size:12px; margin-left:6px;">(2025-04-12 14:32 KST)</span>',
+  },
+  SPRING10: {
+    name: 'Spring 10% OFF',
+    policy: 'gb_spring_promo',
+    type: '기본 쿠폰',
+    status: '<span class="status-badge status-active">활성화</span>',
+    discount: '10% OFF (정률할인, 최대 $50)',
+    minOrder: '$30.00',
+    issueUtc: '2025-03-20T00:00 ~ 2025-04-30T23:59',
+    issueKst: 'KST: 2025-03-20 09:00 ~ 2025-05-01 08:59',
+    useUtc: '2025-03-20T00:00 ~ 2025-05-31T23:59',
+    useKst: 'KST: 2025-03-20 09:00 ~ 2025-06-01 08:59',
+    perUser: '1회',
+    issued: '3,782 / 10,000',
+    used: '1,156 <span style="color:#888; font-size:12px;">(발급 대비 30.6%)</span>',
+    code: 'SPRING10 <span class="link-copy" onclick="copyLink(\'SPRING10\')" style="margin-left:8px;">발급 링크 복사</span>',
+    condition: '전체 (조건 없음)',
+    exposure: '노출',
+    memo: '봄 시즌 프로모션',
+    created: '2025-03-20 14:00 (KST)',
+    creator: 'Hazel',
+    modifier: 'Jayden <span style="color:#888; font-size:12px; margin-left:6px;">(2025-03-25 11:20 KST)</span>',
+  },
+  LAUNCH10: {
+    name: 'Launch $10 OFF',
+    policy: 'gb_launch_flat',
+    type: '기본 쿠폰',
+    status: '<span class="status-badge status-active">활성화</span>',
+    discount: '$10.00 OFF (정액할인)',
+    minOrder: '$50.00',
+    issueUtc: '2025-03-01T00:00 ~ 2025-03-31T23:59',
+    issueKst: 'KST: 2025-03-01 09:00 ~ 2025-04-01 08:59',
+    useUtc: '2025-03-01T00:00 ~ 2025-04-30T23:59',
+    useKst: 'KST: 2025-03-01 09:00 ~ 2025-05-01 08:59',
+    perUser: '1회',
+    issued: '<span style="color:#e65100; font-weight:600;">5,000 / 5,000</span> <span style="color:#888; font-size:12px;">(소진)</span>',
+    used: '2,847 <span style="color:#888; font-size:12px;">(발급 대비 56.9%)</span>',
+    code: 'LAUNCH10 <span class="link-copy" onclick="copyLink(\'LAUNCH10\')" style="margin-left:8px;">발급 링크 복사</span>',
+    condition: '전체 (조건 없음)',
+    exposure: '노출',
+    memo: '글로벌번장 론칭 캠페인',
+    created: '2025-03-01 10:00 (KST)',
+    creator: 'Jayden',
+    modifier: 'Jayden <span style="color:#888; font-size:12px; margin-left:6px;">(2025-03-15 16:00 KST)</span>',
+  },
+  VIP20: {
+    name: 'VIP $20 OFF',
+    policy: 'gb_vip_test',
+    type: '기본 쿠폰',
+    status: '<span class="status-badge status-inactive">비활성화</span>',
+    discount: '$20.00 OFF (정액할인)',
+    minOrder: '$100.00',
+    issueUtc: '2025-02-01T00:00 ~ 2025-02-28T23:59',
+    issueKst: 'KST: 2025-02-01 09:00 ~ 2025-03-01 08:59',
+    useUtc: '2025-02-01T00:00 ~ 2025-03-31T23:59',
+    useKst: 'KST: 2025-02-01 09:00 ~ 2025-04-01 08:59',
+    perUser: '1회',
+    issued: '0 / 1,000',
+    used: '0 <span style="color:#888; font-size:12px;">(발급 대비 0%)</span>',
+    code: '<span style="color:#ccc">- (공통 코드 없음)</span>',
+    condition: '전체 (조건 없음)',
+    exposure: '미노출',
+    memo: 'VIP 테스트',
+    created: '2025-02-01 15:30 (KST)',
+    creator: 'Hazel',
+    modifier: 'Hazel <span style="color:#888; font-size:12px; margin-left:6px;">(2025-02-01 15:30 KST)</span>',
+  },
+};
+
+function showCouponDetail(key) {
+  const d = COUPON_DATA[key];
+  if (!d) return;
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  set('detail-name', d.name);
+  set('detail-policy', d.policy);
+  set('detail-type', d.type);
+  set('detail-status', d.status);
+  set('detail-discount', d.discount);
+  set('detail-min-order', d.minOrder);
+  set('detail-issue-utc', d.issueUtc);
+  set('detail-issue-kst', d.issueKst);
+  set('detail-use-utc', d.useUtc);
+  set('detail-use-kst', d.useKst);
+  set('detail-per-user', d.perUser);
+  set('detail-issued', d.issued);
+  set('detail-used', d.used);
+  set('detail-code', d.code);
+  set('detail-condition', d.condition);
+  set('detail-exposure', d.exposure);
+  set('detail-memo', d.memo);
+  set('detail-created', d.created);
+  set('detail-creator', d.creator);
+  set('detail-modifier', d.modifier);
+  showView('detail');
+}
+
 function showView(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
 
-  const titles = { list: '쿠폰 목록', create: '쿠폰 생성', detail: '쿠폰 상세' };
-  document.getElementById('breadcrumb-page').textContent = titles[view] || '';
+  // Breadcrumb — list 뷰에서는 '쿠폰 관리'에서 정지, create/detail에서만 한 단계 더
+  const bc = document.getElementById('breadcrumb');
+  if (view === 'list') {
+    bc.innerHTML = '글로벌번장 &gt; <span>쿠폰 관리</span>';
+  } else if (view === 'create') {
+    bc.innerHTML = '글로벌번장 &gt; 쿠폰 관리 &gt; <span>쿠폰 생성</span>';
+  } else if (view === 'detail') {
+    bc.innerHTML = '글로벌번장 &gt; 쿠폰 관리 &gt; <span>쿠폰 상세</span>';
+  }
 
   // Sync top-nav active button
   document.querySelectorAll('.proto-nav-btn').forEach(b => b.classList.remove('active'));
@@ -805,11 +996,47 @@ function showView(view) {
   const navBtns = document.querySelectorAll('.proto-nav-btn');
   if (navBtns[navMap[view]]) navBtns[navMap[view]].classList.add('active');
 
+  // Show [에러 케이스] chip only on the 쿠폰 생성 view
+  const extras = document.getElementById('proto-nav-extras');
+  if (extras) extras.style.display = (view === 'create') ? '' : 'none';
+
   window.scrollTo(0, 0);
 }
 
 // ─── Changelog ──────────────────────────────────
 const ADMIN_CHANGELOG = [
+  {
+    version: 'v0.5',
+    date: '2026-05-12',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '쿠폰 관리 페이지 H1 제목 "쿠폰 목록" → "쿠폰 관리"로 변경 (사이드바 메뉴명과 일치)',
+      '쿠폰 상세 페이지를 데이터 기반 렌더링으로 전환 — 목록의 각 행(WELCOME5/SPRING10/LAUNCH10/VIP20) 클릭 시 해당 쿠폰의 실제 데이터로 상세 페이지 노출. 기존에는 어떤 행을 눌러도 WELCOME5 정보만 노출되던 문제 해결',
+      '상세 페이지 데이터 정합성 정리 — 생성자/마지막 수정자, 할인 방식(정액/정률 + 캡), 공통 쿠폰 코드, 활성화 상태, 발급/사용 현황을 목록 행과 1:1 매칭',
+    ]
+  },
+  {
+    version: 'v0.4',
+    date: '2026-05-12',
+    changes: [
+      '정률할인에 [최대 할인 금액] 선택 필드 추가 — 결제 단계에서 min(상품가 × 할인율, 최대 할인 금액)으로 캡 적용. 목록 페이지는 동일 컬럼 내 줄바꿈으로 "(최대 $50)" 노출',
+      '쿠폰 목록 컬럼 헤더 [총 발급 현황] → [발급 및 사용 현황]으로 변경, 셀 표기를 "발급: 1,204 / 50,000 / 사용: 324" 줄바꿈 포맷으로 정리. 상세 페이지에도 [총 사용 현황] 항목 신규 노출',
+      '쿠폰 생성 폼에 [공통 쿠폰 발급 여부] 토글 추가 — 디폴트 OFF, ON 시에만 공통 쿠폰 코드 입력 노출 및 필수. ON+빈값 시 "공통 쿠폰 코드 값을 입력해 주세요. 사용하지 않으려면 공통 쿠폰 발급 여부를 OFF 처리해 주세요." 노출',
+      'Breadcrumb 경로 정리 — 쿠폰 목록 뷰에서 \'쿠폰 관리\'까지만 노출 (페이지 제목은 H1에서 명시), 쿠폰 생성/상세 뷰에서만 한 단계 더 노출',
+      '할인율 입력 — 정확히 30 입력 시 경고 미노출, 30 초과 입력 시점에만 30으로 자동 클램프 + 경고 노출하도록 트리거 정정',
+    ]
+  },
+  {
+    version: 'v0.3',
+    date: '2026-05-12',
+    changes: [
+      '쿠폰 생성 화면 상단에 [에러 케이스] 칩 추가 — 클릭 시 발생 가능한 모든 에러 메시지를 카테고리별로 한눈에 확인 가능',
+      '공통 쿠폰 코드 중복 검증 추가 — 이미 사용 중인 코드 입력 시 "사용 불가한 코드입니다." 노출 (테스트: WELCOME5, SPRING10, LAUNCH10, VIP20, SUMMER25)',
+      '할인율 안내 문구 수정 — "할인율은 최대 30까지 입력 가능합니다."로 정리',
+      'USD 통화 체크박스 disabled 처리 (회색 비활성화)',
+      '쿠폰 상세에 [등록일 / 생성자 / 마지막 수정자] 항목 추가, 기존 \'상태\' 라벨을 \'활성화 상태\'로 명확화',
+    ]
+  },
   {
     version: 'v0.2',
     date: '2026-05-07',
@@ -858,6 +1085,97 @@ function closeChangelog() {
   document.getElementById('changelog-overlay').classList.remove('show');
 }
 
+// ─── Error Cases (쿠폰 생성) ─────────────────────
+// 이미 사용 중인 공통 쿠폰 코드(목록 화면에 노출되는 4건 + 미리 등록된 더미)
+const RESERVED_COUPON_CODES = ['WELCOME5', 'SPRING10', 'LAUNCH10', 'VIP20', 'SUMMER25'];
+
+const CREATE_ERROR_CASES = [
+  {
+    group: '필수 항목 누락',
+    items: [
+      { field: '정책명', msg: '정책명 값을 입력해 주세요.' },
+      { field: '쿠폰명', msg: '쿠폰명 값을 입력해 주세요.' },
+      { field: '쿠폰유형', msg: '쿠폰유형 값을 입력해 주세요.' },
+      { field: '자동 쿠폰 발급 기준', msg: '자동 쿠폰 발급 기준 값을 입력해 주세요. (자동 쿠폰 선택 시)' },
+      { field: '할인율 / 할인금액', msg: '할인율 / 할인금액 값을 입력해 주세요.' },
+      { field: '최소상품금액', msg: '최소상품금액 값을 입력해 주세요.' },
+      { field: '쿠폰 발급기간', msg: '쿠폰 발급기간 값을 입력해 주세요.' },
+      { field: '쿠폰 사용기한', msg: '쿠폰 사용기한 값을 입력해 주세요. (날짜 기준 선택 시)' },
+      { field: '발급 후 사용 가능 기간', msg: '발급 후 사용 가능 기간 값을 입력해 주세요. (발급일 기준 선택 시)' },
+      { field: '인당 발급 가능 횟수 / 총 발급 가능 개수', msg: '값을 입력해 주세요.' },
+    ]
+  },
+  {
+    group: '공통 쿠폰 코드',
+    items: [
+      { field: '형식 오류', msg: '영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)' },
+      { field: '중복 코드', msg: '사용 불가한 코드입니다.', testable: 'WELCOME5, SPRING10, LAUNCH10, VIP20, SUMMER25 입력 시 재현' },
+    ]
+  },
+  {
+    group: '할인 / 금액 범위',
+    items: [
+      { field: '할인율 (정률할인)', msg: '0에서 최대 30까지 입력 가능합니다.' },
+      { field: '할인율 30 도달 시 안내', msg: '할인율은 최대 30까지 입력 가능합니다.' },
+      { field: '할인금액 (정액할인)', msg: '0.01에서 최대 999.99까지 입력 가능합니다.' },
+      { field: '최소상품금액', msg: '0.01에서 최대 999,999.99까지 입력 가능합니다.' },
+    ]
+  },
+  {
+    group: '발급기간 · 사용기한 (cross-field)',
+    items: [
+      { field: '발급 종료 < 발급 시작', msg: '종료시간은 시작시간 이후여야 합니다.' },
+      { field: '사용 종료 < 사용 시작', msg: '종료시간은 시작시간 이후여야 합니다.' },
+      { field: '사용 종료 < 발급 종료', msg: '쿠폰 사용(유효) 종료기간은 쿠폰 발급 종료기간 이후여야 합니다.' },
+      { field: '발급 후 사용 가능 기간 (일)', msg: '0에서 90까지 입력 가능합니다.' },
+    ]
+  },
+  {
+    group: '발급 제한',
+    items: [
+      { field: '인당 발급 가능 횟수', msg: '1에서 5까지 입력 가능합니다.' },
+      { field: '총 발급 가능 개수', msg: '1에서 999,999,999까지 입력 가능합니다.' },
+    ]
+  },
+  {
+    group: '쿠폰 사용 후 최종 금액 (cross-field)',
+    items: [
+      { field: '정액할인 — 최소상품금액 vs 할인금액', msg: '최소상품금액 - 할인금액이 최소 $1 이상이어야 합니다.' },
+      { field: '정률할인 — 최소상품금액 vs 할인율', msg: '최소상품금액 기준 할인 후 금액이 최소 $1 이상이어야 합니다.' },
+    ]
+  },
+];
+
+function openErrorCases() {
+  const body = document.getElementById('error-cases-body');
+  const hint = `
+    <div class="err-cases-hint">
+      ★ <strong>테스트 가능한 케이스</strong>: '공통 쿠폰 코드' 입력란에
+      <code style="background:#fff; padding:1px 6px; border-radius:3px;">WELCOME5</code> 입력 시
+      "사용 불가한 코드입니다." 에러 메시지를 직접 확인할 수 있습니다.
+    </div>
+  `;
+  body.innerHTML = hint + CREATE_ERROR_CASES.map(g => `
+    <div class="err-cases-group">
+      <div class="err-cases-group-title">${g.group}</div>
+      <ul class="err-cases-list">
+        ${g.items.map(it => `
+          <li>
+            <strong>${it.field}</strong> —
+            <span class="err-cases-msg">${it.msg}</span>
+            ${it.testable ? `<span class="err-cases-tag">TESTABLE</span><div style="font-size:11px; color:#888; margin-top:2px; padding-left:0;">${it.testable}</div>` : ''}
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `).join('');
+  document.getElementById('error-cases-overlay').classList.add('show');
+}
+
+function closeErrorCases() {
+  document.getElementById('error-cases-overlay').classList.remove('show');
+}
+
 // Adjust body padding-top to actual nav height (handles wrap on narrow widths)
 function adjustBodyTop() {
   const nav = document.querySelector('.proto-nav');
@@ -872,6 +1190,28 @@ function toggleAutoSection() {
   document.getElementById('auto-criteria-section').style.display = type === 'AUTO' ? '' : 'none';
 }
 
+function toggleCommonCode(input) {
+  const group = document.getElementById('common-code-input-group');
+  const label = document.getElementById('common-code-toggle-label');
+  if (input.checked) {
+    group.style.display = '';
+    label.textContent = '발급';
+    label.style.color = '#2e7d32';
+  } else {
+    group.style.display = 'none';
+    label.textContent = '발급 안 함';
+    label.style.color = '#999';
+    // Clear input + error when turning off
+    const codeInput = document.getElementById('coupon-code-input');
+    if (codeInput) codeInput.value = '';
+    const errEl = document.getElementById('coupon-code-error');
+    if (errEl) {
+      errEl.classList.remove('show');
+      errEl.textContent = '영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)';
+    }
+  }
+}
+
 function toggleDiscountFields() {
   const type = document.getElementById('discount-type').value;
   document.getElementById('discount-fixed-section').style.display = type === 'FIXED' ? '' : 'none';
@@ -882,13 +1222,15 @@ function toggleDiscountFields() {
 }
 
 function checkDiscountRate(input) {
-  let val = parseInt(input.value, 10);
-  if (!isNaN(val) && val > 30) {
-    input.value = 30;
-    val = 30;
-  }
+  const raw = parseInt(input.value, 10);
   const warning = document.getElementById('discount-rate-warning');
-  warning.style.display = (!isNaN(val) && val >= 30) ? '' : 'none';
+  // 정책: '30 초과' 입력 시에만 경고 노출 + 30으로 클램프. 30 정확히 입력은 정상 케이스.
+  if (!isNaN(raw) && raw > 30) {
+    input.value = 30;
+    warning.style.display = '';
+  } else {
+    warning.style.display = 'none';
+  }
 }
 
 function formatDateTime(d) {
@@ -961,10 +1303,28 @@ function validateCouponCode(input) {
   const val = input.value;
   const isValid = /^[A-Za-z0-9]*$/.test(val);
   const errEl = document.getElementById('coupon-code-error');
+
   if (!isValid) {
     input.value = val.replace(/[^A-Za-z0-9]/g, '');
+    errEl.textContent = '영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)';
     errEl.classList.add('show');
-    setTimeout(() => errEl.classList.remove('show'), 2500);
+    setTimeout(() => {
+      // Only clear if the message hasn't changed to the duplicate warning since
+      if (errEl.textContent === '영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)') {
+        errEl.classList.remove('show');
+      }
+    }, 2500);
+    return;
+  }
+
+  // Duplicate-code check (case-insensitive against reserved/used list)
+  const normalized = input.value.trim().toUpperCase();
+  if (normalized && RESERVED_COUPON_CODES.includes(normalized)) {
+    errEl.textContent = '사용 불가한 코드입니다.';
+    errEl.classList.add('show');
+  } else {
+    errEl.textContent = '영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)';
+    errEl.classList.remove('show');
   }
 }
 
@@ -1227,6 +1587,23 @@ function validateCreateForm() {
 
   if (document.getElementById('coupon-type').value === 'AUTO') {
     checkText('auto-criteria', 'err-auto-criteria');
+  }
+
+  // 공통 쿠폰 코드 — '공통 쿠폰 발급 여부' 토글이 ON일 때만 필수 + 중복 검증
+  const codeToggle = document.getElementById('common-code-toggle');
+  if (codeToggle && codeToggle.checked) {
+    const codeEl = document.getElementById('coupon-code-input');
+    const codeErrEl = document.getElementById('coupon-code-error');
+    const val = codeEl.value.trim();
+    if (!val) {
+      codeErrEl.textContent = '공통 쿠폰 코드 값을 입력해 주세요. 사용하지 않으려면 공통 쿠폰 발급 여부를 OFF 처리해 주세요.';
+      codeErrEl.classList.add('show');
+      if (!firstInvalid) firstInvalid = codeEl;
+    } else if (RESERVED_COUPON_CODES.includes(val.toUpperCase())) {
+      codeErrEl.textContent = '사용 불가한 코드입니다.';
+      codeErrEl.classList.add('show');
+      if (!firstInvalid) firstInvalid = codeEl;
+    }
   }
 
   // Discount fields (range + empty)
