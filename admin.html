@@ -227,7 +227,7 @@
     <button class="proto-nav-chip" onclick="openErrorCases()" title="View all possible coupon-create errors">[에러 케이스]</button>
   </span>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.7</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.8</button>
     <span>Updated 2026-05-13</span>
   </span>
 </div>
@@ -476,7 +476,7 @@
               </label>
               <span id="common-code-toggle-label" style="font-size:13px; color:#999; font-weight:500;">발급 안 함</span>
             </div>
-            <div class="form-hint">발급 시, 입력한 공통 코드를 기반으로 쿠폰 발급 링크 및 수동 코드 입력 경로가 활성화됩니다.</div>
+            <div class="form-hint">발급 시, 입력한 공통 코드를 기반으로 쿠폰 발급 링크 및 코드를 고객이 수동으로 쿠폰을 발급 받을 수 있는 공통 코드가 활성화됩니다.</div>
           </div>
 
           <div class="form-group" id="common-code-input-group" style="display:none;">
@@ -484,7 +484,7 @@
               공통 쿠폰 코드 <span class="required">*</span>
             </label>
             <input type="text" class="input input-md" placeholder="예: GDpromotion2025" maxlength="25" id="coupon-code-input" oninput="validateCouponCode(this)">
-            <div class="form-hint">공통 코드로, 쿠폰 생성 후 이를 기반으로 발급 링크가 생성됩니다. 영문 대소문자·숫자만 가능하며 공백 불가, 최대 25자.</div>
+            <div class="form-hint">쿠폰 생성 후 이를 기반으로 발급 링크가 생성됩니다. 영문 대소문자·숫자만 가능하며 공백 불가, 최대 25자.</div>
             <div class="form-error" id="coupon-code-error">영문 대소문자, 숫자만 입력 가능합니다. (공백 불가, 최대 25자)</div>
           </div>
 
@@ -1074,6 +1074,14 @@ function showView(view) {
 
 // ─── Changelog ──────────────────────────────────
 const ADMIN_CHANGELOG = [
+  {
+    version: 'v0.8',
+    date: '2026-05-13',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '쿠폰 생성 폼 [공통 쿠폰 발급 여부] 토글 / [공통 쿠폰 코드] 입력란 하단 안내 문구 다듬기',
+    ]
+  },
   {
     version: 'v0.7',
     date: '2026-05-13',
