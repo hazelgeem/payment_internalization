@@ -227,7 +227,7 @@
     <button class="proto-nav-chip" onclick="openErrorCases()" title="View all possible coupon-create errors">[에러 케이스]</button>
   </span>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v0.9</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.0</button>
     <span>Updated 2026-05-13</span>
   </span>
 </div>
@@ -334,23 +334,27 @@
               </select>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:13px; color:#555; white-space:nowrap;">쿠폰타입</span>
-              <select class="filter-select">
+              <span style="font-size:13px; color:#555; white-space:nowrap;">쿠폰유형</span>
+              <select class="filter-select" id="filter-coupon-type">
                 <option>전체</option>
                 <option>기본 쿠폰</option>
                 <option>자동 쿠폰</option>
               </select>
             </div>
             <div style="display:flex; align-items:center; gap:4px;">
-              <input type="text" class="search-input" placeholder="정책명" style="width:140px;">
+              <input type="text" class="search-input" id="filter-policy-name" placeholder="정책명" style="width:140px;">
               <span style="color:#aaa;">🔍</span>
             </div>
             <div style="display:flex; align-items:center; gap:4px;">
-              <input type="text" class="search-input" placeholder="생성자" style="width:140px;">
+              <input type="text" class="search-input" id="filter-creator" placeholder="생성자" style="width:140px;">
+              <span style="color:#aaa;">🔍</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="text" class="search-input" id="filter-modifier" placeholder="마지막 수정자" style="width:140px;">
               <span style="color:#aaa;">🔍</span>
             </div>
           </div>
-          <div class="table-toolbar" style="border-bottom:1px solid #eee; justify-content:space-between;">
+          <div class="table-toolbar" style="border-bottom:1px solid #eee; flex-wrap:wrap; gap:12px 16px;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:13px; color:#555; white-space:nowrap;">등록 일시</span>
               <div class="dp-wrap">
@@ -364,6 +368,18 @@
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; color:#555; white-space:nowrap;">쿠폰 발급기간</span>
+              <div class="dp-wrap">
+                <input type="text" class="input dp-input" style="width:140px; padding:6px 10px; font-size:12px;" id="filter-issue-start" data-date-only="1" placeholder="YYYY/MM/DD" readonly>
+                <div class="dp-dropdown" id="filter-issue-start-dd"></div>
+              </div>
+              <span style="color:#888;">→</span>
+              <div class="dp-wrap">
+                <input type="text" class="input dp-input" style="width:140px; padding:6px 10px; font-size:12px;" id="filter-issue-end" data-date-only="1" placeholder="YYYY/MM/DD" readonly>
+                <div class="dp-dropdown" id="filter-issue-end-dd"></div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
               <button class="btn btn-secondary btn-sm" onclick="resetCouponFilters()">초기화</button>
               <button class="btn btn-primary btn-sm" onclick="applyCouponFilters()">조회</button>
             </div>
@@ -393,10 +409,11 @@
                 <th>ID</th>
                 <th>정책명</th>
                 <th>쿠폰명</th>
+                <th>쿠폰유형</th>
                 <th>공통 쿠폰 코드</th>
                 <th>할인 금액</th>
                 <th>발급 및 사용 현황</th>
-                <th>등록일</th>
+                <th>등록 일시</th>
                 <th>쿠폰 발급기간</th>
                 <th>쿠폰 사용기간</th>
                 <th>생성자 / 마지막 수정자</th>
@@ -405,10 +422,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr data-coupon-key="WELCOME5">
                 <td>8</td>
                 <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('WELCOME5'); return false;">gb_welcome_2025</a></td>
                 <td>Welcome $5 OFF</td>
+                <td style="font-size:12px;">자동 쿠폰<br><span style="color:#888;">(회원가입 시 발급)</span></td>
                 <td>
                   <span style="color:#555">WELCOME5</span><br>
                   <span class="link-copy" onclick="copyLink('WELCOME5')">발급 링크 복사</span>
@@ -418,17 +436,18 @@
                 <td>2025.04.01 09:00</td>
                 <td style="font-size:12px;">2025.04.01 00:00<br>~ 2025.12.31 23:59</td>
                 <td style="font-size:12px;">2025.04.01 00:00<br>~ 2026.01.31 23:59</td>
-                <td style="font-size:12px;">Hazel / Hazel</td>
+                <td style="font-size:12px; line-height:1.6;">Hazel<br><span style="color:#888;">Hazel</span></td>
                 <td>
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetailModal('WELCOME5')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
-              <tr>
+              <tr data-coupon-key="SPRING10">
                 <td>7</td>
                 <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('SPRING10'); return false;">gb_spring_promo</a></td>
                 <td>Spring 10% OFF</td>
+                <td style="font-size:12px;">기본 쿠폰</td>
                 <td>
                   <span style="color:#555">SPRING10</span><br>
                   <span class="link-copy" onclick="copyLink('SPRING10')">발급 링크 복사</span>
@@ -438,17 +457,18 @@
                 <td>2025.03.20 14:00</td>
                 <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.04.30 23:59</td>
                 <td style="font-size:12px;">2025.03.20 00:00<br>~ 2025.05.31 23:59</td>
-                <td style="font-size:12px;">Hazel / Jayden</td>
+                <td style="font-size:12px; line-height:1.6;">Hazel<br><span style="color:#888;">Jayden</span></td>
                 <td>
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetailModal('SPRING10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
-              <tr>
+              <tr data-coupon-key="LAUNCH10">
                 <td>6</td>
                 <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('LAUNCH10'); return false;">gb_launch_flat</a></td>
                 <td>Launch $10 OFF</td>
+                <td style="font-size:12px;">기본 쿠폰</td>
                 <td>
                   <span style="color:#555">LAUNCH10</span><br>
                   <span class="link-copy" onclick="copyLink('LAUNCH10')">발급 링크 복사</span>
@@ -458,24 +478,25 @@
                 <td>2025.03.01 10:00</td>
                 <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.03.31 23:59</td>
                 <td style="font-size:12px;">2025.03.01 00:00<br>~ 2025.04.30 23:59</td>
-                <td style="font-size:12px;">Jayden / Jayden</td>
+                <td style="font-size:12px; line-height:1.6;">Jayden<br><span style="color:#888;">Jayden</span></td>
                 <td>
                   <label class="toggle"><input type="checkbox" checked onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#2e7d32; font-weight:600;">ON</span>
                 </td>
                 <td><button class="btn btn-secondary btn-sm" onclick="showCouponDetailModal('LAUNCH10')">상세</button> <button class="btn btn-secondary btn-sm" disabled>수정하기</button></td>
               </tr>
-              <tr>
+              <tr data-coupon-key="VIP20">
                 <td>5</td>
                 <td><a href="#" style="color:#ff4757;" onclick="navigateToCoupon('VIP20'); return false;">gb_vip_test</a></td>
                 <td>VIP $20 OFF</td>
+                <td style="font-size:12px;">기본 쿠폰</td>
                 <td><span style="color:#ccc">-</span></td>
                 <td>$20.00</td>
                 <td style="font-size:12px; line-height:1.5;">발급: <strong>0</strong> <span style="color:#aaa;">/</span> <span style="color:#888;">1,000</span><br>사용: <strong>0</strong></td>
                 <td>2025.02.01 15:30</td>
                 <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.02.28 23:59</td>
                 <td style="font-size:12px;">2025.02.01 00:00<br>~ 2025.03.31 23:59</td>
-                <td style="font-size:12px;">Hazel / Hazel</td>
+                <td style="font-size:12px; line-height:1.6;">Hazel<br><span style="color:#888;">Hazel</span></td>
                 <td>
                   <label class="toggle"><input type="checkbox" onchange="updateActiveLabel(this)"><span class="toggle-slider"></span></label>
                   <span class="active-label" style="font-size:11px; color:#999; font-weight:600;">OFF</span>
@@ -1151,6 +1172,15 @@ function showView(view) {
 // ─── Changelog ──────────────────────────────────
 const ADMIN_CHANGELOG = [
   {
+    version: 'v1.0',
+    date: '2026-05-13',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '쿠폰 목록 검색 — 쿠폰유형·정책명·생성자·마지막 수정자·발급기간 필터 실제 조회 기능 구현 (쿠폰유형 라벨명 변경, 발급기간 날짜 범위 필터 신규 추가 포함)',
+      '쿠폰 목록 테이블 — 쿠폰유형 컬럼 추가, 생성자/마지막 수정자 두 줄 표시',
+    ]
+  },
+  {
     version: 'v0.9',
     date: '2026-05-13',
     author: 'hazel.k@bunjang.co.kr',
@@ -1521,8 +1551,10 @@ function initDatePickers() {
     { id: 'issue-end',    kstPrefix: 'issue' },
     { id: 'valid-start',  kstPrefix: 'valid' },
     { id: 'valid-end',    kstPrefix: 'valid' },
-    { id: 'filter-start', dateOnly: true },
-    { id: 'filter-end',   dateOnly: true },
+    { id: 'filter-start',       dateOnly: true },
+    { id: 'filter-end',         dateOnly: true },
+    { id: 'filter-issue-start', dateOnly: true },
+    { id: 'filter-issue-end',   dateOnly: true },
   ];
   specs.forEach(s => _datePickers.push(new DatePicker(s.id, s.id + '-dd', s.kstPrefix, s.dateOnly)));
 
@@ -1881,20 +1913,44 @@ function resetCouponFilters() {
     delete i.dataset.iso;
   });
   _datePickers.forEach(dp => {
-    if (dp.input.id === 'filter-start' || dp.input.id === 'filter-end') {
+    if (['filter-start','filter-end','filter-issue-start','filter-issue-end'].includes(dp.input.id)) {
       dp.selected = null;
     }
   });
+  document.querySelectorAll('#view-list tbody tr[data-coupon-key]').forEach(r => { r.style.display = ''; });
 }
 
 function applyCouponFilters() {
-  // Prototype: data is static, so no actual filtering. Brief visual feedback only.
-  const btn = event && event.currentTarget;
-  if (!btn) return;
-  const orig = btn.textContent;
-  btn.textContent = '조회 중…';
-  btn.disabled = true;
-  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 400);
+  const selectedType = (document.getElementById('filter-coupon-type') || {}).value || '전체';
+  const policyQ = ((document.getElementById('filter-policy-name') || {}).value || '').trim().toLowerCase();
+  const creatorQ = ((document.getElementById('filter-creator') || {}).value || '').trim().toLowerCase();
+  const modifierQ = ((document.getElementById('filter-modifier') || {}).value || '').trim().toLowerCase();
+  const issueStartEl = document.getElementById('filter-issue-start');
+  const issueEndEl   = document.getElementById('filter-issue-end');
+  const filterIssueStart = issueStartEl && issueStartEl.dataset.iso ? issueStartEl.dataset.iso : '';
+  const filterIssueEnd   = issueEndEl   && issueEndEl.dataset.iso   ? issueEndEl.dataset.iso   : '';
+
+  const rows = document.querySelectorAll('#view-list tbody tr[data-coupon-key]');
+  rows.forEach(row => {
+    const key = row.dataset.couponKey;
+    const d = COUPON_DATA[key];
+    if (!d) return;
+    const modifierName = d.modifier.replace(/<[^>]+>/g, '').trim().toLowerCase();
+    let show = true;
+    if (selectedType === '기본 쿠폰') show = show && d.type === '기본 쿠폰';
+    else if (selectedType === '자동 쿠폰') show = show && d.type.startsWith('자동 쿠폰');
+    if (policyQ) show = show && d.policy.toLowerCase().includes(policyQ);
+    if (creatorQ) show = show && d.creator.toLowerCase().includes(creatorQ);
+    if (modifierQ) show = show && modifierName.includes(modifierQ);
+    if (filterIssueStart || filterIssueEnd) {
+      const parts = d.issueUtc.split(' ~ ');
+      const couponIssueStart = parts[0].split('T')[0];
+      const couponIssueEnd   = parts[1] ? parts[1].split('T')[0] : couponIssueStart;
+      if (filterIssueStart) show = show && couponIssueEnd >= filterIssueStart;
+      if (filterIssueEnd)   show = show && couponIssueStart <= filterIssueEnd;
+    }
+    row.style.display = show ? '' : 'none';
+  });
 }
 
 let _confirmCb = null, _confirmCancelCb = null;
