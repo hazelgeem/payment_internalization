@@ -349,6 +349,7 @@
   .orders-pay-desc { font-size: 13px; color: #444; line-height: 1.45; }
   .orders-pay-btn { width: 100%; padding: 14px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .orders-pay-contact { display: block; text-align: center; margin-top: 12px; font-size: 13px; color: #555; text-decoration: underline; cursor: pointer; background: none; border: none; width: 100%; }
+  .orders-pay-card button:disabled { opacity: 0.3; cursor: not-allowed; }
   .orders-cancel-card { margin: 0 16px 16px; padding: 14px 16px; background: #f8f8f8; border-radius: 12px; }
   .orders-cancel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .orders-cancel-arrow { color: #999; font-size: 16px; flex-shrink: 0; }
@@ -845,8 +846,8 @@
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">프록시 SSO 연동</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.14</button>
-    <span>Updated 2026-05-07</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.15</button>
+    <span>Updated 2026-05-14</span>
   </span>
 </div>
 
@@ -882,10 +883,19 @@
       </div>
     </div>
     <div class="sidebar-section">
+      <div class="sidebar-section-title">Apple/Google Pay 노출 기준</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip active" id="sb-qp-safari" onclick="setQuickPaySimMode('safari')">Safari (Apple Pay)</button>
+        <button class="sidebar-chip" id="sb-qp-chrome" onclick="setQuickPaySimMode('chrome')">Chrome (Google Pay)</button>
+        <button class="sidebar-chip" id="sb-qp-none" onclick="setQuickPaySimMode('none')">기타 브라우저 (없음)</button>
+      </div>
+      <div class="sidebar-hint">실제 구현: Safari → Apple Pay만 노출<br>(window.ApplePaySession?.canMakePayments())<br>Chrome/Edge → Google Pay만 노출<br>그 외 → 둘 다 미노출</div>
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-section-title">프록시 노출 기준</div>
       <div class="sidebar-chips">
-        <button id="sb-proxy-single" class="sidebar-chip active" onclick="setProxyMode('single')">PH 1: Single (DK only)</button>
-        <button id="sb-proxy-multi" class="sidebar-chip" onclick="setProxyMode('multi')">PH 2: Multi (3)</button>
+        <button id="sb-proxy-single" class="sidebar-chip" onclick="setProxyMode('single')">단일 프록시 (시뮬)</button>
+        <button id="sb-proxy-multi" class="sidebar-chip active" onclick="setProxyMode('multi')">멀티 프록시 (3)</button>
       </div>
     </div>
     <div class="sidebar-section">
@@ -966,7 +976,37 @@
         <button class="sidebar-chip" data-variant-chip="partial" onclick="setOrderVariant('partial', event)">일부 취소</button>
       </div>
     </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">결제수단 케이스</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip active" id="sb-os-card" onclick="setOrderSummaryPayMethod('card')">Credit Card</button>
+        <button class="sidebar-chip" id="sb-os-paypal" onclick="setOrderSummaryPayMethod('paypal')">PayPal</button>
+        <button class="sidebar-chip" id="sb-os-alipay" onclick="setOrderSummaryPayMethod('alipay')">Alipay+ (TrueMoney)</button>
+      </div>
+      <div class="sidebar-hint">Credit Card: Payment Promotion 할인 라인 노출<br>PayPal: 할인 없음<br>Alipay+: 브랜드명(TrueMoney) 노출</div>
+    </div>
     <div class="sidebar-hint">우측 패널에서 Order Summary 변형(주문 직후 / 전체 확정 / 일부 취소)을 전환합니다.</div>
+  </div>
+
+  <!-- Order Detail panel -->
+  <div id="sidebar-order-detail" class="sidebar-panel">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">주문 상세 케이스</div>
+      <div class="sidebar-chips">
+        <button class="sidebar-chip active" id="sb-od-card" onclick="setOrderDetailCase('card')">Credit Card</button>
+        <button class="sidebar-chip" id="sb-od-paypal" onclick="setOrderDetailCase('paypal')">PayPal</button>
+        <button class="sidebar-chip" id="sb-od-cancel" onclick="setOrderDetailCase('cancel')">취소 주문</button>
+      </div>
+      <div class="sidebar-hint">Credit Card: Payment Promotion 할인 라인 노출<br>PayPal: 할인 없음<br>취소 주문: 환불 처리 상태 표시</div>
+    </div>
+  </div>
+
+  <!-- My Orders panel -->
+  <div id="sidebar-my-orders" class="sidebar-panel">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Additional Payment</div>
+      <div class="sidebar-hint">화살표(‹ ›)로 여러 재결제 상품 간 이동 (1/3 표기)</div>
+    </div>
   </div>
 
   <!-- Empty panel for other screens -->
@@ -1028,9 +1068,9 @@
         <button class="pdp-heart" title="Wishlist">♡</button>
       </div>
       <div class="pdp-price-row">
-        <span class="pdp-price" data-spec="{usd_price_raw}">USD 28.26</span>
+        <span class="pdp-price" data-spec="{usd_price_base}">USD 28.26</span>
         <span class="pdp-price-original" data-spec="{usd_price_paypal}">USD 29.75</span>
-        <span class="pdp-price-discount" data-spec="{PayPal Added %}">5% OFF</span>
+        <span class="pdp-price-discount" data-spec="{PayPal Added %}">5% OFF <span class="info-icon" onclick="showTooltip(event, 'pdp-promo')" style="font-size:11px;">ⓘ</span></span>
       </div>
       <div class="pdp-rating">
         <span style="font-weight: 700;" data-spec="{Shop Name}">글로벌번장</span>
@@ -1400,13 +1440,13 @@
           <div style="display:flex;gap:10px;margin-bottom:10px;">
             <!-- Paysable -->
             <div id="calc-paysable-card" onclick="selectCalcProxy('paysable')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:8px;" data-spec="{Proxy Name}">Paysable</div>
+              <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:8px;" data-spec="{Proxy Partner Name}">Paysable</div>
               <div id="calc-paysable-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;" data-spec="{usd_estimated_shipping}"></div>
               <div id="calc-paysable-detail" style="font-size:10px;color:#aaa;line-height:1.5;" data-spec="Vol. weight: {Vol Weight} kg ({W}×{L}×{H} ÷ {Divisor})"></div>
             </div>
             <!-- Kfriday -->
             <div id="calc-kfriday-card" onclick="selectCalcProxy('kfriday')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:8px;" data-spec="{Proxy Name}">Kfriday</div>
+              <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:8px;" data-spec="{Proxy Partner Name}">Kfriday</div>
               <div id="calc-kfriday-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;" data-spec="{usd_estimated_shipping}"></div>
               <div id="calc-kfriday-detail" style="font-size:10px;color:#aaa;line-height:1.5;" data-spec="Vol. weight: {Vol Weight} kg ({W}×{L}×{H} ÷ {Divisor})"></div>
             </div>
@@ -1416,17 +1456,17 @@
             <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
               <div style="width:32px;height:32px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;flex-shrink:0;">D</div>
               <div>
-                <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:2px;" data-spec="{Proxy Name}">Delivered Korea</div>
-                <div style="font-size:11px;color:#999;line-height:1.4;" data-spec="Check the rate on {Proxy Name}'s website">Check the rate on DK's website</div>
+                <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:2px;" data-spec="{Proxy Partner Name}">Delivered Korea</div>
+                <div style="font-size:11px;color:#999;line-height:1.4;" data-spec="Check the rate on {Proxy Partner Name}'s website">Check the rate on DK's website</div>
               </div>
             </div>
-            <a href="https://www.deliveredkorea.com" target="_blank" onclick="event.stopPropagation()" style="flex-shrink:0;font-size:12px;font-weight:600;color:#e65100;background:#fff;border:1.5px solid #e65100;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;">Visit site ↗</a>
+            <span style="flex-shrink:0;font-size:11px;color:#bbb;white-space:nowrap;">Not available</span>
           </div>
           <div style="background:#f3f8ff;border:1px solid #d6e4f5;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#1565c0;line-height:1.6;">
             <div style="font-weight:700;margin-bottom:4px;">📦 These rates are for shipping a single item.</div>
-            <div>If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
+            <div>If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Proxy Partner — check each Proxy Partner's page for details.</div>
           </div>
-          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
+          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Proxy Partner — check each Proxy Partner's page for details.</div>
         </div>
 
       </div>
@@ -1559,7 +1599,7 @@
               <div class="coupon-card-amount-unit">OFF</div>
             </div>
             <div class="coupon-card-right">
-              <div class="coupon-card-name">Shipping to Shop & Ship Partner Discount</div>
+              <div class="coupon-card-name">Shipping to Proxy Partner Discount</div>
               <div class="coupon-card-min">Min. $30.00</div>
               <div class="coupon-card-remaining" style="color:#bbb;">45 days left</div>
             </div>
@@ -1593,6 +1633,7 @@
         <div class="modal-item-name" data-spec="{Product Name(EN)}">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
         <div class="modal-item-price" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
           <span data-spec="{usd_new_price}">USD 34.62</span>
+          <span style="font-size:11px;color:#888;" data-spec="Domestic Shipping: {usd_shipping_base}">Domestic Shipping: USD 2.15</span>
         </div>
       </div>
       <div class="modal-btns">
@@ -1609,7 +1650,10 @@
       <div class="modal-item">
         <div class="modal-item-img"></div>
         <div class="modal-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee</div>
-        <div class="modal-item-price">USD 4.08</div>
+        <div class="modal-item-price" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span data-spec="{usd_price_base}">USD 4.08</span>
+          <span style="font-size:11px;color:#888;" data-spec="Domestic Shipping: {usd_shipping_base}">Domestic Shipping: USD 2.15</span>
+        </div>
       </div>
       <div class="modal-sub">You can still order the remaining 1 item.</div>
       <div class="modal-btns">
@@ -1627,12 +1671,18 @@
       <div class="modal-item">
         <div class="modal-item-img"></div>
         <div class="modal-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee</div>
-        <div class="modal-item-price">USD 4.08</div>
+        <div class="modal-item-price" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span data-spec="{usd_price_base}">USD 4.08</span>
+          <span style="font-size:11px;color:#888;" data-spec="Domestic Shipping: {usd_shipping_base}">Domestic Shipping: USD 2.15</span>
+        </div>
       </div>
       <div class="modal-item">
         <div class="modal-item-img"></div>
         <div class="modal-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
-        <div class="modal-item-price">USD 34.62</div>
+        <div class="modal-item-price" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span data-spec="{usd_price_base}">USD 34.62</span>
+          <span style="font-size:11px;color:#888;" data-spec="Domestic Shipping: {usd_shipping_base}">Domestic Shipping: USD 2.15</span>
+        </div>
       </div>
       <div class="modal-btns">
         <button class="modal-btn primary" onclick="closeModal('modal-soldout-all');showScreen('cart')">Back</button>
@@ -1641,7 +1691,7 @@
   </div>
 
   <div class="header">
-    <button class="header-back" onclick="showScreen('cart')">‹</button>
+    <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">Check Out</span>
     <span></span>
   </div>
@@ -1662,7 +1712,7 @@
               <div class="order-item-name" data-spec="{Product Name(EN)}">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
               <div class="order-item-qty" data-spec="Qty: {Qty}">Qty: 1</div>
             </div>
-            <div class="order-item-price" data-spec="{usd_price_raw}">USD 4.08</div>
+            <div class="order-item-price" data-spec="{usd_price_base}">USD 4.08</div>
           </div>
           <div class="item-coupon-area" id="coupon-area-item1">
             <div class="item-coupon-row">
@@ -1676,7 +1726,7 @@
             </div>
           </div>
           <div class="order-item-shipping">
-            <span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 2.50</span>
+            <span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 2.50</span>
           </div>
           <div class="add-request-area">
             <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
@@ -1710,7 +1760,7 @@
               <div class="order-item-name" data-spec="{Product Name(EN)}">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
               <div class="order-item-qty" data-spec="Qty: {Qty}">Qty: 1</div>
             </div>
-            <div class="order-item-price" data-spec="{usd_price_raw}">USD 34.62</div>
+            <div class="order-item-price" data-spec="{usd_price_base}">USD 34.62</div>
           </div>
           <div class="item-coupon-area" id="coupon-area-item2">
             <div class="item-coupon-row">
@@ -1724,7 +1774,7 @@
             </div>
           </div>
           <div class="order-item-shipping">
-            <span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 2.50</span>
+            <span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 2.50</span>
           </div>
           <div class="add-request-area">
             <button class="add-request-btn" onclick="toggleRequest(this)">Add Request</button>
@@ -1757,19 +1807,19 @@
     <div class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <div>
-          <span class="section-title">Shop & Ship Partner</span>
-          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally. Service policies (returns, consolidation, fees) vary by Shop & Ship Partner — check each Shop & Ship Partner's page for details.</div>
+          <span class="section-title">Proxy Partner</span>
+          <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally. Service policies (returns, consolidation, fees) vary by Proxy Partner — check each Proxy Partner's page for details.</div>
         </div>
         <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
           <span style="font-size:14px;flex-shrink:0;">🔴</span>
-          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Shop & Ship Partner.</span>
+          <span id="proxy-connect-error-msg" style="font-size:12px;color:#c0392b;line-height:1.5;font-weight:500;">You need to connect your account to use this Proxy Partner.</span>
         </div>
         <div id="proxy-section-container"></div>
         <div class="shipping-fee-note" style="flex-direction:column;align-items:flex-start;gap:8px;">
-          <span>ℹ️ International shipping fee will be paid on the Shop & Ship Partner's website after items arrive at the warehouse</span>
+          <span>ℹ️ International shipping fee will be paid on the Proxy Partner's website after items arrive at the warehouse</span>
           <button id="estimate-btn-proxy" onclick="openShippingCalc()" style="font-size:12px;color:#1565c0;background:none;border:none;cursor:pointer;padding:0;font-weight:600;white-space:nowrap;">Estimate</button>
         </div>
       </div>
@@ -1785,21 +1835,21 @@
 
         <div style="border:1px solid #eee;border-radius:10px;padding:14px;">
           <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px;">
-            <span data-spec="{Proxy Name}" id="addr-proxy-intro" style="font-weight:700;color:#191919;">Delivered Korea</span> handles international shipping.
+            <span data-spec="{Proxy Partner Name}" id="addr-proxy-intro" style="font-weight:700;color:#191919;">Delivered Korea</span> handles international shipping.
           </div>
 
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;align-items:flex-start;gap:10px;">
               <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>
-              <span style="font-size:13px;color:#333;line-height:1.6;">Seller ships your item to <span data-spec="{Proxy Name}" id="addr-step-1-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s Korean warehouse.</span>
+              <span style="font-size:13px;color:#333;line-height:1.6;">Seller ships your item to <span data-spec="{Proxy Partner Name}" id="addr-step-1-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s Korean warehouse.</span>
             </div>
             <div style="display:flex;align-items:flex-start;gap:10px;">
               <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span>
-              <span style="font-size:13px;color:#333;line-height:1.6;">You enter your destination address on <span data-spec="{Proxy Name}" id="addr-step-2-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s site once items arrive.</span>
+              <span style="font-size:13px;color:#333;line-height:1.6;">You enter your destination address on <span data-spec="{Proxy Partner Name}" id="addr-step-2-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s site once items arrive.</span>
             </div>
             <div style="display:flex;align-items:flex-start;gap:10px;">
               <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span>
-              <span style="font-size:13px;color:#333;line-height:1.6;"><span data-spec="{Proxy Name}" id="addr-step-3-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span> ships internationally to you.</span>
+              <span style="font-size:13px;color:#333;line-height:1.6;"><span data-spec="{Proxy Partner Name}" id="addr-step-3-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span> ships internationally to you.</span>
             </div>
           </div>
         </div>
@@ -1826,7 +1876,7 @@
 
         <label class="payment-option">
           <input type="radio" name="payment" class="payment-radio" checked onchange="onPaymentMethodChange('card')">
-          <span class="payment-name">Credit Card</span>
+          <span class="payment-name">Credit Card <span class="payment-badge">Payment Promotion eligible</span></span>
           <div class="payment-icons">
             <span class="payment-icon">VISA</span>
             <span class="payment-icon">MC</span>
@@ -1834,14 +1884,9 @@
           </div>
         </label>
 
-        <label class="payment-option" style="align-items:flex-start;padding:14px 0;">
+        <label class="payment-option" style="padding:14px 0;">
           <input type="radio" name="payment" class="payment-radio" style="margin-top:3px;" onchange="onPaymentMethodChange('paypal')">
-          <div style="flex:1;">
-            <span class="payment-name">PayPal</span>
-            <div style="font-size:11px;color:#e07b00;margin-top:3px;font-weight:500;">
-              Not eligible for payment promotions
-            </div>
-          </div>
+          <span class="payment-name">PayPal</span>
           <div class="payment-icons">
             <span class="payment-icon" style="color:#003087;font-weight:800;">Pay<span style="color:#0070ba;">Pal</span></span>
           </div>
@@ -1849,7 +1894,7 @@
 
         <label class="payment-option" style="border-bottom:none;">
           <input type="radio" name="payment" class="payment-radio" id="payment-alipay" onchange="onPaymentMethodChange('alipay')">
-          <span class="payment-name">Alipay+</span>
+          <span class="payment-name">Alipay+ <span class="payment-badge">Payment Promotion eligible</span></span>
           <div class="payment-icons">
             <span class="payment-icon" style="color:#1677ff;">Alipay+</span>
           </div>
@@ -1868,7 +1913,7 @@
 
         <label class="payment-option">
           <input type="radio" name="payment" class="payment-radio" onchange="onPaymentMethodChange('wechat')">
-          <span class="payment-name">WeChat Pay</span>
+          <span class="payment-name">WeChat Pay <span class="payment-badge">Payment Promotion eligible</span></span>
           <div class="payment-icons">
             <span class="payment-icon" style="color:#07c160;">WeChat</span>
           </div>
@@ -1888,12 +1933,11 @@
           <div class="price-group-title">Product Purchase</div>
           <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount" data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
           <div id="checkout-coupon-row" class="price-row discount" style="display:none;"><span id="checkout-coupon-label">Coupon</span><span id="checkout-coupon-amount" data-spec="-{usd_coupon_value}"></span></div>
-          <div id="checkout-promo-row" class="price-row discount"><span>Payment Promotion (5% off)</span><span id="checkout-promo-amount" data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
-          <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span id="checkout-shipping-to-proxy-amount" data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div class="price-row"><span>Shipping to Proxy Partner</span><span id="checkout-shipping-to-proxy-amount" data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div id="checkout-promo-row" class="price-row discount"><span>Payment Promotion (5% off) <span class="info-icon" onclick="showTooltip(event, 'payment-promo')">ⓘ</span></span><span id="checkout-promo-amount" data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
           <hr class="price-divider">
 
           <div class="price-group-title price-group-intl">International Shipping</div>
-          <div class="price-row muted"><span>Handling Fee <span class="info-icon" onclick="showTooltip(event, 'handling-fee')">ⓘ</span></span><span>Added later</span></div>
           <div class="price-row muted"><span>International Shipping <span class="info-icon" onclick="showTooltip(event, 'intl-shipping')">ⓘ</span></span><span>Calculated later</span></div>
           <div class="price-row muted"><span>Tax &amp; Duties <span class="info-icon" onclick="showTooltip(event, 'tax-duties')">ⓘ</span></span><span>Calculated later</span></div>
 
@@ -1980,8 +2024,8 @@
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">1. Order & Payment</div>
           <p style="margin-bottom:14px;color:#666;">By placing an order on Global Bunjang, you agree to purchase the item at the listed price in USD. All payments are processed securely. Prices are subject to exchange rate fluctuations and may vary slightly at the time of settlement.</p>
 
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Shop & Ship Partner</div>
-          <p style="margin-bottom:14px;color:#666;">A Shop & Ship Partner is a third-party service that purchases items from Korean sellers on your behalf and ships them internationally. Your selected Shop & Ship Partner handles purchase, warehousing, and international shipping. International shipping fees, handling fees, and service policies (returns, consolidation, etc.) are set by each Shop & Ship Partner — review the respective Shop & Ship Partner's page for full terms.</p>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">2. Proxy Partner</div>
+          <p style="margin-bottom:14px;color:#666;">A Proxy Partner is a third-party service that purchases items from Korean sellers on your behalf and ships them internationally. Your selected Proxy Partner handles purchase, warehousing, and international shipping. International shipping fees, handling fees, and service policies (returns, consolidation, etc.) are set by each Proxy Partner — review the respective Proxy Partner's page for full terms.</p>
 
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">3. Customs & Duties</div>
           <p style="margin-bottom:14px;color:#666;">Import taxes, customs duties, and any related fees are the sole responsibility of the recipient. Global Bunjang is not liable for delays or additional costs incurred due to customs procedures in the destination country.</p>
@@ -1993,7 +2037,7 @@
           <p style="margin-bottom:14px;color:#666;">As a secondhand marketplace, all sales are generally final. Returns are accepted only in cases where the item received significantly differs from the listing description. Claims must be submitted within 3 days of delivery.</p>
 
           <div style="font-size:14px;font-weight:700;margin-bottom:6px;">6. Personal Information</div>
-          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the Shop & Ship Partner solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
+          <p style="margin-bottom:14px;color:#666;">Your personal information, including name and contact details, may be shared with the Proxy Partner solely for the purpose of fulfilling your order. Please refer to our Privacy Policy for full details on data handling.</p>
 
           <div style="font-size:12px;color:#bbb;margin-top:8px;">Last updated: April 2026</div>
         </div>
@@ -2021,7 +2065,7 @@
 <!-- ============================================ -->
 <div id="screen-pg-quickpay" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title" id="quickpay-header-title">Apple Pay</span>
     <span></span>
   </div>
@@ -2039,7 +2083,7 @@
         <div style="font-size:13px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Order Summary</div>
         <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Subtotal</span><span data-spec="{usd_subtotal}">USD 38.70</span></div>
         <div style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:8px;"><span data-spec="Coupon Discount ({Coupon Name})">Coupon Discount</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
         <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:#222;border-top:1px solid #f0f0f0;padding-top:14px;"><span>Total</span><span data-spec="{usd_total}">USD 36.70</span></div>
       </div>
       <!-- Biometric auth mock -->
@@ -2069,7 +2113,7 @@
     <!-- ════════════════════════════════════════════════ -->
     <div id="sso-step-create" style="display:none;">
       <div style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:6px;color:#191919;">Create your account</div>
-      <div id="sso-create-sub" data-spec="We'll create a {Proxy Name} account using your Bunjang Global account" style="font-size:13px;color:#888;line-height:1.5;margin-bottom:20px;">We'll create a Delivered Korea account using your Bunjang Global account</div>
+      <div id="sso-create-sub" data-spec="We'll create a {Proxy Partner Name} account using your Bunjang Global account" style="font-size:13px;color:#888;line-height:1.5;margin-bottom:20px;">We'll create a Delivered Korea account using your Bunjang Global account</div>
 
       <!-- Bunjang Global account card with shared info -->
       <div style="background:#f5f5f5;border-radius:12px;padding:14px 16px;margin-bottom:6px;">
@@ -2084,7 +2128,7 @@
         </div>
         <div style="height:1px;background:#e5e5e5;margin:14px 0;"></div>
         <div style="font-size:12px;color:#555;line-height:1.5;margin-bottom:6px;">
-          Bunjang Global will share the following information with <span id="sso-create-share-proxy" data-spec="{Proxy Name}">Delivered Korea</span>:
+          Bunjang Global will share the following information with <span id="sso-create-share-proxy" data-spec="{Proxy Partner Name}">Delivered Korea</span>:
         </div>
         <ul style="margin:0;padding-left:18px;font-size:12px;color:#555;line-height:1.7;">
           <li>Email</li>
@@ -2099,7 +2143,7 @@
         <div style="display:flex;align-items:center;gap:12px;">
           <div id="sso-create-proxy-icon" style="width:40px;height:40px;border-radius:8px;background:#e65100;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#fff;font-weight:800;">D</div>
           <div>
-            <div id="sso-create-proxy-label" data-spec="{Proxy Name} account" style="font-size:14px;font-weight:600;color:#191919;">Delivered Korea account</div>
+            <div id="sso-create-proxy-label" data-spec="{Proxy Partner Name} account" style="font-size:14px;font-weight:600;color:#191919;">Delivered Korea account</div>
           </div>
         </div>
       </div>
@@ -2118,7 +2162,7 @@
     <!-- STEP 2A: SIGN UP TO {PROXY} — terms (new flow)  -->
     <!-- ════════════════════════════════════════════════ -->
     <div id="sso-step-signup-terms" style="display:none;">
-      <div id="sso-signup-title" data-spec="Sign Up to {Proxy Name}" style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:24px;color:#191919;">Sign Up to Delivered Korea</div>
+      <div id="sso-signup-title" data-spec="Sign Up to {Proxy Partner Name}" style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:24px;color:#191919;">Sign Up to Delivered Korea</div>
 
       <label style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #eee;cursor:pointer;">
         <input type="checkbox" id="terms-all" onchange="toggleAllTerms(this)" style="width:18px;height:18px;accent-color:#191919;flex-shrink:0;">
@@ -2146,8 +2190,8 @@
     <!-- STEP 2B: LOG IN TO LINK (existing-account flow) -->
     <!-- ════════════════════════════════════════════════ -->
     <div id="sso-step-login" style="display:none;">
-      <div id="sso-login-title" data-spec="Log in to link your {Proxy Name} account" style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:6px;color:#191919;">Log in to link your Delivered Korea account</div>
-      <div id="sso-login-sub" data-spec="Please login with your {Proxy Name} account." style="font-size:13px;color:#888;line-height:1.5;margin-bottom:28px;">Please login with your Delivered Korea account.</div>
+      <div id="sso-login-title" data-spec="Log in to link your {Proxy Partner Name} account" style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:6px;color:#191919;">Log in to link your Delivered Korea account</div>
+      <div id="sso-login-sub" data-spec="Please login with your {Proxy Partner Name} account." style="font-size:13px;color:#888;line-height:1.5;margin-bottom:28px;">Please login with your Delivered Korea account.</div>
 
       <div style="margin-bottom:18px;">
         <label style="font-size:13px;color:#555;display:block;margin-bottom:8px;font-weight:500;">E-mail</label>
@@ -2178,7 +2222,7 @@
     <div id="sso-step-success" style="display:none;text-align:center;padding-top:24px;">
       <div style="width:56px;height:56px;border-radius:50%;background:#1976d2;display:inline-flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin-bottom:18px;">✓</div>
       <div style="font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.3;color:#191919;">Successfully Linked</div>
-      <div id="sso-success-sub" data-spec="You're all set. Use your Bunjang Global account to sign in to {Proxy Name} — no separate login needed." style="font-size:13px;color:#888;line-height:1.6;margin-bottom:28px;padding:0 8px;">You're all set. Use your Bunjang Global account to sign in to Delivered Korea — no separate login needed.</div>
+      <div id="sso-success-sub" data-spec="You're all set. Use your Bunjang Global account to sign in to {Proxy Partner Name} — no separate login needed." style="font-size:13px;color:#888;line-height:1.6;margin-bottom:28px;padding:0 8px;">You're all set. Use your Bunjang Global account to sign in to Delivered Korea — no separate login needed.</div>
 
       <div style="background:#f5f5f5;border-radius:12px;padding:14px 16px;margin-bottom:6px;display:flex;align-items:center;gap:12px;text-align:left;">
         <div style="width:40px;height:40px;border-radius:8px;background:#191919;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -2195,7 +2239,7 @@
       <div style="background:#f5f5f5;border-radius:12px;padding:14px 16px;margin-bottom:32px;display:flex;align-items:center;gap:12px;text-align:left;">
         <div id="sso-success-proxy-icon" style="width:40px;height:40px;border-radius:8px;background:#e65100;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#fff;font-weight:800;">D</div>
         <div>
-          <div id="sso-success-proxy-label" data-spec="{Proxy Name}" style="font-size:12px;color:#666;font-weight:600;margin-bottom:2px;">Delivered Korea</div>
+          <div id="sso-success-proxy-label" data-spec="{Proxy Partner Name}" style="font-size:12px;color:#666;font-weight:600;margin-bottom:2px;">Delivered Korea</div>
           <div data-spec="{Proxy Account Email}" style="font-size:14px;font-weight:600;color:#191919;">nancy.lee@gmail.com</div>
         </div>
       </div>
@@ -2207,11 +2251,11 @@
 </div>
 
 <!-- ============================================ -->
-<!-- SCREEN 3a: PG MODULE — CARD (KRW) -->
+<!-- SCREEN 3a: PG MODULE — CARD (USD) -->
 <!-- ============================================ -->
 <div id="screen-pg-card" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">Credit Card Payment</span>
     <span></span>
   </div>
@@ -2219,8 +2263,7 @@
 
     <div style="background:#f8f8f8;border-radius:12px;padding:16px;margin-bottom:20px;">
       <div style="font-size:12px;color:#888;margin-bottom:4px;">Amount to pay</div>
-      <div style="font-size:22px;font-weight:700;" data-spec="₩ {krw_total}">₩ 53,215</div>
-      <div style="font-size:11px;color:#aaa;margin-top:2px;" data-spec="≈ {usd_total} · Converted at today's rate">≈ USD 36.70 · Converted at today's rate</div>
+      <div style="font-size:22px;font-weight:700;" data-spec="{usd_total}">USD 36.70</div>
     </div>
 
     <div style="margin-bottom:16px;">
@@ -2246,7 +2289,7 @@
       <span>🔒</span><span>Secured by Hecto Financial · Powered by PortOne</span>
     </div>
 
-    <button class="bottom-btn primary" onclick="showScreen('processing')" style="margin-top:4px;" data-spec="Pay ₩ {krw_total}">Pay ₩ 53,215</button>
+    <button class="bottom-btn primary" onclick="showScreen('processing')" style="margin-top:4px;" data-spec="Pay {usd_total}">Pay USD 36.70</button>
     <div style="text-align:center;font-size:11px;color:#bbb;margin-top:10px;">[Demo] This simulates the PG payment window</div>
   </div>
 </div>
@@ -2255,7 +2298,7 @@
 <!-- ============================================ -->
 <div id="screen-pg-paypal" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('checkout')">‹</button>
+    <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">PayPal Checkout</span>
     <span></span>
   </div>
@@ -2339,6 +2382,7 @@
             <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
             <div class="order-item-info">
               <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
             </div>
             <div class="order-item-price">USD 4.08</div>
           </div>
@@ -2351,6 +2395,7 @@
             <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
             <div class="order-item-info">
               <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 3.50</div>
             </div>
             <div class="order-item-price">USD 34.62</div>
           </div>
@@ -2363,12 +2408,13 @@
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
-          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal}">USD 38.70</span></div>
+          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
           <div class="price-row discount"><span data-spec="Coupon ({Coupon Name})">Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
-          <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div id="os-promo-row-ordering" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
-          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
+          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span id="os-pay-method-ordering" data-spec="{Payment Method}">Credit Card (****1234)</span></div>
         </div>
       </div>
 
@@ -2407,6 +2453,7 @@
             <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
             <div class="order-item-info">
               <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
             </div>
             <div class="order-item-price">USD 4.08</div>
           </div>
@@ -2419,6 +2466,7 @@
             <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
             <div class="order-item-info">
               <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 3.50</div>
             </div>
             <div class="order-item-price">USD 34.62</div>
           </div>
@@ -2431,12 +2479,13 @@
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
-          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal}">USD 38.70</span></div>
+          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
           <div class="price-row discount"><span data-spec="Coupon ({Coupon Name})">Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
-          <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div id="os-promo-row-all" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
-          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
+          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span id="os-pay-method-all" data-spec="{Payment Method}">Credit Card (****1234)</span></div>
         </div>
       </div>
 
@@ -2478,6 +2527,7 @@
             <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
             <div class="order-item-info">
               <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
+              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
             </div>
             <div class="order-item-price">USD 4.08</div>
           </div>
@@ -2505,15 +2555,16 @@
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
-          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal}">USD 38.70</span></div>
+          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
           <div class="price-row discount"><span data-spec="Coupon ({Coupon Name})">Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
-          <div class="price-row"><span>Shipping to Shop & Ship Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div id="os-promo-row-partial" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
           <hr class="price-divider">
           <div class="price-row" style="color:#c62828;"><span>Refund (Sold Out)</span><span data-spec="-{usd_refund}">- USD 27.62</span></div>
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Final Amount</span><span data-spec="{usd_final_amount}">USD 9.08</span></div>
-          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
+          <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span id="os-pay-method-partial" data-spec="{Payment Method}">Credit Card (****1234)</span></div>
           <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#e65100;" data-spec="⏱ Refund of {usd_refund} will be returned to your card within 3–5 business days.">
             ⏱ Refund of USD 27.62 will be returned to your card within 3–5 business days.
           </div>
@@ -2579,7 +2630,7 @@
 <!-- ============================================ -->
 <div id="screen-order-detail" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('order-summary')">‹</button>
+    <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">Order Detail</span>
     <span></span>
   </div>
@@ -2606,7 +2657,9 @@
           <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
           <div class="order-item-info">
             <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
-            <div style="font-size:12px;color:#999;margin-top:2px;" data-spec="{usd_price_raw}">USD 4.08</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;" data-spec="{usd_price_base}">USD 4.08</div>
+            <div style="font-size:11px;color:#999;margin-top:1px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
+            <div style="font-size:11px;color:#e74c3c;margin-top:1px;" data-spec="-{usd_coupon_item}">Coupon: - USD 3.00</div>
           </div>
         </div>
         <div style="margin-top:12px;">
@@ -2648,7 +2701,7 @@
             <div class="status-step">
               <div class="status-dot"></div>
               <div class="status-info">
-                <div class="status-label" style="color:#bbb;">Track with Shipping Partner <span class="status-info-icon" data-tooltip="Your item has been checked and is ready for international shipping. It's now with our Ship & Ship Partner — your packages may be consolidated before shipping. Track your shipment using the button below." onclick="toggleInfoTooltip(event, this)">i</span></div>
+                <div class="status-label" style="color:#bbb;">Track with Proxy Partner <span class="status-info-icon" data-tooltip="Your item has been checked and is ready for international shipping. It's now with our Proxy Partner — your packages may be consolidated before shipping. Track your shipment using the button below." onclick="toggleInfoTooltip(event, this)">i</span></div>
               </div>
             </div>
           </div>
@@ -2661,7 +2714,9 @@
           <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
           <div class="order-item-info">
             <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
-            <div style="font-size:12px;color:#999;margin-top:2px;" data-spec="{usd_price_raw}">USD 34.62</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;" data-spec="{usd_price_base}">USD 34.62</div>
+            <div style="font-size:11px;color:#999;margin-top:1px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 3.50</div>
+            <div style="font-size:11px;color:#e74c3c;margin-top:1px;" data-spec="-{usd_coupon_item}">Coupon: - USD 4.00</div>
           </div>
         </div>
         <div style="margin-top:12px;">
@@ -2704,7 +2759,7 @@
             <div class="status-step">
               <div class="status-dot"></div>
               <div class="status-info">
-                <div class="status-label" style="color:#bbb;">Track with Shipping Partner <span class="status-info-icon" data-tooltip="Your item has been checked and is ready for international shipping. It's now with our Ship & Ship Partner — your packages may be consolidated before shipping. Track your shipment using the button below." onclick="toggleInfoTooltip(event, this)">i</span></div>
+                <div class="status-label" style="color:#bbb;">Track with Proxy Partner <span class="status-info-icon" data-tooltip="Your item has been checked and is ready for international shipping. It's now with our Proxy Partner — your packages may be consolidated before shipping. Track your shipment using the button below." onclick="toggleInfoTooltip(event, this)">i</span></div>
               </div>
             </div>
           </div>
@@ -2714,11 +2769,24 @@
 
     <!-- Payment info -->
     <div class="section">
-      <div class="section-header"><span class="section-title">Payment Info</span></div>
+      <div class="section-header"><span class="section-title">Payment Summary</span></div>
       <div class="section-body">
-        <div class="price-row"><span style="color:#999;">Method</span><span data-spec="{Payment Method}">Credit Card (****1234)</span></div>
-        <div class="price-row"><span style="color:#999;">Total Paid</span><span style="font-weight:700;" data-spec="{usd_total}">USD 36.70</span></div>
-        <div class="price-row"><span style="color:#999;">Status</span><span style="color:#4caf50;font-weight:600;" data-spec="{Payment Status}">Captured</span></div>
+        <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
+        <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
+        <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+        <div id="od-promo-row" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
+        <hr class="price-divider">
+        <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
+        <hr class="price-divider">
+        <div class="price-row"><span style="color:#999;">Payment Method</span><span id="od-pay-method" data-spec="{Payment Method}">Credit Card (****1234)</span></div>
+        <div class="price-row"><span style="color:#999;">Status</span><span id="od-pay-status" style="color:#4caf50;font-weight:600;" data-spec="{Payment Status}">Captured</span></div>
+        <div id="od-cancel-refund" style="display:none;">
+          <hr class="price-divider">
+          <div class="price-row" style="color:#c62828;"><span>Refund</span><span data-spec="-{usd_refund}">- USD 36.70</span></div>
+          <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#e65100;">
+            ⏱ Refund will be returned to your original payment method within 3–5 business days.
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2731,7 +2799,7 @@
 <!-- ==================== MY ORDERS ==================== -->
 <div id="screen-my-orders" class="screen">
   <div class="header">
-    <button class="header-back" onclick="showScreen('cart')">‹</button>
+    <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">Orders</span>
     <div class="header-icons">
       <button>🛒</button>
@@ -2746,15 +2814,26 @@
 
     <!-- Additional Payment card (red border) -->
     <div class="orders-pay-card">
-      <div class="orders-pay-date" data-spec="{Date}">2025-03-14 18:46(KST)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div class="orders-pay-date" style="margin-bottom:0;border-bottom:none;padding-bottom:0;" data-spec="{Date}">2025-03-14 18:46(KST)</div>
+          <div style="font-size:11px;color:#e53935;font-weight:600;" data-spec="Pay by {Payment Due Date}">Pay by 2025-04-13</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#aaa;" id="addl-pay-counter">1 / 3</span>
+          <button onclick="moveAddlPay(-1)" id="addl-pay-prev" disabled style="width:26px;height:26px;border-radius:50%;border:1px solid #ddd;background:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">‹</button>
+          <button onclick="moveAddlPay(1)" id="addl-pay-next" style="width:26px;height:26px;border-radius:50%;border:1px solid #ddd;background:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">›</button>
+        </div>
+      </div>
+      <div style="border-bottom:1px solid #f3f3f3;margin-bottom:14px;"></div>
       <div class="orders-pay-item">
         <div class="orders-pay-img img-placeholder hat"></div>
         <div class="orders-pay-info">
-          <div class="orders-pay-amount" data-spec="{usd_price_raw}">USD 50.45</div>
-          <div class="orders-pay-desc" data-spec="{Product Name(EN)}">Delivered Korea Payment Product</div>
+          <div class="orders-pay-amount" id="addl-pay-amount" data-spec="{usd_price_base}">USD 50.45</div>
+          <div class="orders-pay-desc" id="addl-pay-name" data-spec="{Product Name(EN)}">Delivered Korea Payment Product</div>
         </div>
       </div>
-      <button class="orders-pay-btn" onclick="enterAdditionalPaymentCheckout()"><span data-spec="Pay Now {usd_price_raw}">Pay Now USD 50.45</span></button>
+      <button class="orders-pay-btn" onclick="enterAdditionalPaymentCheckout()"><span id="addl-pay-btn-label" data-spec="Pay Now {usd_price_base}">Pay Now USD 50.45</span></button>
       <button class="orders-pay-contact">Contact us</button>
     </div>
 
@@ -2878,9 +2957,9 @@
 
       <div class="uf-arrow">→</div>
 
-      <!-- Stage 2: 주문서 -->
+      <!-- Stage 2: Checkout 페이지 -->
       <div class="uf-stage">
-        <div class="uf-stage-header">② 주문서</div>
+        <div class="uf-stage-header">② Checkout 페이지</div>
         <div class="uf-stage-body">
           <div class="uf-phone-wrap" onclick="showScreen('checkout')">
             <div class="uf-phone"><div class="uf-inner">
@@ -2898,9 +2977,9 @@
                   <div style="font-size:11px;color:#888;">Required to complete your order</div>
                   <div style="margin-top:10px;background:#222;color:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:600;text-align:center;">Log In / Sign Up</div>
                 </div>
-                <!-- Shop & Ship Partner -->
+                <!-- Proxy Partner -->
                 <div style="background:#fff;margin-top:8px;padding:14px 16px;">
-                  <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Shop & Ship Partner</div>
+                  <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Proxy Partner</div>
                   <div style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #eee;border-radius:8px;"><span style="font-size:13px;">📦</span><span style="font-size:13px;font-weight:600;">Delivered Korea</span><span style="margin-left:auto;font-size:12px;color:#888;">$8.00</span></div>
                 </div>
                 <!-- Payment method -->
@@ -2912,7 +2991,7 @@
                 <!-- Price summary -->
                 <div style="background:#fff;margin-top:8px;padding:14px 16px;">
                   <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Items</span><span>$21.93</span></div>
-                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Shipping to Shop & Ship Partner</span><span>$6.00</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Shipping to Proxy Partner</span><span>$6.00</span></div>
                   <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;border-top:2px solid #222;padding-top:8px;margin-top:4px;"><span>Total</span><span style="color:#e74c3c;">$36.70</span></div>
                 </div>
                 <!-- Terms -->
@@ -2937,12 +3016,11 @@
             <div class="uf-phone"><div class="uf-inner">
               <div style="background:#fff;min-height:700px;padding:20px 16px;">
                 <div style="text-align:center;margin-bottom:20px;font-size:16px;font-weight:700;color:#333;">Hecto Financial</div>
-                <div style="text-align:center;font-size:26px;font-weight:800;margin-bottom:4px;">₩ 53,215</div>
-                <div style="text-align:center;font-size:12px;color:#888;margin-bottom:28px;">≈ USD 36.70</div>
+                <div style="text-align:center;font-size:26px;font-weight:800;margin-bottom:28px;">USD 36.70</div>
                 <div style="margin-bottom:12px;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Card Number</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">1234  5678  9012  3456</div></div>
                 <div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">MM / YY</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">MM / YY</div></div><div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">CVV</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">•••</div></div></div>
                 <div style="margin-bottom:24px;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Cardholder Name</label><div style="border:1px solid #ddd;border-radius:8px;padding:12px;font-size:14px;color:#bbb;">Full name</div></div>
-                <div style="background:#222;color:#fff;border-radius:12px;padding:16px;font-size:16px;font-weight:700;text-align:center;margin-bottom:12px;">Pay ₩ 53,215</div>
+                <div style="background:#222;color:#fff;border-radius:12px;padding:16px;font-size:16px;font-weight:700;text-align:center;margin-bottom:12px;">Pay USD 36.70</div>
                 <div style="text-align:center;font-size:11px;color:#999;">🔒 Secured by Hecto Financial · Powered by PortOne</div>
               </div>
             </div></div>
@@ -3144,7 +3222,7 @@
 
     <!-- ── SSO / DK 로그인 ──────────────────────────── -->
     <div class="uf-sep"></div>
-    <div class="uf-section-title">DK 로그인 (주문서 내 필수 단계)</div>
+    <div class="uf-section-title">DK 로그인 (Checkout 페이지 내 필수 단계)</div>
     <div class="uf-track">
       <div class="uf-stage">
         <div class="uf-stage-header">DK 로그인 / 회원가입</div>
@@ -3231,11 +3309,11 @@
                   </div>
                   <div style="display:flex;gap:14px;margin-bottom:20px;">
                     <div style="width:24px;height:24px;border-radius:50%;background:#2196f3;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">▶</div>
-                    <div><div style="font-size:13px;font-weight:600;color:#2196f3;">Shipping to Shop & Ship Partner</div><div style="font-size:11px;color:#999;">In progress</div></div>
+                    <div><div style="font-size:13px;font-weight:600;color:#2196f3;">Shipping to Proxy Partner</div><div style="font-size:11px;color:#999;">In progress</div></div>
                   </div>
                   <div style="display:flex;gap:14px;margin-bottom:20px;">
                     <div style="width:24px;height:24px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;flex-shrink:0;">4</div>
-                    <div style="color:#bbb;"><div style="font-size:13px;font-weight:600;">Shop & Ship Partner Confirmed</div></div>
+                    <div style="color:#bbb;"><div style="font-size:13px;font-weight:600;">Proxy Partner Confirmed</div></div>
                   </div>
                   <div style="display:flex;gap:14px;">
                     <div style="width:24px;height:24px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;flex-shrink:0;">5</div>
@@ -3261,7 +3339,7 @@
     <span style="color:#ccc;">|</span>
     <span style="color:#9CA3AF;">부분 취소</span>는 Order Placed 단계에서 분기
     <span style="color:#ccc;">|</span>
-    <span style="color:#9CA3AF;">DK 로그인</span>은 주문서 안에 내장된 필수 단계
+    <span style="color:#9CA3AF;">DK 로그인</span>은 Checkout 페이지 안에 내장된 필수 단계
   </div>
 </div><!-- /screen-flow -->
 
@@ -3285,7 +3363,7 @@
     <!-- ── 결제 ──────────────────────────────────────────── -->
     <div id="diag-payment" class="diag-section active">
       <div class="diag-section-title">결제 시퀀스</div>
-      <div class="diag-section-sub">PG 결제 완료 후 Shop &amp; Ship Partner에 주문 생성 요청 → N개 상품 전체 Core 번장 주문 완료 후 일괄 상태 업데이트</div>
+      <div class="diag-section-sub">PG 결제 완료 후 Proxy Partner에 주문 생성 요청 → N개 상품 전체 Core 번장 주문 완료 후 일괄 상태 업데이트</div>
       <div class="diag-render">
         <div class="sq">
           <div class="sq-legend">
@@ -3296,7 +3374,7 @@
             <span class="sq-tag dk">S&amp;SP</span>
             <span class="sq-tag core">Core 번장</span>
           </div>
-          <div class="sq-row"><span class="sq-tag user">구매자</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">PDP / 장바구니 → 주문서 진입</span></div>
+          <div class="sq-row"><span class="sq-tag user">구매자</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">PDP / 장바구니 → Checkout 진입</span></div>
           <div class="sq-block sq-opt">
             <div class="sq-bh">opt — 가격 변경 있음</div>
             <div class="sq-bb">
@@ -3316,7 +3394,7 @@
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">결제완료 페이지 (전체 상품 주문중 상태)</span></div>
               <div class="sq-note">↓ 이 아래부터 비동기 처리</div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl">글로벌번장 주문 생성 요청 (상품 N개)</span></div>
-              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl">Shop &amp; Ship Partner 주문 생성</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl">Proxy Partner 주문 생성</span></div>
               <div class="sq-block sq-loop">
                 <div class="sq-bh">loop — 상품 수(N)만큼 반복</div>
                 <div class="sq-bb">
@@ -3349,7 +3427,7 @@
           <li>결제 수단은 체크아웃 페이지에서 먼저 선택 → <code>requestPayment()</code> 호출 시 <code>payMethod</code> + <code>channelKey</code> 함께 전달</li>
           <li>결제창 호출은 프론트엔드 SDK, 결제 검증/취소는 서버 REST API</li>
           <li>글로벌 주문 1 : Core 번장 주문 N (1:N). 글로벌번장은 상품별로 주문 상태를 독립적으로 관리</li>
-          <li>Shop &amp; Ship Partner는 N개 상품 전체 Core 처리 완료 후 결과를 일괄 업데이트 (성공 → 결제완료 / 실패 → 주문취소)</li>
+          <li>Proxy Partner는 N개 상품 전체 Core 처리 완료 후 결과를 일괄 업데이트 (성공 → 결제완료 / 실패 → 주문취소)</li>
           <li>부분 취소 금액 기준: 쿠폰 적용 후 실결제 금액. 여러 실패 상품은 합산하여 1회 요청</li>
         </ul>
       </div>
@@ -3358,7 +3436,7 @@
     <!-- ── 구매확정 ───────────────────────────────────────── -->
     <div id="diag-confirmation" class="diag-section">
       <div class="diag-section-title">구매확정 시퀀스</div>
-      <div class="diag-section-sub">Shop &amp; Ship Partner 창고 입고·검수 후 수동 확정, 또는 배송완료 5일 후 자동 확정. 구매확정 + 6영업일 후 정산 배치 트리거. <strong>영업일 기준: 한국 공휴일 + 결제국가 공휴일 + PG사 본사 공휴일 제외.</strong></div>
+      <div class="diag-section-sub">Proxy Partner 창고 입고·검수 후 수동 확정, 또는 배송완료 5일 후 자동 확정. 구매확정 + 6영업일 후 정산 배치 트리거. <strong>영업일 기준: 한국 공휴일 + 결제국가 공휴일 + PG사 본사 공휴일 제외.</strong></div>
       <div class="diag-render">
         <div class="sq">
           <div class="sq-legend">
@@ -3395,7 +3473,7 @@
         <strong>주요 설계 결정사항</strong>
         <ul>
           <li>구매확정은 상품 단위로 처리 (국내번장 시스템 규칙 준수)</li>
-          <li>수동: Shop &amp; Ship Partner 운영팀이 창고 입고 &amp; 검수 후 직접 처리</li>
+          <li>수동: Proxy Partner 운영팀이 창고 입고 &amp; 검수 후 직접 처리</li>
           <li>자동: Core 번장 배송완료 후 5일 경과 시 시스템 자동 처리</li>
           <li>구매확정 완료 후 유저 이메일 발송 없음. 구매확정 + 6영업일 후 정산 배치 트리거</li>
         </ul>
@@ -3405,7 +3483,7 @@
     <!-- ── 주문취소 ───────────────────────────────────────── -->
     <div id="diag-cancel" class="diag-section">
       <div class="diag-section-title">주문취소 시퀀스</div>
-      <div class="diag-section-sub">취소는 상품 단위만 가능. 구매자는 글로벌번장에서 직접 취소 불가 — Shop &amp; Ship Partner에 문의 후 운영팀이 Core 번장 앱으로 직접 처리.</div>
+      <div class="diag-section-sub">취소는 상품 단위만 가능. 구매자는 글로벌번장에서 직접 취소 불가 — Proxy Partner에 문의 후 운영팀이 Core 번장 앱으로 직접 처리.</div>
       <div class="diag-render">
         <div class="sq">
           <div class="sq-legend">
@@ -3457,7 +3535,7 @@
         <strong>주요 설계 결정사항</strong>
         <ul>
           <li>취소는 상품 단위로만 가능</li>
-          <li>구매자는 글로벌번장에서 직접 취소 불가 — Shop &amp; Ship Partner에 문의 → 운영팀이 Core 번장 앱으로 직접 취소</li>
+          <li>구매자는 글로벌번장에서 직접 취소 불가 — Proxy Partner에 문의 → 운영팀이 Core 번장 앱으로 직접 취소</li>
           <li>취소 가능 조건: 판매자 승인(구매확정) 이전까지</li>
           <li>포트원 환불 트리거: Core 번장 취소 완료 웹훅 → DK가 글로벌번장에 상태 업데이트 → 글로벌번장이 포트원 환불 요청</li>
           <li>유저 알림 채널: 이메일</li>
@@ -3548,8 +3626,8 @@
         <strong>주요 설계 결정사항</strong>
         <ul>
           <li>구매확정 이전 반품: Core 번장이 DK 포인트 자동 환원 → 정산금 차감 없음. 글로벌번장이 포트원에 환불 요청 (매입 완료 이후이므로 환불 처리)</li>
-          <li>구매확정 이후 반품: 원칙적으로 불가. Shop &amp; Ship Partner 운영팀이 Slack으로 글로벌번장 운영팀에 예외 요청 시 재량 판단</li>
-          <li>차지백: 글로벌번장 TnS 수동 처리. 시스템에 의한 Shop &amp; Ship Partner 정산금 자동 차감 없음</li>
+          <li>구매확정 이후 반품: 원칙적으로 불가. Proxy Partner 운영팀이 Slack으로 글로벌번장 운영팀에 예외 요청 시 재량 판단</li>
+          <li>차지백: 글로벌번장 TnS 수동 처리. 시스템에 의한 Proxy Partner 정산금 자동 차감 없음</li>
         </ul>
       </div>
     </div>
@@ -3690,10 +3768,12 @@ function removeCoupon(itemId) {
 
 // ─── Info Tooltips ───────────────────────────────
 const TOOLTIP_TEXT = {
-  'handling-fee':  'A service fee charged by your Shop & Ship Partner for purchasing, inspecting, and preparing your items at the Korean warehouse.',
+  'handling-fee':  'A service fee charged by your Proxy Partner for purchasing, inspecting, and preparing your items at the Korean warehouse.',
   'intl-shipping': 'The cost to ship your package from Korea to your destination. Calculated based on weight and dimensions after items arrive at the warehouse.',
   'tax-duties':    'Import taxes and customs duties imposed by your country. These are the recipient\'s responsibility and are not included in the order total.',
-  'total':         'This total covers the item price and shipping to your Shop & Ship Partner only. International shipping, handling fees, and customs duties are billed separately by your Shop & Ship Partner.'
+  'total':         'This total covers the item price and shipping to your Proxy Partner only. International shipping, handling fees, and customs duties are billed separately by your Proxy Partner.',
+  'payment-promo': '5% off applied to your subtotal and domestic shipping combined (after coupon deduction). Not available for PayPal.',
+  'pdp-promo':     '5% off is available with select payment methods (Credit/Debit Card, Alipay+, WeChat Pay). Not applicable to PayPal.'
 };
 let _tooltipEl = null;
 
@@ -3864,7 +3944,7 @@ function confirmPartialSoldout() {
   const title = document.getElementById('order-summary-title');
   if (title) title.textContent = 'Order Summary (1)';
 
-  // Update Subtotal (item2 only) and Shipping to Shop & Ship Partner (one item's worth)
+  // Update Subtotal (item2 only) and Shipping to Proxy Partner (one item's worth)
   const sub = document.getElementById('checkout-subtotal-amount');
   if (sub) sub.textContent = 'USD 34.62';
   const ks = document.getElementById('checkout-shipping-to-proxy-amount');
@@ -3895,7 +3975,7 @@ const proxyOrder = ['dk', 'paysable', 'kfriday'];
 let _selectedProxy = 'dk';
 let _proxyConnected = { dk: false, paysable: false, kfriday: false };
 let _dkConnected = false;
-let _proxyMode = 'single'; // 'multi' | 'single' (DK only)
+let _proxyMode = 'multi'; // 'multi' | 'single' (시뮬레이션용)
 
 function getActiveProxies() {
   return _proxyMode === 'single' ? ['dk'] : proxyOrder;
@@ -3997,7 +4077,7 @@ function renderProxySection() {
         ${radioDot}
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:14px;font-weight:700;color:#222;" data-spec="{Proxy Name}">${p.name}</span>
+            <span style="font-size:14px;font-weight:700;color:#222;" data-spec="{Proxy Partner Name}">${p.name}</span>
             ${isSingleMode ? `<span style="font-size:9px;font-weight:700;color:#555;background:#f0f0f0;padding:2px 6px;border-radius:3px;letter-spacing:0.5px;">YOUR PROXY</span>` : ''}
           </div>
           ${p.promo ? `<div style="font-size:11px;color:#222;margin-top:4px;line-height:1.4;" data-spec="{Proxy's Promotional Message}">${p.promo}</div>` : ''}
@@ -4578,6 +4658,31 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.15',
+    date: '2026-05-14',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '"Shop & Ship Partner" → "Proxy Partner" 전면 변경',
+      '스펙 토큰 교체: {usd_price_raw} → {usd_price_base} 전면 반영',
+      '결제 금액 통화 USD 단일화: PG 카드·결제 버튼에서 KRW(₩) 이중 표기 제거',
+      'Proxy 구조 변경: Multi-Proxy 기본 진입, Phase 개념 제거 (진입 시 3개 파트너 기본 노출)',
+      '"주문서" → "Checkout 페이지" 용어 변경 (플로우 다이어그램, 시퀀스 다이어그램)',
+      'DK 배송비 계산기 "Visit site" 버튼 → "Not available" 교체 (DK 연동 미준비)',
+      '결제수단 Payment Promotion eligible 배지 추가 (Credit Card / Alipay+ / WeChat Pay) — PayPal "Not eligible" 문구 제거',
+      '주문서 가격 순서 변경: Subtotal → Coupon → Shipping to Proxy Partner → Payment Promotion',
+      'International Shipping Handling Fee 항목 제거',
+      '결제완료/주문상세 상품별 국내배송비 표기 추가',
+      '가격 변경·품절 모달에 국내배송비(Domestic Shipping) 행 추가',
+      '결제완료/주문상세 Credit Card 결제 시 Payment Promotion 할인 라인 추가',
+      '주문상세 상품별 쿠폰 할인 표기 및 Payment Summary 전체 금액 항목 완성',
+      '주문상세 사이드바 케이스 추가 (Credit Card / PayPal / 취소 주문)',
+      '결제완료 사이드바 결제수단 케이스 추가 (Credit Card / PayPal / Alipay+ TrueMoney)',
+      'Apple/Google Pay 사이드바 시뮬레이션 토글 추가',
+      '내 주문 Additional Payment 캐러셀 + 결제 기한 추가 (요청일로부터 +30일, Pay by {Payment Due Date})',
+      '뒤로가기 히스토리 스택 구현 — 모든 ‹ 버튼이 실제 이전 화면으로 이동',
+    ]
+  },
+  {
     version: 'v1.14',
     date: '2026-05-07',
     changes: [
@@ -4799,6 +4904,9 @@ function enterAdditionalPaymentCheckout() {
   recalcTotal();
 }
 
+let _screenHistory = [];
+let _goingBack = false;
+
 function showScreen(id, updateNav = true) {
   const phoneFrame = document.querySelector('.phone-frame');
   const flowPage = document.getElementById('screen-flow');
@@ -4819,11 +4927,19 @@ function showScreen(id, updateNav = true) {
     diagPage.style.display = 'block';
     diagPage.style.top = navH + 'px';
   } else {
+    if (!_goingBack) {
+      const cur = document.querySelector('.screen.active');
+      if (cur && cur.id && cur.id !== 'screen-' + id) {
+        _screenHistory.push(cur.id.replace('screen-', ''));
+      }
+    }
+    _goingBack = false;
     phoneFrame.style.display = '';
     flowPage.style.display = 'none';
     diagPage.style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + id).classList.add('active');
+    if (id === 'pdp') { _screenHistory = []; }
     if (id === 'checkout') {
       _resetCheckoutToDefaults();
     }
@@ -4841,11 +4957,19 @@ function showScreen(id, updateNav = true) {
     if (event && event.target && event.target.classList.contains('proto-nav-btn')) event.target.classList.add('active');
   }
   // Update sidebar panel
-  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram', 'order-summary': 'order-summary' };
+  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram', 'order-summary': 'order-summary', 'order-detail': 'order-detail', 'my-orders': 'my-orders' };
   const panelId = sidebarMap[id] || 'default';
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('sidebar-' + panelId).classList.add('active');
   window.scrollTo(0, 0);
+}
+
+function goBack() {
+  if (_screenHistory.length > 0) {
+    _goingBack = true;
+    const prev = _screenHistory.pop();
+    showScreen(prev);
+  }
 }
 
 function showOrderSummary(variant) {
@@ -4897,6 +5021,7 @@ function setSidebarError(val) {
 
 // Init
 renderProxySection();
+applyProxyModeToShippingCalc();
 updateShippingAddress();
 
 function adjustFrameTop() {
@@ -4929,20 +5054,20 @@ function toggleRepaymentDetails(btn) {
 function _initSpecDefaults() {
   // Auto-apply data-spec to repeating elements that don't already have one
   const auto = [
-    ['.pdp-carousel-price', '{usd_price_raw}'],
+    ['.pdp-carousel-price', '{usd_price_base}'],
     ['.pdp-carousel-name',  '{Product Name(EN)}'],
-    ['.pdp-grid-price',     '{usd_price_raw}'],
+    ['.pdp-grid-price',     '{usd_price_base}'],
     ['.pdp-grid-name',      '{Product Name(EN)}'],
     ['.pdp-grid-similar',   'See Similar'],
     ['.pdp-tag',            '{Tag}'],
     ['.order-item-name',    '{Product Name(EN)}'],
-    ['.order-item-price',   '{usd_price_raw}'],
+    ['.order-item-price',   '{usd_price_base}'],
     ['.order-item-qty',     'Qty: {Qty}'],
     ['.complete-order-id span', '{Order ID}'],
     ['.cart-item-name',     '{Product Name(EN)}'],
-    ['.cart-item-price',    '{usd_price_raw}'],
+    ['.cart-item-price',    '{usd_price_base}'],
     ['.modal-item-name',    '{Product Name(EN)}'],
-    ['.modal-item-price',   '{usd_price_raw}'],
+    ['.modal-item-price',   '{usd_price_base}'],
   ];
   auto.forEach(([sel, spec]) => {
     document.querySelectorAll(sel).forEach(el => {
@@ -4981,6 +5106,80 @@ function _syncViewMode() {
 }
 
 _initSpecDefaults();
+
+function setQuickPaySimMode(mode) {
+  const appleBtn = document.getElementById('qp-apple-btn');
+  const googleBtn = document.getElementById('qp-google-btn');
+  if (!appleBtn || !googleBtn) return;
+  if (mode === 'safari') {
+    appleBtn.style.display = '';
+    googleBtn.style.display = 'none';
+  } else if (mode === 'chrome') {
+    appleBtn.style.display = 'none';
+    googleBtn.style.display = '';
+  } else {
+    appleBtn.style.display = 'none';
+    googleBtn.style.display = 'none';
+  }
+  document.querySelectorAll('#sb-qp-safari, #sb-qp-chrome, #sb-qp-none').forEach(b => b.classList.remove('active'));
+  const map = { safari: 'sb-qp-safari', chrome: 'sb-qp-chrome', none: 'sb-qp-none' };
+  const btn = document.getElementById(map[mode]);
+  if (btn) btn.classList.add('active');
+}
+
+function setOrderSummaryPayMethod(method) {
+  const promoIds = ['os-promo-row-ordering', 'os-promo-row-all', 'os-promo-row-partial'];
+  const methodIds = ['os-pay-method-ordering', 'os-pay-method-all', 'os-pay-method-partial'];
+  const showPromo = method !== 'paypal';
+  promoIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = showPromo ? 'flex' : 'none';
+  });
+  const methodLabel = method === 'card' ? 'Credit Card (****1234)' : method === 'paypal' ? 'PayPal' : 'Alipay+ (TrueMoney)';
+  methodIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = methodLabel;
+  });
+  ['sb-os-card', 'sb-os-paypal', 'sb-os-alipay'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.classList.toggle('active', id === 'sb-os-' + (method === 'alipay' ? 'alipay' : method));
+  });
+}
+
+function setOrderDetailCase(cas) {
+  const promoRow = document.getElementById('od-promo-row');
+  const payMethod = document.getElementById('od-pay-method');
+  const payStatus = document.getElementById('od-pay-status');
+  const cancelRefund = document.getElementById('od-cancel-refund');
+  if (promoRow) promoRow.style.display = (cas === 'card') ? 'flex' : 'none';
+  if (payMethod) payMethod.textContent = cas === 'paypal' ? 'PayPal' : 'Credit Card (****1234)';
+  if (payStatus) {
+    payStatus.textContent = cas === 'cancel' ? 'Refunded' : 'Captured';
+    payStatus.style.color = cas === 'cancel' ? '#e74c3c' : '#4caf50';
+  }
+  if (cancelRefund) cancelRefund.style.display = cas === 'cancel' ? 'block' : 'none';
+  ['sb-od-card', 'sb-od-paypal', 'sb-od-cancel'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.classList.toggle('active', id === 'sb-od-' + cas);
+  });
+}
+
+const _addlPayItems = [
+  { amount: 'USD 50.45', name: 'Delivered Korea Payment Product' },
+  { amount: 'USD 12.30', name: 'NCT Wish Photocard Set' },
+  { amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt' }
+];
+let _addlPayIdx = 0;
+function moveAddlPay(dir) {
+  _addlPayIdx = Math.max(0, Math.min(_addlPayItems.length - 1, _addlPayIdx + dir));
+  const item = _addlPayItems[_addlPayIdx];
+  document.getElementById('addl-pay-amount').textContent = item.amount;
+  document.getElementById('addl-pay-name').textContent = item.name;
+  document.getElementById('addl-pay-btn-label').textContent = 'Pay Now ' + item.amount;
+  document.getElementById('addl-pay-counter').textContent = (_addlPayIdx + 1) + ' / ' + _addlPayItems.length;
+  document.getElementById('addl-pay-prev').disabled = (_addlPayIdx === 0);
+  document.getElementById('addl-pay-next').disabled = (_addlPayIdx === _addlPayItems.length - 1);
+}
 </script>
 </body>
 </html>
