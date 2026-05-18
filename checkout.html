@@ -349,6 +349,9 @@
   .orders-pay-desc { font-size: 13px; color: #444; line-height: 1.45; }
   .orders-pay-btn { width: 100%; padding: 14px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .orders-pay-contact { display: block; text-align: center; margin-top: 12px; font-size: 13px; color: #555; text-decoration: underline; cursor: pointer; background: none; border: none; width: 100%; }
+  .mypage-menu-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 16px; font-size: 15px; color: #111; border-bottom: 1px solid #f3f3f3; cursor: pointer; background: #fff; }
+  .mypage-menu-row:active { background: #f9f9f9; }
+  .mypage-menu-arrow { font-size: 18px; color: #ccc; }
   .orders-pay-card button:disabled { opacity: 0.3; cursor: not-allowed; }
   .orders-cancel-card { margin: 0 16px 16px; padding: 14px 16px; background: #f8f8f8; border-radius: 12px; }
   .orders-cancel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -844,10 +847,11 @@
   <button class="proto-nav-btn" onclick="showScreen('payment-fail')">결제 실패</button>
   <button class="proto-nav-btn" onclick="showScreen('order-detail')">주문 상세</button>
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
+  <button class="proto-nav-btn" onclick="showScreen('my-page')">마이페이지</button>
   <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">프록시 SSO 연동</button>
   <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.15</button>
-    <span>Updated 2026-05-14</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.16</button>
+    <span>Updated 2026-05-18</span>
   </span>
 </div>
 
@@ -961,6 +965,7 @@
         <button class="sidebar-chip" onclick="showScreen('sso-redirect')">🔑 DK Login</button>
         <button class="sidebar-chip" onclick="showScreen('my-orders')">📄 내 주문</button>
         <button class="sidebar-chip" onclick="showScreen('order-detail')">📍 주문 상세</button>
+        <button class="sidebar-chip" onclick="showScreen('my-page')">👤 마이페이지</button>
       </div>
     </div>
     <div class="sidebar-hint">각 화면 카드를 클릭하면 해당 화면으로 이동합니다.</div>
@@ -1006,6 +1011,14 @@
     <div class="sidebar-section">
       <div class="sidebar-section-title">Additional Payment</div>
       <div class="sidebar-hint">화살표(‹ ›)로 여러 재결제 상품 간 이동 (1/3 표기)</div>
+    </div>
+  </div>
+
+  <!-- My Page panel -->
+  <div id="sidebar-my-page" class="sidebar-panel">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">마이페이지</div>
+      <div class="sidebar-hint">현재 버전 기준 화면. 추가할 항목은 Hazel에게 확인.</div>
     </div>
   </div>
 
@@ -1374,104 +1387,42 @@
       </div>
       <div class="coupon-sheet-body">
 
-        <!-- Estimates disclaimer -->
-        <div style="font-size:11px;color:#888;margin-bottom:14px;line-height:1.6;padding:10px 12px;background:#fafafa;border-radius:8px;">* Estimates only. Final fee calculated at the warehouse. Processing fees not included.</div>
-
-        <!-- Country -->
-        <div style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:600;color:#333;display:block;margin-bottom:7px;">Destination Country</label>
-          <select id="calc-country" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;background:#fff;outline:none;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path d=%22M1 1l5 5 5-5%22 stroke=%22%23999%22 stroke-width=%221.5%22 fill=%22none%22/></svg>');background-repeat:no-repeat;background-position:right 14px center;">
-            <option value="">Select Country</option>
-            <option value="US">United States</option>
-            <option value="UK">United Kingdom</option>
-            <option value="AU">Australia</option>
-            <option value="CA">Canada</option>
-            <option value="JP">Japan</option>
-            <option value="SG">Singapore</option>
-            <option value="FR">France</option>
-            <option value="DE">Germany</option>
-            <option value="PH">Philippines</option>
-            <option value="MY">Malaysia</option>
-            <option value="TH">Thailand</option>
-            <option value="TW">Taiwan</option>
-          </select>
+        <div style="font-size:12px;color:#888;margin-bottom:20px;line-height:1.6;padding:10px 12px;background:#fafafa;border-radius:8px;">
+          Shipping fee calculator is coming soon. For now, check the shipping rate on each Proxy Partner's website.
         </div>
 
-        <!-- Weight -->
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
-            <label style="font-size:13px;font-weight:600;color:#333;">Weight</label>
-            <div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;font-size:12px;">
-              <button id="unit-weight-kg" onclick="setWeightUnit('kg')" style="padding:4px 12px;border:none;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;">kg</button>
-              <button id="unit-weight-lbs" onclick="setWeightUnit('lbs')" style="padding:4px 12px;border:none;background:#222;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">lbs</button>
-            </div>
+        <!-- Paysable -->
+        <div style="border:1.5px solid #e0e4f5;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;" data-spec="{Proxy Partner Name}">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1565c0;margin-bottom:2px;">Paysable</div>
+            <div style="font-size:11px;color:#999;">Check shipping rates on Paysable's website</div>
           </div>
-          <input id="calc-weight" type="number" min="0" step="0.1" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:13px;outline:none;background:#fafafa;">
+          <a href="#" onclick="event.preventDefault()" style="font-size:12px;font-weight:600;color:#1565c0;background:#e8eef8;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;" data-spec="Go to {Proxy Partner Name} ↗">Go to Paysable ↗</a>
         </div>
 
-        <!-- Dimensions -->
-        <div style="margin-bottom:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
-            <label style="font-size:13px;font-weight:600;color:#333;">Package Size</label>
-            <div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden;">
-              <button id="unit-dim-cm" onclick="setDimUnit('cm')" style="padding:4px 12px;border:none;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;">cm</button>
-              <button id="unit-dim-in" onclick="setDimUnit('in')" style="padding:4px 12px;border:none;background:#222;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">in</button>
-            </div>
+        <!-- Kfriday -->
+        <div style="border:1.5px solid #ede0f5;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;" data-spec="{Proxy Partner Name}">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#6a1b9a;margin-bottom:2px;">Kfriday</div>
+            <div style="font-size:11px;color:#999;">Check shipping rates on Kfriday's website</div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:11px;color:#888;margin-bottom:5px;">Width</div>
-              <input id="calc-width" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
-            </div>
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:11px;color:#888;margin-bottom:5px;">Length</div>
-              <input id="calc-length" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
-            </div>
-            <div style="flex:1;text-align:center;">
-              <div style="font-size:11px;color:#888;margin-bottom:5px;">Height</div>
-              <input id="calc-height" type="number" min="0" placeholder="0" style="width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 8px;font-size:13px;outline:none;background:#fafafa;text-align:center;">
-            </div>
-          </div>
+          <a href="#" onclick="event.preventDefault()" style="font-size:12px;font-weight:600;color:#6a1b9a;background:#f3edf9;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;" data-spec="Go to {Proxy Partner Name} ↗">Go to Kfriday ↗</a>
         </div>
 
-        <!-- Comparison results -->
-        <div id="calc-compare-result" style="display:none;margin-bottom:16px;">
-          <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Estimated Shipping Fee</div>
-          <div style="display:flex;gap:10px;margin-bottom:10px;">
-            <!-- Paysable -->
-            <div id="calc-paysable-card" onclick="selectCalcProxy('paysable')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:8px;" data-spec="{Proxy Partner Name}">Paysable</div>
-              <div id="calc-paysable-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;" data-spec="{usd_estimated_shipping}"></div>
-              <div id="calc-paysable-detail" style="font-size:10px;color:#aaa;line-height:1.5;" data-spec="Vol. weight: {Vol Weight} kg ({W}×{L}×{H} ÷ {Divisor})"></div>
-            </div>
-            <!-- Kfriday -->
-            <div id="calc-kfriday-card" onclick="selectCalcProxy('kfriday')" style="flex:1;border:1.5px solid #eee;border-radius:12px;padding:14px;position:relative;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#6a1b9a;margin-bottom:8px;" data-spec="{Proxy Partner Name}">Kfriday</div>
-              <div id="calc-kfriday-price" style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px;" data-spec="{usd_estimated_shipping}"></div>
-              <div id="calc-kfriday-detail" style="font-size:10px;color:#aaa;line-height:1.5;" data-spec="Vol. weight: {Vol Weight} kg ({W}×{L}×{H} ÷ {Divisor})"></div>
-            </div>
+        <!-- Delivered Korea -->
+        <div style="border:1.5px solid #fbe9e7;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;" data-spec="{Proxy Partner Name}">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#e65100;margin-bottom:2px;">Delivered Korea</div>
+            <div style="font-size:11px;color:#999;">Check shipping rates on DK's website</div>
           </div>
-          <!-- Delivered Korea -->
-          <div id="calc-dk-card" style="border:1px solid #eee;border-radius:12px;padding:14px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-              <div style="width:32px;height:32px;border-radius:50%;background:#e65100;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;flex-shrink:0;">D</div>
-              <div>
-                <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:2px;" data-spec="{Proxy Partner Name}">Delivered Korea</div>
-                <div style="font-size:11px;color:#999;line-height:1.4;" data-spec="Check the rate on {Proxy Partner Name}'s website">Check the rate on DK's website</div>
-              </div>
-            </div>
-            <span style="flex-shrink:0;font-size:11px;color:#bbb;white-space:nowrap;">Not available</span>
-          </div>
-          <div style="background:#f3f8ff;border:1px solid #d6e4f5;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#1565c0;line-height:1.6;">
-            <div style="font-weight:700;margin-bottom:4px;">📦 These rates are for shipping a single item.</div>
-            <div>If you order multiple items, you may save on shipping by consolidating them into one package. Consolidation policies (fees, holding period, etc.) vary by Proxy Partner — check each Proxy Partner's page for details.</div>
-          </div>
-          <div style="font-size:11px;color:#888;margin-top:10px;line-height:1.6;">Service policies (returns, consolidation, fees) vary by Proxy Partner — check each Proxy Partner's page for details.</div>
+          <span style="font-size:11px;color:#bbb;white-space:nowrap;">Not available</span>
         </div>
+
+        <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.6;text-align:center;">Service policies (returns, consolidation, fees) vary by Proxy Partner.</div>
 
       </div>
       <div class="coupon-sheet-footer">
-        <button id="calc-cta-btn" class="coupon-apply-btn" onclick="calcCtaAction()">Calculate</button>
+        <button class="coupon-apply-btn" onclick="closeShippingCalc()">Close</button>
       </div>
     </div>
   </div>
@@ -2376,36 +2327,6 @@
       </div>
 
       <div class="section">
-        <div class="section-header"><span class="section-title" data-spec="Items ({Item Count})">Items (2)</span></div>
-        <div class="order-detail-item">
-          <div class="order-detail-item-row">
-            <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
-            <div class="order-item-info">
-              <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
-              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
-            </div>
-            <div class="order-item-price">USD 4.08</div>
-          </div>
-          <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Ordering</span><span class="status-info-icon" data-tooltip="Your order is being placed with the Korean seller. You'll be notified once it's submitted." onclick="toggleInfoTooltip(event, this)">i</span></span>
-          </div>
-        </div>
-        <div class="order-detail-item">
-          <div class="order-detail-item-row">
-            <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
-            <div class="order-item-info">
-              <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
-              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 3.50</div>
-            </div>
-            <div class="order-item-price">USD 34.62</div>
-          </div>
-          <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Ordering</span><span class="status-info-icon" data-tooltip="Your order is being placed with the Korean seller. You'll be notified once it's submitted." onclick="toggleInfoTooltip(event, this)">i</span></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
           <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
@@ -2445,36 +2366,6 @@
       <div class="complete-title">Order Placed!</div>
       <div class="complete-subtitle">All items have been successfully ordered</div>
       <div class="complete-order-id">Order ID: <span>GB-20260407-002</span></div>
-
-      <div class="section">
-        <div class="section-header"><span class="section-title" data-spec="Items ({Item Count})">Items (2)</span></div>
-        <div class="order-detail-item">
-          <div class="order-detail-item-row">
-            <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
-            <div class="order-item-info">
-              <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
-              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
-            </div>
-            <div class="order-item-price">USD 4.08</div>
-          </div>
-          <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Awaiting Seller Confirmation</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></span>
-          </div>
-        </div>
-        <div class="order-detail-item">
-          <div class="order-detail-item-row">
-            <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
-            <div class="order-item-info">
-              <div class="order-item-name">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
-              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 3.50</div>
-            </div>
-            <div class="order-item-price">USD 34.62</div>
-          </div>
-          <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Awaiting Seller Confirmation</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></span>
-          </div>
-        </div>
-      </div>
 
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
@@ -2518,38 +2409,6 @@
 
       <div class="notification warning" style="margin:0 16px 16px;border-radius:8px;">
         ⚠️ One item became unavailable during checkout. A refund for that item has been issued to your original payment method.
-      </div>
-
-      <div class="section">
-        <div class="section-header"><span class="section-title" data-spec="Items ({Item Count})">Items (2)</span></div>
-        <div class="order-detail-item">
-          <div class="order-detail-item-row">
-            <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;"></div>
-            <div class="order-item-info">
-              <div class="order-item-name">Nct Wish Malang Pin Badge Ssion Riku Yuushi Jaehee Ryo Sakuya</div>
-              <div style="font-size:11px;color:#999;margin-top:2px;" data-spec="{USD_shipping_fee_domestic}">Shipping to Proxy Partner: USD 1.50</div>
-            </div>
-            <div class="order-item-price">USD 4.08</div>
-          </div>
-          <div class="order-detail-item-status">
-            <span class="status-badge-wrap"><span class="status-badge ordering">Awaiting Seller Confirmation</span><span class="status-info-icon" data-tooltip="Your order has been placed and is waiting for seller confirmation. Shipping will begin once confirmed." onclick="toggleInfoTooltip(event, this)">i</span></span>
-          </div>
-        </div>
-        <div class="order-detail-item" style="opacity:0.6;">
-          <div class="order-detail-item-row">
-            <div style="position:relative;flex-shrink:0;">
-              <div class="order-item-img img-placeholder hat" style="width:48px;height:48px;filter:grayscale(1);"></div>
-            </div>
-            <div class="order-item-info">
-              <div class="order-item-name" style="text-decoration:line-through;color:#aaa;">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
-            </div>
-            <div class="order-item-price" style="color:#aaa;text-decoration:line-through;">USD 34.62</div>
-          </div>
-          <div class="order-detail-item-status">
-            <span class="status-badge" style="background:#fce4ec;color:#c62828;">Canceled · Sold Out</span>
-            <span style="font-size:11px;color:#e65100;margin-left:6px;" data-spec="Refund: {usd_refund}">Refund: USD 27.62</span>
-          </div>
-        </div>
       </div>
 
       <div class="section">
@@ -2840,16 +2699,16 @@
     <!-- Cancelled order -->
     <div class="orders-cancel-card">
       <div class="orders-cancel-head">
-        <span class="orders-cancel-amount" data-spec="{usd_total}">USD 34</span>
+        <span class="orders-cancel-amount" id="cancel-amount" data-spec="{usd_total}">USD 34</span>
         <span class="orders-cancel-badge">Order Cancelled</span>
       </div>
       <div class="orders-cancel-body">
         <div class="orders-cancel-img img-placeholder hat"></div>
         <div class="orders-cancel-info">
-          <div class="orders-cancel-title" data-spec="{Product Name(EN)}">Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...</div>
+          <div class="orders-cancel-title" id="cancel-title" data-spec="{Product Name(EN)}">Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...</div>
           <ul class="orders-cancel-list">
-            <li data-spec="Buyer Request: {Buyer Request}">Buyer Request: Flower poca Please</li>
-            <li data-spec="Shipping Agency MSG: {Agency Message}">Shpping Agency MSG: Seller said 10$ needed</li>
+            <li id="cancel-req" data-spec="Buyer Request: {Buyer Request}">Buyer Request: Flower poca Please</li>
+            <li id="cancel-msg" data-spec="Shipping Agency MSG: {Agency Message}">Shipping Agency MSG: Seller said 10$ needed</li>
           </ul>
         </div>
       </div>
@@ -2903,6 +2762,78 @@
         </div>
       </div>
       <button class="orders-card-v2-track">Order Tracking <span style="font-size:13px;">↗</span></button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN: MY PAGE                             -->
+<!-- ============================================ -->
+<div id="screen-my-page" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goBack()">‹</button>
+    <span class="header-title">My Page</span>
+    <div class="header-icons">
+      <button style="position:relative;">🛒<span style="position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1;">2</span></button>
+      <button>☰</button>
+    </div>
+  </div>
+
+  <div class="content" style="padding-top:0;">
+
+    <!-- Profile -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 16px 18px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px;" data-spec="{User Name}">Seventeen</div>
+        <div style="font-size:13px;color:#888;" data-spec="{Bunjang Account Email}">hazel.k@bunjang.co.kr</div>
+      </div>
+      <button style="font-size:12px;font-weight:600;color:#333;background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 14px;cursor:pointer;">Edit Profile</button>
+    </div>
+
+    <div style="height:8px;background:#f5f5f5;"></div>
+
+    <!-- My Activity -->
+    <div style="padding:18px 16px 4px;">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px;">My Activity</div>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)">
+      <span>Promo Codes</span><span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-row" onclick="showScreen('my-orders')">
+      <span>Orders</span><span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)">
+      <span>Favorites</span><span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)" style="border-bottom:none;">
+      <span>Recently Viewed</span><span class="mypage-menu-arrow">›</span>
+    </div>
+
+    <div style="height:8px;background:#f5f5f5;margin-top:4px;"></div>
+
+    <!-- Support -->
+    <div style="padding:18px 16px 4px;">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px;">Support</div>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)">
+      <span>Guide</span><span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)">
+      <span>FAQ</span><span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)">
+      <span>Contact us</span><span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-row" onclick="void(0)" style="border-bottom:none;">
+      <span>News</span><span class="mypage-menu-arrow">›</span>
+    </div>
+
+    <div style="height:8px;background:#f5f5f5;margin-top:4px;"></div>
+
+    <!-- Logout -->
+    <div style="text-align:center;padding:24px 16px;">
+      <button style="font-size:13px;color:#999;background:none;border:none;cursor:pointer;text-decoration:underline;">Logout</button>
     </div>
 
   </div>
@@ -4658,6 +4589,17 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.16',
+    date: '2026-05-18',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '마이페이지 화면 신규 추가 (프로필, My Activity, Support, Logout)',
+      '배송비 계산기 UI 제거 → Proxy Partner별 사이트 링크 제공으로 전환',
+      '결제완료 화면 상품 목록 제거 (3개 variant 모두) — Payment Summary + CTA 버튼 구성으로 변경',
+      '내 주문 재결제 캐러셀: 화살표 이동 시 취소 카드(상품명·금액·요청사항)도 함께 연동 업데이트',
+    ]
+  },
+  {
     version: 'v1.15',
     date: '2026-05-14',
     author: 'hazel.k@bunjang.co.kr',
@@ -4957,7 +4899,7 @@ function showScreen(id, updateNav = true) {
     if (event && event.target && event.target.classList.contains('proto-nav-btn')) event.target.classList.add('active');
   }
   // Update sidebar panel
-  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram', 'order-summary': 'order-summary', 'order-detail': 'order-detail', 'my-orders': 'my-orders' };
+  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram', 'order-summary': 'order-summary', 'order-detail': 'order-detail', 'my-orders': 'my-orders', 'my-page': 'my-page' };
   const panelId = sidebarMap[id] || 'default';
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('sidebar-' + panelId).classList.add('active');
@@ -5165,9 +5107,21 @@ function setOrderDetailCase(cas) {
 }
 
 const _addlPayItems = [
-  { amount: 'USD 50.45', name: 'Delivered Korea Payment Product' },
-  { amount: 'USD 12.30', name: 'NCT Wish Photocard Set' },
-  { amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt' }
+  {
+    amount: 'USD 50.45', name: 'Delivered Korea Payment Product',
+    cancelAmount: 'USD 34', cancelName: 'Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...',
+    cancelReq: 'Buyer Request: Flower poca Please', cancelMsg: 'Shipping Agency MSG: Seller said 10$ needed'
+  },
+  {
+    amount: 'USD 12.30', name: 'NCT Wish Photocard Set',
+    cancelAmount: 'USD 10', cancelName: 'NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee',
+    cancelReq: 'Buyer Request: Riku version please', cancelMsg: 'Shipping Agency MSG: Seller changed price'
+  },
+  {
+    amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt',
+    cancelAmount: 'USD 7', cancelName: 'BTS Map of the Soul T-shirt (White / M)',
+    cancelReq: 'Buyer Request: Size M please', cancelMsg: 'Shipping Agency MSG: Out of stock, similar item available'
+  }
 ];
 let _addlPayIdx = 0;
 function moveAddlPay(dir) {
@@ -5179,6 +5133,10 @@ function moveAddlPay(dir) {
   document.getElementById('addl-pay-counter').textContent = (_addlPayIdx + 1) + ' / ' + _addlPayItems.length;
   document.getElementById('addl-pay-prev').disabled = (_addlPayIdx === 0);
   document.getElementById('addl-pay-next').disabled = (_addlPayIdx === _addlPayItems.length - 1);
+  document.getElementById('cancel-amount').textContent = item.cancelAmount;
+  document.getElementById('cancel-title').textContent = item.cancelName;
+  document.getElementById('cancel-req').textContent = item.cancelReq;
+  document.getElementById('cancel-msg').textContent = item.cancelMsg;
 }
 </script>
 </body>
