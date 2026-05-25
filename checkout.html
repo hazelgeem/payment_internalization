@@ -363,6 +363,7 @@
   .orders-cancel-info { flex: 1; }
   .orders-cancel-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; color: #333; }
   .orders-cancel-list { list-style: disc; font-size: 12px; color: #555; padding-left: 14px; line-height: 1.6; margin: 0; }
+  .orders-cancel-reason { margin-top: 10px; padding: 9px 10px; border-radius: 8px; background: #fff; border: 1px solid #eee; color: #666; font-size: 12px; line-height: 1.45; }
   .orders-pagination { text-align: center; padding: 16px 0 24px; font-size: 14px; color: #ccc; letter-spacing: 0.5px; }
   .orders-pagination .current { color: #222; font-weight: 700; }
   .orders-divider { height: 8px; background: #f4f4f4; margin: 0; }
@@ -378,6 +379,10 @@
   .orders-card-v2-name { font-size: 13px; color: #222; line-height: 1.4; font-weight: 500; }
   .orders-card-v2-name-sub { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.4; }
   .orders-card-v2-track { width: 100%; padding: 13px; background: #fafafa; color: #444; border: 1px solid #eee; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .orders-v2-row { margin-bottom: 2px; }
+  .orders-v2-row + .orders-v2-row { border-top: 1px solid #f3f3f3; padding-top: 12px; margin-top: 4px; }
+  .orders-v2-row .orders-card-v2-item { margin-bottom: 0; }
+  .orders-v2-viewall { display: block; text-align: center; font-size: 13px; color: #666; padding: 10px 0 2px; cursor: pointer; text-decoration: underline; border-top: 1px solid #f3f3f3; margin-top: 8px; }
   .changelog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; }
   .changelog-overlay.show { display: flex; }
   .changelog-modal { background: #fff; border-radius: 14px; max-width: 520px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
@@ -846,13 +851,13 @@
   <button class="proto-nav-btn" onclick="showScreen('order-summary')">결제 완료</button>
   <button class="proto-nav-btn" onclick="showScreen('payment-fail')">결제 실패</button>
   <button class="proto-nav-btn" onclick="showScreen('order-detail')">주문 상세</button>
-  <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="showScreen('my-page')">마이페이지</button>
-  <button class="proto-nav-btn" onclick="showScreen('sso-redirect')">프록시 SSO 연동</button>
-  <span class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.16</button>
-    <span>Updated 2026-05-18</span>
-  </span>
+  <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
+  <button class="proto-nav-btn" onclick="startSSOConnect()">프록시 SSO 연동</button>
+  <div class="proto-nav-version">
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.17</button>
+    <span>Updated 2026-05-26</span>
+  </div>
 </div>
 
 <!-- Changelog Modal -->
@@ -869,8 +874,18 @@
 <!-- Right Sidebar -->
 <div class="proto-sidebar">
 
+  <!-- PDP panel -->
+  <div id="sidebar-pdp" class="sidebar-panel active">
+    <div style="font-size:11px;color:#444;padding:4px 0;">상품 상세 화면입니다. 컨트롤이 없습니다.</div>
+  </div>
+
+  <!-- Cart panel -->
+  <div id="sidebar-cart" class="sidebar-panel">
+    <div style="font-size:11px;color:#444;padding:4px 0;">장바구니 화면입니다. 컨트롤이 없습니다.</div>
+  </div>
+
   <!-- Checkout panel -->
-  <div id="sidebar-checkout" class="sidebar-panel active">
+  <div id="sidebar-checkout" class="sidebar-panel">
     <div class="sidebar-section">
       <div class="sidebar-section-title">시나리오</div>
       <div class="sidebar-chips">
@@ -962,7 +977,7 @@
         <button class="sidebar-chip" onclick="showScreen('processing')">⏳ 결제 중</button>
         <button class="sidebar-chip" onclick="showScreen('order-summary')">📋 결제 완료</button>
         <button class="sidebar-chip" onclick="showScreen('payment-fail')">✕ 결제 실패</button>
-        <button class="sidebar-chip" onclick="showScreen('sso-redirect')">🔑 DK Login</button>
+        <button class="sidebar-chip" onclick="startSSOConnect()">🔑 DK Login</button>
         <button class="sidebar-chip" onclick="showScreen('my-orders')">📄 내 주문</button>
         <button class="sidebar-chip" onclick="showScreen('order-detail')">📍 주문 상세</button>
         <button class="sidebar-chip" onclick="showScreen('my-page')">👤 마이페이지</button>
@@ -1083,7 +1098,7 @@
       <div class="pdp-price-row">
         <span class="pdp-price" data-spec="{usd_price_base}">USD 28.26</span>
         <span class="pdp-price-original" data-spec="{usd_price_paypal}">USD 29.75</span>
-        <span class="pdp-price-discount" data-spec="{PayPal Added %}">5% OFF <span class="info-icon" onclick="showTooltip(event, 'pdp-promo')" style="font-size:11px;">ⓘ</span></span>
+        <span class="pdp-price-discount"><span data-spec="{PayPal Added %}">7% OFF</span> <span class="orders-card-v2-info-icon" style="font-size:13px;" data-tooltip="Pay with Card, Alipay+, or WeChat Pay and get 7% off — compared to PayPal pricing. This discount is automatically applied at checkout when you select a qualifying payment method." onclick="toggleInfoTooltip(event, this)">ⓘ</span></span>
       </div>
       <div class="pdp-rating">
         <span style="font-weight: 700;" data-spec="{Shop Name}">글로벌번장</span>
@@ -1306,11 +1321,15 @@
 <!-- ============================================ -->
 <div id="screen-cart" class="screen">
   <div class="header">
-    <button class="header-back">‹</button>
+    <button class="header-back" onclick="showScreen('pdp')">‹</button>
     <span class="header-title">Cart</span>
     <div class="header-icons">
-      <button>⌂</button>
-      <button>☰</button>
+      <button title="Home" style="border:none;background:none;padding:0;cursor:pointer;display:inline-flex;" onclick="showScreen('pdp')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" stroke="#191919" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="#191919" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button title="Menu" style="border:none;background:none;padding:0;cursor:pointer;display:inline-flex;">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.9 4.60005H18.099C18.596 4.60005 19 4.19705 19 3.70005C19 3.20305 18.596 2.80005 18.099 2.80005H1.9C1.403 2.80005 1 3.20305 1 3.70005C1 4.19705 1.403 4.60005 1.9 4.60005ZM1.9 10.9003H18.099C18.596 10.9003 19 10.4973 19 10.0003C19 9.50335 18.596 9.10035 18.099 9.10035H1.9C1.403 9.10035 1 9.50335 1 10.0003C1 10.4973 1.403 10.9003 1.9 10.9003ZM18.099 17.2001H1.9C1.403 17.2001 1 16.7971 1 16.3001C1 15.8031 1.403 15.4001 1.9 15.4001H18.099C18.596 15.4001 19 15.8031 19 16.3001C19 16.7971 18.596 17.2001 18.099 17.2001Z" fill="#191919"/></svg>
+      </button>
     </div>
   </div>
 
@@ -1392,27 +1411,27 @@
         </div>
 
         <!-- Paysable -->
-        <div style="border:1.5px solid #e0e4f5;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;" data-spec="{Proxy Partner Name}">
+        <div style="border:1.5px solid #e0e4f5;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <div style="font-size:13px;font-weight:700;color:#1565c0;margin-bottom:2px;">Paysable</div>
+            <div style="font-size:13px;font-weight:700;color:#1565c0;margin-bottom:2px;" data-spec="{Proxy Partner Name}">Paysable</div>
             <div style="font-size:11px;color:#999;">Check shipping rates on Paysable's website</div>
           </div>
           <a href="#" onclick="event.preventDefault()" style="font-size:12px;font-weight:600;color:#1565c0;background:#e8eef8;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;" data-spec="Go to {Proxy Partner Name} ↗">Go to Paysable ↗</a>
         </div>
 
         <!-- Kfriday -->
-        <div style="border:1.5px solid #ede0f5;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;" data-spec="{Proxy Partner Name}">
+        <div style="border:1.5px solid #ede0f5;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <div style="font-size:13px;font-weight:700;color:#6a1b9a;margin-bottom:2px;">Kfriday</div>
+            <div style="font-size:13px;font-weight:700;color:#6a1b9a;margin-bottom:2px;" data-spec="{Proxy Partner Name}">Kfriday</div>
             <div style="font-size:11px;color:#999;">Check shipping rates on Kfriday's website</div>
           </div>
           <a href="#" onclick="event.preventDefault()" style="font-size:12px;font-weight:600;color:#6a1b9a;background:#f3edf9;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;" data-spec="Go to {Proxy Partner Name} ↗">Go to Kfriday ↗</a>
         </div>
 
         <!-- Delivered Korea -->
-        <div style="border:1.5px solid #fbe9e7;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;" data-spec="{Proxy Partner Name}">
+        <div style="border:1.5px solid #fbe9e7;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <div style="font-size:13px;font-weight:700;color:#e65100;margin-bottom:2px;">Delivered Korea</div>
+            <div style="font-size:13px;font-weight:700;color:#e65100;margin-bottom:2px;" data-spec="{Proxy Partner Name}">Delivered Korea</div>
             <div style="font-size:11px;color:#999;">Check shipping rates on DK's website</div>
           </div>
           <span style="font-size:11px;color:#bbb;white-space:nowrap;">Not available</span>
@@ -1882,10 +1901,10 @@
       <div class="section-body">
         <div class="price-box">
           <div class="price-group-title">Product Purchase</div>
-          <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount" data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
+          <div class="price-row"><span>Subtotal</span><span id="checkout-subtotal-amount" data-spec="{usd_subtotal_gross}">USD 41.61</span></div>
           <div id="checkout-coupon-row" class="price-row discount" style="display:none;"><span id="checkout-coupon-label">Coupon</span><span id="checkout-coupon-amount" data-spec="-{usd_coupon_value}"></span></div>
-          <div class="price-row"><span>Shipping to Proxy Partner</span><span id="checkout-shipping-to-proxy-amount" data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
-          <div id="checkout-promo-row" class="price-row discount"><span>Payment Promotion (5% off) <span class="info-icon" onclick="showTooltip(event, 'payment-promo')">ⓘ</span></span><span id="checkout-promo-amount" data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
+          <div id="checkout-shipping-row" class="price-row"><span>Shipping to Proxy Partner</span><span id="checkout-shipping-to-proxy-amount" data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+          <div id="checkout-promo-row" class="price-row discount"><span>Payment Promotion (7% off) <span class="info-icon" onclick="showTooltip(event, 'payment-promo')">ⓘ</span></span><span id="checkout-promo-amount" data-spec="-{usd_payment_promo}">- USD 2.91</span></div>
           <hr class="price-divider">
 
           <div class="price-group-title price-group-intl">International Shipping</div>
@@ -1899,7 +1918,7 @@
 
           <div class="price-total">
             <span>Total <span class="info-icon" style="font-size:12px;" onclick="showTooltip(event, 'total')">ⓘ</span></span>
-            <span class="amount" id="checkout-total-amount" data-spec="{usd_total}">USD 36.70</span>
+            <span class="amount" id="checkout-total-amount" data-spec="{usd_total}">USD 43.70</span>
           </div>
         </div>
       </div>
@@ -2032,10 +2051,11 @@
       <!-- Order summary -->
       <div style="padding:20px 24px;">
         <div style="font-size:13px;font-weight:600;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Order Summary</div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Subtotal</span><span data-spec="{usd_subtotal}">USD 38.70</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:8px;"><span data-spec="Coupon Discount ({Coupon Name})">Coupon Discount</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:16px;"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:#222;border-top:1px solid #f0f0f0;padding-top:14px;"><span>Total</span><span data-spec="{usd_total}">USD 36.70</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Subtotal</span><span id="quickpay-subtotal-amount" data-spec="{usd_subtotal_gross}">USD 41.61</span></div>
+        <div id="quickpay-coupon-row" style="display:none;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:8px;"><span id="quickpay-coupon-label" data-spec="Coupon Discount ({Coupon Name})">Coupon Discount</span><span id="quickpay-coupon-amount" data-spec="-{usd_coupon_value}"></span></div>
+        <div id="quickpay-shipping-row" style="display:flex;justify-content:space-between;font-size:14px;color:#444;margin-bottom:8px;"><span>Shipping to Proxy Partner</span><span id="quickpay-shipping-amount" data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
+        <div id="quickpay-promo-row" style="display:flex;justify-content:space-between;font-size:14px;color:#27ae60;margin-bottom:16px;"><span>Payment Promotion</span><span id="quickpay-promo-amount" data-spec="-{usd_payment_promo}">- USD 2.91</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;color:#222;border-top:1px solid #f0f0f0;padding-top:14px;"><span>Total</span><span id="quickpay-total-amount" data-spec="{usd_total}">USD 43.70</span></div>
       </div>
       <!-- Biometric auth mock -->
       <div style="padding:0 24px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;">
@@ -2045,7 +2065,7 @@
     </div>
 
     <!-- [Demo] Pay button -->
-    <button id="quickpay-pay-btn" onclick="simulateQuickPay()" style="width:100%;padding:17px;border-radius:14px;border:none;font-size:16px;font-weight:700;color:#fff;background:#000;cursor:pointer;" data-spec="[Demo] Pay {usd_total}">[Demo] Pay USD 36.70</button>
+    <button id="quickpay-pay-btn" onclick="simulateQuickPay()" style="width:100%;padding:17px;border-radius:14px;border:none;font-size:16px;font-weight:700;color:#fff;background:#000;cursor:pointer;" data-spec="[Demo] Pay {usd_total}">[Demo] Pay USD 43.70</button>
     <button onclick="showScreen('checkout')" style="margin-top:14px;background:none;border:none;font-size:14px;color:#888;cursor:pointer;">Cancel</button>
   </div>
 </div>
@@ -2063,8 +2083,8 @@
     <!-- STEP 1: CREATE YOUR ACCOUNT (entry — both flows) -->
     <!-- ════════════════════════════════════════════════ -->
     <div id="sso-step-create" style="display:none;">
-      <div style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:6px;color:#191919;">Create your account</div>
-      <div id="sso-create-sub" data-spec="We'll create a {Proxy Partner Name} account using your Bunjang Global account" style="font-size:13px;color:#888;line-height:1.5;margin-bottom:20px;">We'll create a Delivered Korea account using your Bunjang Global account</div>
+      <div style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:6px;color:#191919;">Link your account</div>
+      <div id="sso-create-sub" data-spec="We'll link your {Proxy Partner Name} account using your Bunjang Global account" style="font-size:13px;color:#888;line-height:1.5;margin-bottom:20px;">We'll link your Delivered Korea account using your Bunjang Global account</div>
 
       <!-- Bunjang Global account card with shared info -->
       <div style="background:#f5f5f5;border-radius:12px;padding:14px 16px;margin-bottom:6px;">
@@ -2074,7 +2094,7 @@
           </div>
           <div>
             <div style="font-size:12px;color:#666;font-weight:600;margin-bottom:2px;">Bunjang Global account</div>
-            <div data-spec="{Bunjang Account Email}" style="font-size:14px;font-weight:600;color:#191919;">nancy.lee@bunjang.co.kr</div>
+            <div id="sso-create-bunjang-email" data-spec="{Bunjang Account Email}" style="font-size:14px;font-weight:600;color:#191919;">hazel.k@bunjang.co.kr</div>
           </div>
         </div>
         <div style="height:1px;background:#e5e5e5;margin:14px 0;"></div>
@@ -2105,15 +2125,15 @@
         <span style="font-size:14px;color:#191919;line-height:1.5;font-weight:500;">I agree to the collection and use of my personal information</span>
       </label>
 
-      <button id="sso-create-new-btn" disabled onclick="goToSSOStep('signup-terms')" data-spec="Continue" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;margin-bottom:8px;">Continue</button>
-      <button id="sso-use-existing-btn" disabled onclick="goToSSOStep('login')" data-spec="Already have an account?" style="width:100%;padding:16px;background:#fff;color:#aaa;border:1px solid #ddd;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Already have an account?</button>
+      <button id="sso-create-new-btn" disabled onclick="goToSSOStep('login')" data-spec="Continue" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Continue</button>
     </div>
 
+
     <!-- ════════════════════════════════════════════════ -->
-    <!-- STEP 2A: SIGN UP TO {PROXY} — terms (new flow)  -->
+    <!-- STEP 2A: SIGN UP TERMS (new account flow)       -->
     <!-- ════════════════════════════════════════════════ -->
     <div id="sso-step-signup-terms" style="display:none;">
-      <div id="sso-signup-title" data-spec="Sign Up to {Proxy Partner Name}" style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:24px;color:#191919;">Sign Up to Delivered Korea</div>
+      <div id="sso-signup-title" data-spec="Sign Up to {Proxy Partner Name}" style="font-size:20px;font-weight:700;line-height:1.3;margin-bottom:24px;color:#191919;">Sign Up to Delivered Korea</div>
 
       <label style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #eee;cursor:pointer;">
         <input type="checkbox" id="terms-all" onchange="toggleAllTerms(this)" style="width:18px;height:18px;accent-color:#191919;flex-shrink:0;">
@@ -2134,15 +2154,19 @@
         <span style="font-size:13px;color:#555;line-height:1.5;"><span style="color:#999;font-size:11px;font-weight:700;">[Optional]</span> I agree to receive marketing information</span>
       </label>
 
-      <button id="sso-terms-btn" disabled onclick="submitSSOTerms()" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;">Sign Up</button>
+      <button id="sso-terms-btn" disabled onclick="submitSSOTerms()" style="width:100%;padding:16px;background:#ddd;color:#aaa;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;margin-bottom:16px;">회원가입</button>
+      <div style="text-align:center;">
+        <span style="font-size:13px;color:#888;">Already have a DK account? </span>
+        <button onclick="goToSSOStep('login')" style="background:none;border:none;padding:0;font-size:13px;color:#191919;text-decoration:underline;font-weight:600;cursor:pointer;">Log in</button>
+      </div>
     </div>
 
     <!-- ════════════════════════════════════════════════ -->
     <!-- STEP 2B: LOG IN TO LINK (existing-account flow) -->
     <!-- ════════════════════════════════════════════════ -->
     <div id="sso-step-login" style="display:none;">
-      <div id="sso-login-title" data-spec="Log in to link your {Proxy Partner Name} account" style="font-size:15px;font-weight:700;line-height:1.3;margin-bottom:6px;color:#191919;">Log in to link your Delivered Korea account</div>
-      <div id="sso-login-sub" data-spec="Please login with your {Proxy Partner Name} account." style="font-size:13px;color:#888;line-height:1.5;margin-bottom:28px;">Please login with your Delivered Korea account.</div>
+      <div id="sso-login-title" data-spec="Log in to link your {Proxy Partner Name} account" style="font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px;color:#191919;">Log in to link your Delivered Korea account</div>
+      <div id="sso-login-sub" data-spec="Please login with your {Proxy Partner Name} account." style="font-size:13px;color:#888;line-height:1.5;margin-bottom:32px;">Please login with your Delivered Korea account.</div>
 
       <div style="margin-bottom:18px;">
         <label style="font-size:13px;color:#555;display:block;margin-bottom:8px;font-weight:500;">E-mail</label>
@@ -2155,8 +2179,9 @@
           <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#888;cursor:pointer;">⊘</span>
         </div>
       </div>
-      <div style="margin-bottom:24px;">
+      <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
         <button style="background:none;border:none;padding:0;font-size:13px;color:#191919;text-decoration:underline;font-weight:500;cursor:pointer;">Forgot My Password</button>
+        <button onclick="goToSSOStep('signup-terms')" style="background:none;border:none;padding:0;font-size:13px;color:#191919;text-decoration:underline;font-weight:500;cursor:pointer;">Sign up</button>
       </div>
 
       <div style="display:flex;gap:10px;">
@@ -2181,7 +2206,7 @@
         </div>
         <div>
           <div style="font-size:12px;color:#666;font-weight:600;margin-bottom:2px;">Bunjang Global account</div>
-          <div data-spec="{Bunjang Account Email}" style="font-size:14px;font-weight:600;color:#191919;">nancy.lee@bunjang.co.kr</div>
+          <div id="sso-success-bunjang-email" data-spec="{Bunjang Account Email}" style="font-size:14px;font-weight:600;color:#191919;">hazel.k@bunjang.co.kr</div>
         </div>
       </div>
 
@@ -2191,7 +2216,7 @@
         <div id="sso-success-proxy-icon" style="width:40px;height:40px;border-radius:8px;background:#e65100;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#fff;font-weight:800;">D</div>
         <div>
           <div id="sso-success-proxy-label" data-spec="{Proxy Partner Name}" style="font-size:12px;color:#666;font-weight:600;margin-bottom:2px;">Delivered Korea</div>
-          <div data-spec="{Proxy Account Email}" style="font-size:14px;font-weight:600;color:#191919;">nancy.lee@gmail.com</div>
+          <div id="sso-success-proxy-email" data-spec="{Proxy Account Email}" style="font-size:14px;font-weight:600;color:#191919;">hazel.k@gmail.com</div>
         </div>
       </div>
 
@@ -2329,10 +2354,10 @@
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
-          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
+          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 41.61</span></div>
           <div class="price-row discount"><span data-spec="Coupon ({Coupon Name})">Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
           <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
-          <div id="os-promo-row-ordering" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
+          <div id="os-promo-row-ordering" class="price-row discount"><span>Payment Promotion (7% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.91</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
           <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span id="os-pay-method-ordering" data-spec="{Payment Method}">Credit Card (****1234)</span></div>
@@ -2370,10 +2395,10 @@
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
-          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
+          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 41.61</span></div>
           <div class="price-row discount"><span data-spec="Coupon ({Coupon Name})">Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
           <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
-          <div id="os-promo-row-all" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
+          <div id="os-promo-row-all" class="price-row discount"><span>Payment Promotion (7% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.91</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
           <div class="price-row" style="margin-top:8px;"><span style="color:#999;">Payment Method</span><span id="os-pay-method-all" data-spec="{Payment Method}">Credit Card (****1234)</span></div>
@@ -2414,10 +2439,10 @@
       <div class="section">
         <div class="section-header"><span class="section-title">Payment Summary</span></div>
         <div class="section-body">
-          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
+          <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 41.61</span></div>
           <div class="price-row discount"><span data-spec="Coupon ({Coupon Name})">Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
           <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
-          <div id="os-promo-row-partial" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
+          <div id="os-promo-row-partial" class="price-row discount"><span>Payment Promotion (7% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.91</span></div>
           <hr class="price-divider">
           <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
           <hr class="price-divider">
@@ -2473,7 +2498,7 @@
     <!-- Error message card -->
     <div style="text-align:left;margin:0 auto 28px;">
       <div id="error-card" style="background:#fff5f5;border:1px solid #fcc;border-radius:12px;padding:18px 20px;">
-        <div id="error-msg" style="font-size:14px;color:#333;line-height:1.6;font-weight:500;" data-spec="{Error Message}">Your card limit or balance is insufficient.<br>Please use a different payment method.</div>
+        <div id="error-msg" style="font-size:14px;color:#333;line-height:1.6;font-weight:500;" data-spec="{Error Message}">Your card limit or balance is insufficient. Please use a different payment method.</div>
       </div>
     </div>
 
@@ -2630,10 +2655,10 @@
     <div class="section">
       <div class="section-header"><span class="section-title">Payment Summary</span></div>
       <div class="section-body">
-        <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 40.74</span></div>
+        <div class="price-row"><span>Subtotal</span><span data-spec="{usd_subtotal_gross}">USD 41.61</span></div>
         <div class="price-row discount"><span>Coupon (Welcome $7 Off)</span><span data-spec="-{usd_coupon_value}">- USD 7.00</span></div>
         <div class="price-row"><span>Shipping to Proxy Partner</span><span data-spec="{USD_shipping_fee_domestic}">USD 5.00</span></div>
-        <div id="od-promo-row" class="price-row discount"><span>Payment Promotion (5% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.04</span></div>
+        <div id="od-promo-row" class="price-row discount"><span>Payment Promotion (7% off)</span><span data-spec="-{usd_payment_promo}">- USD 2.91</span></div>
         <hr class="price-divider">
         <div class="price-row" style="font-weight:700;font-size:15px;"><span>Total Charged</span><span data-spec="{usd_total}">USD 36.70</span></div>
         <hr class="price-divider">
@@ -2642,7 +2667,10 @@
         <div id="od-cancel-refund" style="display:none;">
           <hr class="price-divider">
           <div class="price-row" style="color:#c62828;"><span>Refund</span><span data-spec="-{usd_refund}">- USD 36.70</span></div>
-          <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#e65100;">
+          <div id="od-cancel-reason" data-spec="{Cancel Reason}" style="background:#f5f5f5;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#555;line-height:1.5;">
+            The seller has canceled this order. A full refund will be processed.
+          </div>
+          <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#e65100;">
             ⏱ Refund will be returned to your original payment method within 3–5 business days.
           </div>
         </div>
@@ -2661,8 +2689,13 @@
     <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">Orders</span>
     <div class="header-icons">
-      <button>🛒</button>
-      <button>☰</button>
+      <button title="Cart" style="border:none;background:none;padding:0;cursor:pointer;display:inline-flex;position:relative;" onclick="showScreen('cart')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="#191919" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#191919" stroke-width="1.7" stroke-linecap="round"/><path d="M16 10a4 4 0 01-8 0" stroke="#191919" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1;">3</span>
+      </button>
+      <button title="Menu" style="border:none;background:none;padding:0;cursor:pointer;display:inline-flex;">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.9 4.60005H18.099C18.596 4.60005 19 4.19705 19 3.70005C19 3.20305 18.596 2.80005 18.099 2.80005H1.9C1.403 2.80005 1 3.20305 1 3.70005C1 4.19705 1.403 4.60005 1.9 4.60005ZM1.9 10.9003H18.099C18.596 10.9003 19 10.4973 19 10.0003C19 9.50335 18.596 9.10035 18.099 9.10035H1.9C1.403 9.10035 1 9.50335 1 10.0003C1 10.4973 1.403 10.9003 1.9 10.9003ZM18.099 17.2001H1.9C1.403 17.2001 1 16.7971 1 16.3001C1 15.8031 1.403 15.4001 1.9 15.4001H18.099C18.596 15.4001 19 15.8031 19 16.3001C19 16.7971 18.596 17.2001 18.099 17.2001Z" fill="#191919"/></svg>
+      </button>
     </div>
   </div>
 
@@ -2710,6 +2743,7 @@
             <li id="cancel-req" data-spec="Buyer Request: {Buyer Request}">Buyer Request: Flower poca Please</li>
             <li id="cancel-msg" data-spec="Shipping Agency MSG: {Agency Message}">Shipping Agency MSG: Seller said 10$ needed</li>
           </ul>
+          <div id="cancel-reason" class="orders-cancel-reason" data-spec="{Cancel Reason}">ITEM_SOLD_OUT — This item is no longer available. A full refund will be processed.</div>
         </div>
       </div>
     </div>
@@ -2722,46 +2756,184 @@
     <!-- Section divider -->
     <div class="orders-divider"></div>
 
-    <!-- Order card 1 -->
+    <!-- Order card: Re-order (Awaiting Seller Confirmation) — single item with cancelled reference -->
     <div class="orders-card-v2">
       <div class="orders-card-v2-header">
-        <span class="orders-card-v2-date" data-spec="{Order Date}">2025-03-14 18:46(KST)</span>
+        <span class="orders-card-v2-date" data-spec="{Order Date}">2026-04-02 11:20(KST)</span>
         <a class="orders-card-v2-link" onclick="showScreen('order-detail')">View Order ›</a>
       </div>
-      <div class="orders-card-v2-status">
-        <span data-spec="{Order Status}">Handed Off to Shipping Partner</span>
-        <span class="orders-card-v2-info-icon" title="Status detail">ⓘ</span>
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status" style="color:#e65100;">
+          <span data-spec="{Order Status}">Awaiting Seller Confirmation</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your order has been placed and is waiting for the seller to confirm. This usually takes 1–2 business days." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee</div>
+            <div class="orders-card-v2-name-sub" data-spec="{usd_price_base}">USD 10.00</div>
+          </div>
+        </div>
+        <!-- Cancelled item reference -->
+        <div style="background:#f8f8f8;border-radius:8px;padding:10px 12px;margin-bottom:14px;">
+          <div style="font-size:11px;color:#999;font-weight:600;margin-bottom:8px;">Replaces cancelled item</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:40px;height:40px;border-radius:6px;background:#e8e8e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:16px;color:#bbb;text-decoration:line-through;font-weight:700;">✕</span>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:12px;color:#999;text-decoration:line-through;line-height:1.4;" data-spec="{Cancelled Product Name(EN)}">NCT Wish Photocard Set · USD 10</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="orders-card-v2-substatus" data-spec="{Status Date}">2025-03-13 17:00(KST)</div>
-      <div class="orders-card-v2-item">
-        <div class="orders-card-v2-img img-placeholder hat"></div>
-        <div>
-          <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">Enhypen heeseung jay ni-ki sunghoon photocard wts Sell</div>
-          <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">엔하이픈 희승 제이 니키 포토카드 일괄</div>
+    </div>
+
+    <!-- Order card: 2026-03-28 — 2 items with different statuses -->
+    <div class="orders-card-v2">
+      <div class="orders-card-v2-header">
+        <span class="orders-card-v2-date" data-spec="{Order Date}">2026-03-28 09:15(KST)</span>
+        <a class="orders-card-v2-link" onclick="showScreen('order-detail')">View Order ›</a>
+      </div>
+      <!-- Item 1 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Shipping to Korea Warehouse</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your item has been shipped by the seller and is on its way to the proxy warehouse in Korea." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee</div>
+            <div class="orders-card-v2-name-sub" data-spec="{usd_price_base}">USD 4.08</div>
+          </div>
+        </div>
+      </div>
+      <!-- Item 2 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Arrived at Korea Warehouse</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your item has arrived at the warehouse in Korea and is being checked against your order." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">Day6 Roundlab Sunscreen Hand Mirror Sealed</div>
+            <div class="orders-card-v2-name-sub" data-spec="{usd_price_base}">USD 34.62</div>
+          </div>
         </div>
       </div>
       <button class="orders-card-v2-track">Order Tracking <span style="font-size:13px;">↗</span></button>
     </div>
 
-    <!-- Order card 2 -->
-    <div class="orders-card-v2" style="margin-bottom:24px;">
+    <!-- Order card: 2025-03-14 — 4 items (3 shown + View all) -->
+    <div class="orders-card-v2">
+      <div class="orders-card-v2-header">
+        <span class="orders-card-v2-date" data-spec="{Order Date}">2025-03-14 18:46(KST)</span>
+        <a class="orders-card-v2-link" onclick="showScreen('order-detail')">View Order ›</a>
+      </div>
+      <!-- Item 1 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Handed Off to Shipping Partner</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your item is now with our logistics partner and is being shipped internationally to your destination." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">Enhypen heeseung jay ni-ki sunghoon photocard wts Sell</div>
+            <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">엔하이픈 희승 제이 니키 포토카드 일괄</div>
+          </div>
+        </div>
+      </div>
+      <!-- Item 2 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Arrived at Korea Warehouse</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your item has arrived at the warehouse in Korea and is being checked against your order." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">IVE Starlight 2nd Anniversary Photocard Official</div>
+            <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">아이브 스타라이트 2주년 공식 포토카드</div>
+          </div>
+        </div>
+      </div>
+      <!-- Item 3 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Seller Confirmed – Packing Your Order</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="The seller has confirmed your order and is preparing it for domestic shipping in Korea." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">BTS Map of the Soul Concert Tour Short Sleeved T-shirt</div>
+            <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">BTS 마샬마걸 도츠 반팔 티셔츠</div>
+          </div>
+        </div>
+      </div>
+      <a class="orders-v2-viewall" onclick="showScreen('order-detail')" data-spec="View all {Item Count} products">View all 4 products</a>
+      <button class="orders-card-v2-track" style="margin-top:12px;">Order Tracking <span style="font-size:13px;">↗</span></button>
+    </div>
+
+    <!-- Order card: 2025-03-12 — 2 items -->
+    <div class="orders-card-v2">
       <div class="orders-card-v2-header">
         <span class="orders-card-v2-date" data-spec="{Order Date}">2025-03-12 22:09(KST)</span>
         <a class="orders-card-v2-link" onclick="showScreen('order-detail')">View Order ›</a>
       </div>
-      <div class="orders-card-v2-status">
-        <span data-spec="{Order Status}">Handed Off to Shipping Partner</span>
-        <span class="orders-card-v2-info-icon" title="Status detail">ⓘ</span>
+      <!-- Item 1 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Handed Off to Shipping Partner</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your item is now with our logistics partner and is being shipped internationally to your destination." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">PRADA ASWD523 Night Black</div>
+            <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">프라다 ASWD523 나이트 블랙</div>
+          </div>
+        </div>
       </div>
-      <div class="orders-card-v2-substatus" data-spec="{Status Date}">2025-03-13 17:00(KST)</div>
-      <div class="orders-card-v2-item">
-        <div class="orders-card-v2-img img-placeholder hat"></div>
-        <div>
-          <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">PRADA ASWD523 Night Black</div>
-          <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">프라다 ASWD523 나이트 블랙</div>
+      <!-- Item 2 -->
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status">
+          <span data-spec="{Order Status}">Shipping to Korea Warehouse</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="Your item has been shipped by the seller and is on its way to the proxy warehouse in Korea." onclick="toggleInfoTooltip(event, this)">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat"></div>
+          <div>
+            <div class="orders-card-v2-name" data-spec="{Product Name(EN)}">BLACKPINK Lalisa Limited Edition Photocard Set</div>
+            <div class="orders-card-v2-name-sub" data-spec="{Product Name(KR)}">블랙핑크 라리사 한정판 포토카드 세트</div>
+          </div>
         </div>
       </div>
       <button class="orders-card-v2-track">Order Tracking <span style="font-size:13px;">↗</span></button>
+    </div>
+
+    <!-- Order card: 2025-02-20 — Cancelled -->
+    <div class="orders-card-v2" style="margin-bottom:24px;">
+      <div class="orders-card-v2-header">
+        <span class="orders-card-v2-date" data-spec="{Order Date}">2025-02-20 16:44(KST)</span>
+        <a class="orders-card-v2-link" onclick="showScreen('order-detail')">View Order ›</a>
+      </div>
+      <div class="orders-v2-row">
+        <div class="orders-card-v2-status" style="color:#e74c3c;">
+          <span data-spec="{Order Status}">Cancelled</span>
+          <span class="orders-card-v2-info-icon" data-tooltip="This order has been cancelled. A full refund will be returned to your original payment method within 3–5 business days." onclick="toggleInfoTooltip(event, this)" style="color:#e74c3c;">ⓘ</span>
+        </div>
+        <div class="orders-card-v2-item">
+          <div class="orders-card-v2-img img-placeholder hat" style="opacity:0.4;"></div>
+          <div>
+            <div class="orders-card-v2-name" style="color:#aaa;text-decoration:line-through;" data-spec="{Product Name(EN)}">BLACKPINK Lisa Solo Album Vinyl Record Limited Edition</div>
+            <div class="orders-card-v2-name-sub" data-spec="{usd_price_base}">USD 18.50</div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -2775,8 +2947,13 @@
     <button class="header-back" onclick="goBack()">‹</button>
     <span class="header-title">My Page</span>
     <div class="header-icons">
-      <button style="position:relative;">🛒<span style="position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1;">2</span></button>
-      <button>☰</button>
+      <button title="Cart" style="border:none;background:none;padding:0;cursor:pointer;display:inline-flex;position:relative;" onclick="showScreen('cart')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="#191919" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#191919" stroke-width="1.7" stroke-linecap="round"/><path d="M16 10a4 4 0 01-8 0" stroke="#191919" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1;">3</span>
+      </button>
+      <button title="Menu" style="border:none;background:none;padding:0;cursor:pointer;display:inline-flex;">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.9 4.60005H18.099C18.596 4.60005 19 4.19705 19 3.70005C19 3.20305 18.596 2.80005 18.099 2.80005H1.9C1.403 2.80005 1 3.20305 1 3.70005C1 4.19705 1.403 4.60005 1.9 4.60005ZM1.9 10.9003H18.099C18.596 10.9003 19 10.4973 19 10.0003C19 9.50335 18.596 9.10035 18.099 9.10035H1.9C1.403 9.10035 1 9.50335 1 10.0003C1 10.4973 1.403 10.9003 1.9 10.9003ZM18.099 17.2001H1.9C1.403 17.2001 1 16.7971 1 16.3001C1 15.8031 1.403 15.4001 1.9 15.4001H18.099C18.596 15.4001 19 15.8031 19 16.3001C19 16.7971 18.596 17.2001 18.099 17.2001Z" fill="#191919"/></svg>
+      </button>
     </div>
   </div>
 
@@ -2798,7 +2975,11 @@
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px;">My Activity</div>
     </div>
     <div class="mypage-menu-row" onclick="void(0)">
-      <span>Promo Codes</span><span class="mypage-menu-arrow">›</span>
+      <span>Coupons</span>
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="background:#e53935;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;line-height:1;">1</span>
+        <span class="mypage-menu-arrow">›</span>
+      </span>
     </div>
     <div class="mypage-menu-row" onclick="showScreen('my-orders')">
       <span>Orders</span><span class="mypage-menu-arrow">›</span>
@@ -2808,6 +2989,16 @@
     </div>
     <div class="mypage-menu-row" onclick="void(0)" style="border-bottom:none;">
       <span>Recently Viewed</span><span class="mypage-menu-arrow">›</span>
+    </div>
+
+    <div style="height:8px;background:#f5f5f5;margin-top:4px;"></div>
+
+    <!-- Account Settings -->
+    <div style="padding:18px 16px 4px;">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px;">Account Settings</div>
+    </div>
+    <div class="mypage-menu-row" onclick="showScreen('linked-accounts')" style="border-bottom:none;">
+      <span>Manage Linked Accounts</span><span class="mypage-menu-arrow">›</span>
     </div>
 
     <div style="height:8px;background:#f5f5f5;margin-top:4px;"></div>
@@ -2834,6 +3025,42 @@
     <!-- Logout -->
     <div style="text-align:center;padding:24px 16px;">
       <button style="font-size:13px;color:#999;background:none;border:none;cursor:pointer;text-decoration:underline;">Logout</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SCREEN: MANAGE LINKED ACCOUNTS             -->
+<!-- ============================================ -->
+<div id="screen-linked-accounts" class="screen">
+  <div class="header">
+    <button class="header-back" onclick="goBack()">‹</button>
+    <span class="header-title">Manage Linked Accounts</span>
+    <span></span>
+  </div>
+
+  <div class="content" style="padding-top:16px;padding-bottom:40px;">
+
+    <!-- Proxy account row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f3f3;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <!-- Delivered Korea "D" icon -->
+        <div id="linked-proxy-icon" style="width:44px;height:44px;border-radius:10px;background:#f05500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span id="linked-proxy-icon-text" style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;">D</span>
+        </div>
+        <div>
+          <span id="linked-proxy-name" style="font-size:15px;font-weight:500;color:#111;" data-spec="{Proxy Partner Name}">Delivered Korea</span>
+          <div id="linked-proxy-status" style="font-size:11px;color:#e53935;margin-top:3px;">Not connected</div>
+        </div>
+      </div>
+      <a id="linked-proxy-action" style="font-size:14px;color:#666;cursor:pointer;display:flex;align-items:center;gap:2px;" onclick="startSSOConnect()"><span data-spec="Link / Linked">Link</span> <span style="font-size:16px;color:#ccc;">›</span></a>
+    </div>
+
+    <!-- Info banner -->
+    <div style="margin:16px;padding:12px 14px;background:#f5f5f5;border-radius:10px;display:flex;align-items:flex-start;gap:8px;">
+      <span style="font-size:14px;color:#888;flex-shrink:0;margin-top:1px;">ⓘ</span>
+      <p style="font-size:13px;color:#666;line-height:1.55;" data-spec="{Linked Accounts Help Text}">Link your accounts to shop and ship internationally — all with your single Bunjang Global account.</p>
     </div>
 
   </div>
@@ -3158,7 +3385,7 @@
       <div class="uf-stage">
         <div class="uf-stage-header">DK 로그인 / 회원가입</div>
         <div class="uf-stage-body">
-          <div class="uf-phone-wrap" onclick="showScreen('sso-redirect')">
+          <div class="uf-phone-wrap" onclick="startSSOConnect()">
             <div class="uf-phone"><div class="uf-inner">
               <div style="background:#fff;min-height:700px;">
                 <div style="padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">‹</span><span style="font-size:17px;font-weight:700;">Delivered Korea</span></div>
@@ -3430,10 +3657,10 @@
           <div class="sq-block sq-alt">
             <div class="sq-bh">alt — 취소: 구매자 요청</div>
             <div class="sq-bb">
-              <div class="sq-note">구매자 → S&amp;SP에 직접 문의</div>
+              <div class="sq-note">구매자 → Proxy 문의 창구에 직접 연락 (GB 앱에서 취소 불가)</div>
               <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">운영팀이 Core 번장 앱으로 주문 직접 취소 (상품 단위)</span></div>
               <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">취소 완료 웹훅</span></div>
-              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트 + cancel_reason: GBCancelCode</span></div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">부분 취소 요청 (취소 상품 실결제 금액)</span></div>
               <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 취소</span></div>
@@ -3443,21 +3670,21 @@
             <div class="sq-bb">
               <div class="sq-row"><span class="sq-tag seller">판매자</span><span class="sq-arr">→</span><span class="sq-tag core">Core 번장</span><span class="sq-lbl">Core 번장 앱에서 주문 직접 취소</span></div>
               <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">취소 상태 웹훅</span></div>
-              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트 + cancel_reason: GBCancelCode</span></div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">부분 취소 요청 (취소 상품 실결제 금액)</span></div>
               <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 취소</span></div>
-              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 (이메일)</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 + 취소 사유 메시지 (이메일)</span></div>
             </div>
             <div class="sq-else">else — 취소: 시스템 자동 취소 (결제 후 7일 판매자 미승인)</div>
             <div class="sq-bb">
               <div class="sq-note">결제 +7일, 판매자 미승인</div>
               <div class="sq-row"><span class="sq-tag core">Core 번장</span><span class="sq-arr">⤳</span><span class="sq-tag dk">S&amp;SP</span><span class="sq-lbl ret">자동 취소 상태 웹훅</span></div>
-              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트</span></div>
+              <div class="sq-row"><span class="sq-tag dk">S&amp;SP</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">상품별 취소 상태 업데이트 + cancel_reason: GBCancelCode</span></div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag po">포트원</span><span class="sq-lbl">부분 취소 요청 (취소 상품 실결제 금액)</span></div>
               <div class="sq-row"><span class="sq-tag po">포트원</span><span class="sq-arr">⤳</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl ret">환불 완료</span></div>
               <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">→</span><span class="sq-tag gb">글로벌번장</span><span class="sq-lbl">해당 상품 상태 → 취소</span></div>
-              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 (이메일)</span></div>
+              <div class="sq-row"><span class="sq-tag gb">글로벌번장</span><span class="sq-arr">⤳</span><span class="sq-tag user">구매자</span><span class="sq-lbl ret">취소 및 환불 완료 안내 + 취소 사유 메시지 (이메일)</span></div>
             </div>
           </div>
         </div>
@@ -3466,10 +3693,11 @@
         <strong>주요 설계 결정사항</strong>
         <ul>
           <li>취소는 상품 단위로만 가능</li>
-          <li>구매자는 글로벌번장에서 직접 취소 불가 — Proxy Partner에 문의 → 운영팀이 Core 번장 앱으로 직접 취소</li>
+          <li>구매자는 GB 앱에서 직접 취소 불가 — Proxy 문의 창구 통해 요청 → 운영팀이 Core 번장 앱으로 직접 취소</li>
           <li>취소 가능 조건: 판매자 승인(구매확정) 이전까지</li>
+          <li>Proxy는 취소 상태 업데이트 시 <code>cancel_reason: GBCancelCode</code> 필드 포함 (API 계약) — GB는 이 코드로 구매자에게 표시할 취소 사유 메시지를 결정</li>
           <li>포트원 환불 트리거: Core 번장 취소 완료 웹훅 → DK가 글로벌번장에 상태 업데이트 → 글로벌번장이 포트원 환불 요청</li>
-          <li>유저 알림 채널: 이메일</li>
+          <li>유저 알림 채널: 이메일 (취소 사유 메시지 포함)</li>
         </ul>
       </div>
     </div>
@@ -3697,41 +3925,74 @@ function removeCoupon(itemId) {
   recalcTotal();
 }
 
+function clearAppliedCoupons() {
+  Object.keys(_appliedCoupons).forEach(itemId => {
+    const area = document.getElementById('coupon-area-' + itemId);
+    if (area) {
+      area.querySelector('.item-coupon-applied').style.display = 'none';
+      area.querySelector('.item-coupon-select').style.display = 'inline-block';
+    }
+    delete _appliedCoupons[itemId];
+  });
+}
+
+function setUiText(target, text) {
+  const el = typeof target === 'string' ? document.getElementById(target) : target;
+  if (!el) return;
+  el.dataset.uiText = text;
+  if (!document.body.classList.contains('spec-mode') || !el.hasAttribute('data-spec')) el.textContent = text;
+}
+
+function getUiText(id) {
+  const el = document.getElementById(id);
+  return el ? (el.dataset.uiText || el.textContent || '') : '';
+}
+
 // ─── Info Tooltips ───────────────────────────────
 const TOOLTIP_TEXT = {
   'handling-fee':  'A service fee charged by your Proxy Partner for purchasing, inspecting, and preparing your items at the Korean warehouse.',
   'intl-shipping': 'The cost to ship your package from Korea to your destination. Calculated based on weight and dimensions after items arrive at the warehouse.',
   'tax-duties':    'Import taxes and customs duties imposed by your country. These are the recipient\'s responsibility and are not included in the order total.',
   'total':         'This total covers the item price and shipping to your Proxy Partner only. International shipping, handling fees, and customs duties are billed separately by your Proxy Partner.',
-  'payment-promo': '5% off applied to your subtotal and domestic shipping combined (after coupon deduction). Not available for PayPal.',
-  'pdp-promo':     '5% off is available with select payment methods (Credit/Debit Card, Alipay+, WeChat Pay). Not applicable to PayPal.'
+  'payment-promo': '7% off applied to your subtotal and domestic shipping combined (after coupon deduction). Not available for PayPal.',
+  'pdp-promo':     'Pay with Card, Alipay+, or WeChat Pay and get 7% off — compared to PayPal pricing. This discount is automatically applied at checkout when you select a qualifying payment method.'
 };
 let _tooltipEl = null;
+let _tooltipRemoveFn = null;
 
 function showTooltip(e, key) {
   e.stopPropagation();
   removeTooltip();
   const tip = document.createElement('div');
   tip.className = 'info-tooltip';
-  tip.textContent = TOOLTIP_TEXT[key];
+  tip.textContent = TOOLTIP_TEXT[key] || '';
+  // Position offscreen first to get rendered height, then place correctly
+  tip.style.cssText = 'left:-9999px;top:-9999px;';
   document.body.appendChild(tip);
   const rect = e.target.getBoundingClientRect();
-  tip.style.left = Math.min(rect.left, window.innerWidth - 470) + 'px';
-  tip.style.top = (rect.top - tip.offsetHeight - 12) + 'px';
+  const tipH = tip.offsetHeight || 60;
+  const tipW = 240;
+  const leftPos = Math.max(8, Math.min(rect.left, window.innerWidth - tipW - 20));
+  // Show above if there is enough room, otherwise show below
+  const topPos = (rect.top - tipH - 12 > 60) ? (rect.top - tipH - 12) : (rect.bottom + 8);
+  tip.style.left = leftPos + 'px';
+  tip.style.top  = topPos  + 'px';
   _tooltipEl = tip;
-  setTimeout(() => document.addEventListener('click', removeTooltip, { once: true }), 0);
+  _tooltipRemoveFn = () => removeTooltip();
+  setTimeout(() => document.addEventListener('click', _tooltipRemoveFn, { once: true }), 0);
 }
 
 function removeTooltip() {
   if (_tooltipEl) { _tooltipEl.remove(); _tooltipEl = null; }
+  if (_tooltipRemoveFn) { document.removeEventListener('click', _tooltipRemoveFn); _tooltipRemoveFn = null; }
 }
 
 function recalcTotal() {
   const totalDiscount = Object.values(_appliedCoupons).reduce((sum, id) => sum + (couponData[id]?.numAmount || 0), 0);
   const couponRow = document.getElementById('checkout-coupon-row');
   if (totalDiscount > 0) {
-    document.getElementById('checkout-coupon-label').textContent = `Coupon`;
-    document.getElementById('checkout-coupon-amount').textContent = `- USD ${totalDiscount.toFixed(2)}`;
+    setUiText('checkout-coupon-label', 'Coupon');
+    setUiText('checkout-coupon-amount', `- USD ${totalDiscount.toFixed(2)}`);
     couponRow.style.display = 'flex';
   } else {
     couponRow.style.display = 'none';
@@ -3744,17 +4005,45 @@ function recalcTotal() {
   const promo = showPromo ? grossSubtotal * PROMO_RATE : 0;
   const total = grossSubtotal + shipping - totalDiscount - promo;
 
-  document.getElementById('checkout-subtotal-amount').textContent = `USD ${grossSubtotal.toFixed(2)}`;
+  setUiText('checkout-subtotal-amount', `USD ${grossSubtotal.toFixed(2)}`);
+  const shippingRow = document.getElementById('checkout-shipping-row');
+  if (shippingRow) shippingRow.style.display = additional ? 'none' : 'flex';
+  setUiText('checkout-shipping-to-proxy-amount', `USD ${shipping.toFixed(2)}`);
   const promoRow = document.getElementById('checkout-promo-row');
   if (promoRow) {
     promoRow.style.display = showPromo ? 'flex' : 'none';
-    document.getElementById('checkout-promo-amount').textContent = `- USD ${promo.toFixed(2)}`;
+    setUiText('checkout-promo-amount', `- USD ${promo.toFixed(2)}`);
   }
   const totalStr = `USD ${total.toFixed(2)}`;
-  document.getElementById('checkout-total-amount').textContent = totalStr;
+  setUiText('checkout-total-amount', totalStr);
   const btn = document.getElementById('checkout-place-order-btn');
   if (btn && _currentPaymentMethod !== 'apple' && _currentPaymentMethod !== 'google') {
-    btn.textContent = `${totalStr} — Place Order`;
+    setUiText(btn, `${totalStr} — Place Order`);
+  }
+  syncQuickPayAmounts();
+}
+
+function syncQuickPayAmounts() {
+  setUiText('quickpay-subtotal-amount', getUiText('checkout-subtotal-amount'));
+  setUiText('quickpay-shipping-amount', getUiText('checkout-shipping-to-proxy-amount'));
+  setUiText('quickpay-total-amount', getUiText('checkout-total-amount'));
+  const shippingVisible = document.getElementById('checkout-shipping-row')?.style.display !== 'none';
+  const quickShipping = document.getElementById('quickpay-shipping-row');
+  if (quickShipping) quickShipping.style.display = shippingVisible ? 'flex' : 'none';
+  const couponVisible = document.getElementById('checkout-coupon-row')?.style.display !== 'none';
+  const quickCoupon = document.getElementById('quickpay-coupon-row');
+  if (quickCoupon) quickCoupon.style.display = couponVisible ? 'flex' : 'none';
+  if (couponVisible) {
+    setUiText('quickpay-coupon-label', 'Coupon Discount');
+    setUiText('quickpay-coupon-amount', getUiText('checkout-coupon-amount'));
+  }
+  const promoVisible = document.getElementById('checkout-promo-row')?.style.display !== 'none';
+  const quickPromo = document.getElementById('quickpay-promo-row');
+  if (quickPromo) quickPromo.style.display = promoVisible ? 'flex' : 'none';
+  if (promoVisible) setUiText('quickpay-promo-amount', getUiText('checkout-promo-amount'));
+  const payBtn = document.getElementById('quickpay-pay-btn');
+  if (payBtn && !payBtn.disabled) {
+    setUiText(payBtn, `[Demo] Pay ${getUiText('checkout-total-amount')}`);
   }
 }
 
@@ -3873,13 +4162,13 @@ function confirmPartialSoldout() {
 
   // Update Order Summary count
   const title = document.getElementById('order-summary-title');
-  if (title) title.textContent = 'Order Summary (1)';
+  if (title) setUiText(title, 'Order Summary (1)');
 
   // Update Subtotal (item2 only) and Shipping to Proxy Partner (one item's worth)
   const sub = document.getElementById('checkout-subtotal-amount');
-  if (sub) sub.textContent = 'USD 34.62';
+  if (sub) setUiText(sub, 'USD 34.62');
   const ks = document.getElementById('checkout-shipping-to-proxy-amount');
-  if (ks) ks.textContent = 'USD 2.50';
+  if (ks) setUiText(ks, 'USD 2.50');
 
   // Update base total so recalcTotal/onPaymentMethodChange reflect the new subtotal
   BASE_TOTAL = 34.62 + 2.50;
@@ -3917,9 +4206,11 @@ function setProxyMode(mode) {
   document.getElementById('sb-proxy-multi').classList.toggle('active', mode === 'multi');
   document.getElementById('sb-proxy-single').classList.toggle('active', mode === 'single');
   if (mode === 'single') _selectedProxy = 'dk';
+  _dkConnected = _proxyConnected[_selectedProxy];
   renderProxySection();
   applyProxyModeToShippingCalc();
   updateShippingAddress();
+  updateLinkedAccountsScreen();
 }
 
 function applyProxyModeToShippingCalc() {
@@ -4033,6 +4324,7 @@ function selectProxy(id) {
   renderProxySection();
   updateProxyToggleBtn();
   updateShippingAddress();
+  updateLinkedAccountsScreen();
 }
 
 function updateShippingAddress() {
@@ -4055,12 +4347,14 @@ function toggleDKConnection() {
   _dkConnected = _proxyConnected[_selectedProxy];
   renderProxySection();
   updateProxyToggleBtn();
+  updateLinkedAccountsScreen();
 }
 
 function updateDKConnectionUI() {
   _dkConnected = _proxyConnected[_selectedProxy];
   renderProxySection();
   updateProxyToggleBtn();
+  updateLinkedAccountsScreen();
 }
 
 function updateProxyToggleBtn() {
@@ -4105,41 +4399,60 @@ let _dimUnit = 'cm';
 
 function setWeightUnit(unit) {
   _weightUnit = unit;
-  document.getElementById('unit-weight-kg').style.background = unit === 'kg' ? '#222' : '#fff';
-  document.getElementById('unit-weight-kg').style.color = unit === 'kg' ? '#fff' : '#888';
-  document.getElementById('unit-weight-lbs').style.background = unit === 'lbs' ? '#222' : '#fff';
-  document.getElementById('unit-weight-lbs').style.color = unit === 'lbs' ? '#fff' : '#888';
+  const kg = document.getElementById('unit-weight-kg');
+  const lbs = document.getElementById('unit-weight-lbs');
+  if (!kg || !lbs) return;
+  kg.style.background = unit === 'kg' ? '#222' : '#fff';
+  kg.style.color = unit === 'kg' ? '#fff' : '#888';
+  lbs.style.background = unit === 'lbs' ? '#222' : '#fff';
+  lbs.style.color = unit === 'lbs' ? '#fff' : '#888';
 }
 
 function setDimUnit(unit) {
   _dimUnit = unit;
-  document.getElementById('unit-dim-cm').style.background = unit === 'cm' ? '#222' : '#fff';
-  document.getElementById('unit-dim-cm').style.color = unit === 'cm' ? '#fff' : '#888';
-  document.getElementById('unit-dim-in').style.background = unit === 'in' ? '#222' : '#fff';
-  document.getElementById('unit-dim-in').style.color = unit === 'in' ? '#fff' : '#888';
+  const cm = document.getElementById('unit-dim-cm');
+  const inch = document.getElementById('unit-dim-in');
+  if (!cm || !inch) return;
+  cm.style.background = unit === 'cm' ? '#222' : '#fff';
+  cm.style.color = unit === 'cm' ? '#fff' : '#888';
+  inch.style.background = unit === 'in' ? '#222' : '#fff';
+  inch.style.color = unit === 'in' ? '#fff' : '#888';
 }
 
 let _calcSelectedProxy = null;
 
 function openShippingCalc() {
-  ['calc-weight','calc-width','calc-length','calc-height'].forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('calc-country').value = '';
-  document.getElementById('calc-compare-result').style.display = 'none';
+  const sheet = document.getElementById('shipping-calc-sheet');
+  if (!sheet) return;
+  const country = document.getElementById('calc-country');
+  if (!country) {
+    sheet.classList.remove('hidden');
+    return;
+  }
+  ['calc-weight','calc-width','calc-length','calc-height'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  country.value = '';
+  const result = document.getElementById('calc-compare-result');
+  if (result) result.style.display = 'none';
   _calcSelectedProxy = null;
-  document.getElementById('calc-cta-btn').textContent = 'Calculate';
+  setUiText('calc-cta-btn', 'Calculate');
   setWeightUnit('lbs');
   setDimUnit('in');
-  document.getElementById('shipping-calc-sheet').classList.remove('hidden');
+  sheet.classList.remove('hidden');
 }
 
 function selectCalcProxy(id) {
   _calcSelectedProxy = id;
   const proxyNames = { paysable: 'Paysable', kfriday: 'Kfriday' };
   // Update card borders
-  document.getElementById('calc-paysable-card').style.border = id === 'paysable' ? '2px solid #1565c0' : '1.5px solid #eee';
-  document.getElementById('calc-kfriday-card').style.border = id === 'kfriday' ? '2px solid #6a1b9a' : '1.5px solid #eee';
+  const pCard = document.getElementById('calc-paysable-card');
+  const kCard = document.getElementById('calc-kfriday-card');
+  if (pCard) pCard.style.border = id === 'paysable' ? '2px solid #1565c0' : '1.5px solid #eee';
+  if (kCard) kCard.style.border = id === 'kfriday' ? '2px solid #6a1b9a' : '1.5px solid #eee';
   // Update CTA
-  document.getElementById('calc-cta-btn').textContent = `Select ${proxyNames[id]}`;
+  setUiText('calc-cta-btn', `Select ${proxyNames[id]}`);
 }
 
 function calcCtaAction() {
@@ -4152,7 +4465,8 @@ function calcCtaAction() {
 }
 
 function closeShippingCalc() {
-  document.getElementById('shipping-calc-sheet').classList.add('hidden');
+  const sheet = document.getElementById('shipping-calc-sheet');
+  if (sheet) sheet.classList.add('hidden');
 }
 
 function calcFee(cfg, country, weight, w, l, h) {
@@ -4168,11 +4482,13 @@ function calcFee(cfg, country, weight, w, l, h) {
 }
 
 function runShippingCalc() {
-  const country = document.getElementById('calc-country').value;
-  const rawWeight = parseFloat(document.getElementById('calc-weight').value) || 0;
-  const rawW = parseFloat(document.getElementById('calc-width').value) || 0;
-  const rawL = parseFloat(document.getElementById('calc-length').value) || 0;
-  const rawH = parseFloat(document.getElementById('calc-height').value) || 0;
+  const countryEl = document.getElementById('calc-country');
+  if (!countryEl) { openShippingCalc(); return; }
+  const country = countryEl.value;
+  const rawWeight = parseFloat(document.getElementById('calc-weight')?.value) || 0;
+  const rawW = parseFloat(document.getElementById('calc-width')?.value) || 0;
+  const rawL = parseFloat(document.getElementById('calc-length')?.value) || 0;
+  const rawH = parseFloat(document.getElementById('calc-height')?.value) || 0;
 
   if (!country) { showGlobalToast('Please select a destination country.'); return; }
   if (rawWeight <= 0 && (rawW <= 0 || rawL <= 0 || rawH <= 0)) { showGlobalToast('Please enter weight or dimensions.'); return; }
@@ -4188,12 +4504,14 @@ function runShippingCalc() {
 
   // Reset selection state on new calculation
   _calcSelectedProxy = null;
-  document.getElementById('calc-cta-btn').textContent = 'Calculate';
+  setUiText('calc-cta-btn', 'Calculate');
 
   // Highlight cheaper option (subtle, not selection state)
   const pCheaper = parseFloat(p.fee) <= parseFloat(k.fee);
-  document.getElementById('calc-paysable-card').style.border = pCheaper ? '1.5px solid #1565c0' : '1.5px solid #eee';
-  document.getElementById('calc-kfriday-card').style.border = !pCheaper ? '1.5px solid #6a1b9a' : '1.5px solid #eee';
+  const pCard = document.getElementById('calc-paysable-card');
+  const kCard = document.getElementById('calc-kfriday-card');
+  if (pCard) pCard.style.border = pCheaper ? '1.5px solid #1565c0' : '1.5px solid #eee';
+  if (kCard) kCard.style.border = !pCheaper ? '1.5px solid #6a1b9a' : '1.5px solid #eee';
 
   // Use _setUiText so spec mode keeps showing placeholders after recalculation.
   _setUiText('calc-paysable-price', `USD ${p.fee}`);
@@ -4201,7 +4519,8 @@ function runShippingCalc() {
   _setUiText('calc-kfriday-price', `USD ${k.fee}`);
   _setUiText('calc-kfriday-detail', k.detail);
 
-  document.getElementById('calc-compare-result').style.display = 'block';
+  const result = document.getElementById('calc-compare-result');
+  if (result) result.style.display = 'block';
 }
 
 // Set the UI-mode text on a [data-spec] element while preserving spec-mode display.
@@ -4215,13 +4534,14 @@ function _setUiText(id, text) {
 // ─── PayPal Fee Info Toggle ───────────────────────
 function togglePaypalFeeInfo() {
   const el = document.getElementById('paypal-fee-info');
+  if (!el) return;
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // ─── Payment Method & Promo ─────────────────
 const INITIAL_BASE_TOTAL = 43.70; // net subtotal (38.70) + shipping (5.00), before coupon
 const INITIAL_SUBTOTAL_NET = 38.70; // net subtotal (post-promotion); gross = net / 0.95
-const PROMO_RATE = 0.05;
+const PROMO_RATE = 0.07;
 let BASE_TOTAL = INITIAL_BASE_TOTAL;
 let _currentSubtotalNet = INITIAL_SUBTOTAL_NET;
 let _currentPaymentMethod = 'card';
@@ -4242,16 +4562,16 @@ function onPaymentMethodChange(method) {
 
   recalcTotal();
 
-  const totalStr = document.getElementById('checkout-total-amount').textContent;
+  const totalStr = getUiText('checkout-total-amount');
   const btn = document.getElementById('checkout-place-order-btn');
   if (method === 'apple') {
-    btn.textContent = `Apple Pay — ${totalStr}`;
+    setUiText(btn, `Apple Pay — ${totalStr}`);
     btn.onclick = () => selectQuickPay('apple');
   } else if (method === 'google') {
-    btn.textContent = `G Pay — ${totalStr}`;
+    setUiText(btn, `G Pay — ${totalStr}`);
     btn.onclick = () => selectQuickPay('google');
   } else {
-    btn.textContent = `${totalStr} — Place Order`;
+    setUiText(btn, `${totalStr} — Place Order`);
     btn.onclick = goToSSORedirect;
   }
 }
@@ -4278,27 +4598,33 @@ function selectQuickPay(type) {
   if (!_dkConnected) { goToSSORedirect(); return; }
   window._quickPayMethod = type;
   const isApple = type === 'apple';
-  document.getElementById('quickpay-header-title').textContent = isApple ? 'Apple Pay' : 'Google Pay';
-  document.getElementById('quickpay-method-label').textContent = isApple ? 'Apple Pay' : 'Google Pay';
+  setUiText('quickpay-header-title', isApple ? 'Apple Pay' : 'Google Pay');
+  setUiText('quickpay-method-label', isApple ? 'Apple Pay' : 'Google Pay');
   document.getElementById('quickpay-band').style.background = isApple ? '#000' : '#4285f4';
-  document.getElementById('quickpay-auth-icon').textContent = isApple ? '' : '🔐';
-  document.getElementById('quickpay-auth-hint').textContent = isApple ? 'Double-click side button to pay' : 'Authenticate with Google Pay';
-  document.getElementById('quickpay-pay-btn').style.background = isApple ? '#000' : '#4285f4';
+  setUiText('quickpay-auth-icon', isApple ? '' : '🔐');
+  setUiText('quickpay-auth-hint', isApple ? 'Double-click side button to pay' : 'Authenticate with Google Pay');
+  const payBtn = document.getElementById('quickpay-pay-btn');
+  payBtn.disabled = false;
+  payBtn.style.cursor = 'pointer';
+  payBtn.style.background = isApple ? '#000' : '#4285f4';
+  syncQuickPayAmounts();
   showScreen('pg-quickpay');
 }
 
 function simulateQuickPay() {
   const btn = document.getElementById('quickpay-pay-btn');
-  btn.textContent = 'Processing…';
+  setUiText(btn, 'Processing...');
   btn.disabled = true;
+  btn.style.cursor = 'not-allowed';
   setTimeout(() => { showScreen('processing'); }, 1400);
 }
 
 // ─── SSO Step Navigation ─────────────────────────
 let _ssoStep = 'create';
+let _ssoReturnScreen = 'checkout';
 const SSO_STEPS = ['create', 'signup-terms', 'login', 'success'];
 // Back targets: signup-terms and login both came from create.
-const SSO_PREV = { create: null, 'signup-terms': 'create', login: 'create', success: null };
+const SSO_PREV = { create: null, login: 'create', 'signup-terms': 'login', success: null };
 
 function goToSSOStep(step) {
   _ssoStep = step;
@@ -4322,7 +4648,7 @@ function ssoBack() {
   if (prev) {
     goToSSOStep(prev);
   } else {
-    showScreen('checkout');
+    showScreen(_ssoReturnScreen || 'checkout');
   }
 }
 
@@ -4342,7 +4668,7 @@ function syncTermsBtn() {
   const btn = document.getElementById('sso-terms-btn');
   const enabled = required.every(c => c.checked);
   btn.disabled = !enabled;
-  btn.style.background = enabled ? '#191919' : '#ddd';
+  btn.style.background = enabled ? '#ff7a00' : '#ddd';
   btn.style.color = enabled ? '#fff' : '#aaa';
   btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
 }
@@ -4361,15 +4687,6 @@ function updateConsentBtn() {
     primary.style.color = checked ? '#fff' : '#aaa';
     primary.style.cursor = checked ? 'pointer' : 'not-allowed';
   }
-
-  const secondary = document.getElementById('sso-use-existing-btn');
-  if (secondary) {
-    secondary.disabled = !checked;
-    secondary.style.background = '#fff';
-    secondary.style.borderColor = checked ? '#191919' : '#ddd';
-    secondary.style.color = checked ? '#191919' : '#aaa';
-    secondary.style.cursor = checked ? 'pointer' : 'not-allowed';
-  }
 }
 
 // ─── SSO Redirect ────────────────────────────────
@@ -4380,10 +4697,18 @@ function goToSSORedirect() {
     // Show error in shipping section and scroll to it
     const errEl = document.getElementById('proxy-connect-error');
     const p = proxyData[_selectedProxy];
-    document.getElementById('proxy-connect-error-msg').textContent =
-      `Connect your ${p.name} account to use this shipping option.`;
+    if (!errEl || !p) {
+      startSSOConnect();
+      return;
+    }
+    const errMsg = document.getElementById('proxy-connect-error-msg');
+    if (errMsg) errMsg.textContent = `Connect your ${p.name} account to use this shipping option.`;
     errEl.style.display = 'flex';
     const shippingSection = errEl.closest('.section') || document.getElementById('proxy-section-container').closest('.section');
+    if (!shippingSection) {
+      startSSOConnect();
+      return;
+    }
     shippingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     shippingSection.style.outline = '2px solid #e74c3c';
     shippingSection.style.borderRadius = '8px';
@@ -4392,16 +4717,21 @@ function goToSSORedirect() {
 }
 
 function startSSOConnect() {
+  const active = document.querySelector('.screen.active');
+  const activeId = active && active.id ? active.id.replace('screen-', '') : '';
+  _ssoReturnScreen = activeId && activeId !== 'sso-redirect' ? activeId : 'checkout';
   const errEl = document.getElementById('proxy-connect-error');
   if (errEl) errEl.style.display = 'none';
   updateSSOProxyName();
 
-  // Reset consent + terms
+  // Reset consent, terms, and transient login input state.
   const cb = document.getElementById('consent-check-1');
   if (cb) cb.checked = false;
   updateConsentBtn();
-  document.querySelectorAll('#sso-step-signup-terms input[type="checkbox"]').forEach(c => c.checked = false);
+  document.querySelectorAll('#sso-step-signup-terms input[type="checkbox"]').forEach(c => { c.checked = false; });
   syncTermsBtn();
+  const loginEmail = document.getElementById('sso-login-email');
+  if (loginEmail) loginEmail.value = '';
 
   showScreen('sso-redirect');
   goToSSOStep('create');
@@ -4420,8 +4750,8 @@ function updateSSOProxyName() {
   };
   const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-  // Step 1 — Create your account
-  setUi('sso-create-sub', `We'll create a ${name} account using your Bunjang Global account`);
+  // Step 1 — Link your account
+  setUi('sso-create-sub', `We'll link your ${name} account using your Bunjang Global account`);
   setUi('sso-create-share-proxy', name);
   setUi('sso-create-proxy-label', `${name} account`);
   setStyle('sso-create-proxy-icon', 'background', p.color);
@@ -4438,9 +4768,35 @@ function updateSSOProxyName() {
   // Step 3 — Success
   setUi('sso-success-sub', `You're all set. Use your Bunjang Global account to sign in to ${name} — no separate login needed.`);
   setUi('sso-success-proxy-label', name);
+  setUi('sso-create-bunjang-email', 'hazel.k@bunjang.co.kr');
+  setUi('sso-success-bunjang-email', 'hazel.k@bunjang.co.kr');
+  setUi('sso-success-proxy-email', `${_selectedProxy === 'dk' ? 'hazel.k' : _selectedProxy}@gmail.com`);
   setStyle('sso-success-proxy-icon', 'background', p.color);
   const successIcon = document.getElementById('sso-success-proxy-icon');
   if (successIcon) successIcon.textContent = p.icon;
+}
+
+function updateLinkedAccountsScreen() {
+  const p = proxyData[_selectedProxy];
+  if (!p) return;
+  const connected = !!_proxyConnected[_selectedProxy];
+  setUiText('linked-proxy-name', p.name);
+  setUiText('linked-proxy-icon-text', p.icon);
+  const icon = document.getElementById('linked-proxy-icon');
+  if (icon) icon.style.background = p.color;
+  const status = document.getElementById('linked-proxy-status');
+  if (status) {
+    status.textContent = connected ? 'Linked' : 'Not connected';
+    status.style.color = connected ? '#2e7d32' : '#e53935';
+  }
+  const action = document.getElementById('linked-proxy-action');
+  if (action) {
+    action.style.color = connected ? '#999' : '#666';
+    action.style.cursor = connected ? 'default' : 'pointer';
+    action.onclick = connected ? (e) => e.preventDefault() : () => startSSOConnect();
+    const label = action.querySelector('[data-spec]');
+    if (label) setUiText(label, connected ? 'Linked' : 'Link');
+  }
 }
 
 function completeSSOAndProceed() {
@@ -4449,7 +4805,8 @@ function completeSSOAndProceed() {
   _dkConnected = true;
   renderProxySection();
   updateProxyToggleBtn();
-  showScreen('checkout');
+  updateLinkedAccountsScreen();
+  showScreen(_ssoReturnScreen === 'linked-accounts' ? 'linked-accounts' : 'checkout');
 }
 
 // ─── PG routing ──────────────────────────────────
@@ -4466,12 +4823,12 @@ function goToPgScreen() {
 // ─── Payment Failure error types ─────────────────
 const errorMessages = {
   'card-info': 'Please check your card details and try again.',
-  'limit': 'Your card limit or balance is insufficient.<br>Please use a different payment method.',
-  'issuer': 'Your card issuer has declined this payment.<br>Please contact your card issuer or try a different payment method.',
+  'limit': 'Your card limit or balance is insufficient. Please use a different payment method.',
+  'issuer': 'Your card issuer has declined this payment. Please contact your card issuer or try a different payment method.',
   'generic': 'A temporary error occurred. Please try again in a moment.'
 };
 function updateErrorDisplay(type) {
-  document.getElementById('error-msg').innerHTML = errorMessages[type] || errorMessages['generic'];
+  setUiText('error-msg', errorMessages[type] || errorMessages['generic']);
 }
 
 function toggleRequest(btn) {
@@ -4552,7 +4909,7 @@ function removeThumb(btn) {
 // ─── Info icon tooltip (click to open) ──────────
 function closeAllInfoTooltips() {
   document.querySelectorAll('.floating-info-tooltip').forEach(t => t.remove());
-  document.querySelectorAll('.status-info-icon.show').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.status-info-icon.show, .orders-card-v2-info-icon.show').forEach(e => e.classList.remove('show'));
 }
 function toggleInfoTooltip(event, el) {
   if (event) { event.stopPropagation(); event.preventDefault(); }
@@ -4588,6 +4945,25 @@ window.addEventListener('resize', closeAllInfoTooltips);
 
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
+  {
+    version: 'v1.17',
+    date: '2026-05-26',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      'Payment Promotion 할인율 5% → 7% 전체 상향 (PDP 배지, 주문서/결제완료/주문상세 라인, 툴팁 텍스트 모두 반영)',
+      'SSO 플로우 재설계: "Create your account" → "Link your account" 컨셉 전환 (Bunjang Global 계정을 Proxy 계정에 연결)',
+      'SSO 단계 진입 경로 정리: Step 1(Link) → Login 우선, 회원가입↔로그인 양방향 진입 링크 추가',
+      '마이페이지 "Manage Linked Accounts" 화면 신규 추가 (Account Settings 섹션, 선택 Proxy 연결 상태 표시 + 연결 진입)',
+      '마이페이지 "Promo Codes" → "Coupons" 명칭 변경 + 발급 쿠폰 수 배지',
+      '취소 사유 코드 API 계약 추가: Proxy → 글로벌번장 상태 업데이트 시 cancel_reason: GBCancelCode 동봉 (글로벌번장이 구매자 노출 메시지 결정), 이메일 알림에도 취소 사유 포함',
+      '주문 상세/주문 카드에 취소 사유 메시지 표시 ({Cancel Reason} 토큰 신설)',
+      '내 주문 카드 구조 개편: 한 주문 안에 상품별 다른 상태/타임라인을 row 단위로 표시, 4개 이상은 "View all"로 접기',
+      '내 주문 케이스 확대: 재결제 카드(취소 상품 reference 포함), 취소(line-through) 카드',
+      '주문 상태 ⓘ 툴팁 텍스트 상태별 풀어쓰기 (Awaiting Seller Confirmation / Shipping to Korea Warehouse / Arrived / Handed Off / Cancelled 등)',
+      'QuickPay (Apple/Google Pay) 결제 시트 Order Summary 구조를 Checkout과 동일하게 정렬 (Subtotal gross + Coupon + Shipping + Payment Promotion → Total)',
+      'PDP Payment Promotion 배지 ⓘ 툴팁 텍스트 풀어쓰기',
+    ]
+  },
   {
     version: 'v1.16',
     date: '2026-05-18',
@@ -4788,7 +5164,7 @@ const _CHECKOUT_DEFAULTS = {
   item1Price: 'USD 4.08',
   title: 'Order Summary (2)',
   subtotal: 'USD 38.70',
-  total: 'USD 36.70',
+  total: 'USD 43.70',
 };
 
 function _resetCheckoutToDefaults() {
@@ -4797,11 +5173,9 @@ function _resetCheckoutToDefaults() {
   if (card1) {
     card1.style.display = '';
     const name1 = card1.querySelector('.order-item-name');
-    name1.textContent = _CHECKOUT_DEFAULTS.item1Name;
-    name1.dataset.uiText = _CHECKOUT_DEFAULTS.item1Name;
+    setUiText(name1, _CHECKOUT_DEFAULTS.item1Name);
     const price1 = card1.querySelector('.order-item-price');
-    price1.textContent = _CHECKOUT_DEFAULTS.item1Price;
-    price1.dataset.uiText = _CHECKOUT_DEFAULTS.item1Price;
+    setUiText(price1, _CHECKOUT_DEFAULTS.item1Price);
     card1.querySelector('.item-coupon-area').style.display = '';
     card1.querySelector('.order-item-shipping').style.display = '';
     card1.querySelector('.add-request-area').style.display = '';
@@ -4810,9 +5184,9 @@ function _resetCheckoutToDefaults() {
   if (cards[1]) cards[1].style.display = '';
   const title = document.getElementById('order-summary-title');
   if (title) {
-    title.textContent = _CHECKOUT_DEFAULTS.title;
-    title.dataset.uiText = _CHECKOUT_DEFAULTS.title;
+    setUiText(title, _CHECKOUT_DEFAULTS.title);
   }
+  setUiText('checkout-shipping-to-proxy-amount', 'USD 5.00');
   if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = INITIAL_BASE_TOTAL;
   _currentSubtotalNet = INITIAL_SUBTOTAL_NET;
   _checkoutInAdditionalMode = false;
@@ -4821,33 +5195,40 @@ function _resetCheckoutToDefaults() {
 
 function enterAdditionalPaymentCheckout() {
   showScreen('checkout');
+  const item = _addlPayItems[_addlPayIdx] || _addlPayItems[0];
+  clearAppliedCoupons();
   const card1 = document.getElementById('order-card-item1');
   if (card1) {
     const cards = document.querySelectorAll('#screen-checkout .order-item-card');
     if (cards[1]) cards[1].style.display = 'none';
     const name1 = card1.querySelector('.order-item-name');
-    name1.textContent = 'Delivered Korea Payment Product';
-    name1.dataset.uiText = 'Delivered Korea Payment Product';
+    setUiText(name1, item.name);
     const price1 = card1.querySelector('.order-item-price');
-    price1.textContent = 'USD 50.45';
-    price1.dataset.uiText = 'USD 50.45';
+    setUiText(price1, item.amount);
     card1.querySelector('.item-coupon-area').style.display = 'none';
     card1.querySelector('.order-item-shipping').style.display = 'none';
     card1.querySelector('.add-request-area').style.display = 'none';
   }
   const title = document.getElementById('order-summary-title');
   if (title) {
-    title.textContent = 'Order Summary (1)';
-    title.dataset.uiText = 'Order Summary (1)';
+    setUiText(title, 'Order Summary (1)');
   }
-  if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = 50.45;
-  _currentSubtotalNet = 50.45;
+  const amount = parseFloat(item.amount.replace(/[^0-9.]/g, '')) || 0;
+  if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = amount;
+  _currentSubtotalNet = amount;
   _checkoutInAdditionalMode = true;
   recalcTotal();
 }
 
 let _screenHistory = [];
 let _goingBack = false;
+
+function updateActiveNav(id) {
+  document.querySelectorAll('.proto-nav-btn').forEach(btn => {
+    const target = btn.getAttribute('onclick') || '';
+    btn.classList.toggle('active', target.includes(`showScreen('${id}')`));
+  });
+}
 
 function showScreen(id, updateNav = true) {
   const phoneFrame = document.querySelector('.phone-frame');
@@ -4880,10 +5261,15 @@ function showScreen(id, updateNav = true) {
     flowPage.style.display = 'none';
     diagPage.style.display = 'none';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + id).classList.add('active');
+    const nextScreen = document.getElementById('screen-' + id);
+    if (!nextScreen) return;
+    nextScreen.classList.add('active');
     if (id === 'pdp') { _screenHistory = []; }
     if (id === 'checkout') {
       _resetCheckoutToDefaults();
+    }
+    if (id === 'linked-accounts') {
+      updateLinkedAccountsScreen();
     }
     if (id === 'sso-redirect') {
       const anyVisible = SSO_STEPS.some(s => {
@@ -4895,14 +5281,14 @@ function showScreen(id, updateNav = true) {
   }
 
   if (updateNav) {
-    document.querySelectorAll('.proto-nav-btn').forEach(b => b.classList.remove('active'));
-    if (event && event.target && event.target.classList.contains('proto-nav-btn')) event.target.classList.add('active');
+    updateActiveNav(id);
   }
   // Update sidebar panel
-  const sidebarMap = { 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram', 'order-summary': 'order-summary', 'order-detail': 'order-detail', 'my-orders': 'my-orders', 'my-page': 'my-page' };
+  const sidebarMap = { 'pdp': 'pdp', 'cart': 'cart', 'checkout': 'checkout', 'payment-fail': 'payment-fail', 'flow': 'flow', 'diagram': 'diagram', 'order-summary': 'order-summary', 'order-detail': 'order-detail', 'my-orders': 'my-orders', 'my-page': 'my-page' };
   const panelId = sidebarMap[id] || 'default';
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('sidebar-' + panelId).classList.add('active');
+  const panel = document.getElementById('sidebar-' + panelId) || document.getElementById('sidebar-default');
+  if (panel) panel.classList.add('active');
   window.scrollTo(0, 0);
 }
 
@@ -4943,6 +5329,7 @@ function setSidebarAgent(connected) {
   _dkConnected = connected;
   renderProxySection();
   updateProxyToggleBtn();
+  updateLinkedAccountsScreen();
   document.getElementById('sb-agent-connected').classList.toggle('active', connected);
   document.getElementById('sb-agent-disconnected').classList.toggle('active', !connected);
 }
@@ -4965,6 +5352,8 @@ function setSidebarError(val) {
 renderProxySection();
 applyProxyModeToShippingCalc();
 updateShippingAddress();
+updateLinkedAccountsScreen();
+recalcTotal();
 
 function adjustFrameTop() {
   const nav = document.querySelector('.proto-nav');
@@ -5080,7 +5469,7 @@ function setOrderSummaryPayMethod(method) {
   const methodLabel = method === 'card' ? 'Credit Card (****1234)' : method === 'paypal' ? 'PayPal' : 'Alipay+ (TrueMoney)';
   methodIds.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = methodLabel;
+    if (el) setUiText(el, methodLabel);
   });
   ['sb-os-card', 'sb-os-paypal', 'sb-os-alipay'].forEach(id => {
     const b = document.getElementById(id);
@@ -5094,12 +5483,14 @@ function setOrderDetailCase(cas) {
   const payStatus = document.getElementById('od-pay-status');
   const cancelRefund = document.getElementById('od-cancel-refund');
   if (promoRow) promoRow.style.display = (cas === 'card') ? 'flex' : 'none';
-  if (payMethod) payMethod.textContent = cas === 'paypal' ? 'PayPal' : 'Credit Card (****1234)';
+  if (payMethod) setUiText(payMethod, cas === 'paypal' ? 'PayPal' : 'Credit Card (****1234)');
   if (payStatus) {
-    payStatus.textContent = cas === 'cancel' ? 'Refunded' : 'Captured';
+    setUiText(payStatus, cas === 'cancel' ? 'Refunded' : 'Captured');
     payStatus.style.color = cas === 'cancel' ? '#e74c3c' : '#4caf50';
   }
   if (cancelRefund) cancelRefund.style.display = cas === 'cancel' ? 'block' : 'none';
+  const cancelReason = document.getElementById('od-cancel-reason');
+  if (cancelReason && cas === 'cancel') setUiText(cancelReason, 'The seller has canceled this order. A full refund will be processed.');
   ['sb-od-card', 'sb-od-paypal', 'sb-od-cancel'].forEach(id => {
     const b = document.getElementById(id);
     if (b) b.classList.toggle('active', id === 'sb-od-' + cas);
@@ -5110,33 +5501,38 @@ const _addlPayItems = [
   {
     amount: 'USD 50.45', name: 'Delivered Korea Payment Product',
     cancelAmount: 'USD 34', cancelName: 'Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...',
-    cancelReq: 'Buyer Request: Flower poca Please', cancelMsg: 'Shipping Agency MSG: Seller said 10$ needed'
+    cancelReq: 'Buyer Request: Flower poca Please', cancelMsg: 'Shipping Agency MSG: Seller said 10$ needed',
+    cancelReason: 'ITEM_SOLD_OUT — This item is no longer available. A full refund will be processed.'
   },
   {
     amount: 'USD 12.30', name: 'NCT Wish Photocard Set',
     cancelAmount: 'USD 10', cancelName: 'NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee',
-    cancelReq: 'Buyer Request: Riku version please', cancelMsg: 'Shipping Agency MSG: Seller changed price'
+    cancelReq: 'Buyer Request: Riku version please', cancelMsg: 'Shipping Agency MSG: Seller changed price',
+    cancelReason: 'PRICE_DISCREPANCY — There was a price discrepancy with this item. A full refund will be processed.'
   },
   {
     amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt',
     cancelAmount: 'USD 7', cancelName: 'BTS Map of the Soul T-shirt (White / M)',
-    cancelReq: 'Buyer Request: Size M please', cancelMsg: 'Shipping Agency MSG: Out of stock, similar item available'
+    cancelReq: 'Buyer Request: Size M please', cancelMsg: 'Shipping Agency MSG: Out of stock, similar item available',
+    cancelReason: 'SELLER_CANCELED_ETC — Your order has been canceled. A full refund will be processed. If you need more details, please contact your Proxy Partner.'
   }
 ];
 let _addlPayIdx = 0;
 function moveAddlPay(dir) {
   _addlPayIdx = Math.max(0, Math.min(_addlPayItems.length - 1, _addlPayIdx + dir));
   const item = _addlPayItems[_addlPayIdx];
-  document.getElementById('addl-pay-amount').textContent = item.amount;
-  document.getElementById('addl-pay-name').textContent = item.name;
-  document.getElementById('addl-pay-btn-label').textContent = 'Pay Now ' + item.amount;
-  document.getElementById('addl-pay-counter').textContent = (_addlPayIdx + 1) + ' / ' + _addlPayItems.length;
+  setUiText('addl-pay-amount', item.amount);
+  setUiText('addl-pay-name', item.name);
+  setUiText('addl-pay-btn-label', 'Pay Now ' + item.amount);
+  setUiText('addl-pay-counter', (_addlPayIdx + 1) + ' / ' + _addlPayItems.length);
   document.getElementById('addl-pay-prev').disabled = (_addlPayIdx === 0);
   document.getElementById('addl-pay-next').disabled = (_addlPayIdx === _addlPayItems.length - 1);
-  document.getElementById('cancel-amount').textContent = item.cancelAmount;
-  document.getElementById('cancel-title').textContent = item.cancelName;
-  document.getElementById('cancel-req').textContent = item.cancelReq;
-  document.getElementById('cancel-msg').textContent = item.cancelMsg;
+  setUiText('cancel-amount', item.cancelAmount);
+  setUiText('cancel-title', item.cancelName);
+  setUiText('cancel-req', item.cancelReq);
+  setUiText('cancel-msg', item.cancelMsg);
+  setUiText('cancel-reason', item.cancelReason);
+
 }
 </script>
 </body>
