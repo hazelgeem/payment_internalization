@@ -36,9 +36,8 @@
 
   /* Section */
   .section { background: #fff; margin-bottom: 8px; }
-  .section-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .section-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; }
   .section-title { font-size: 15px; font-weight: 700; }
-  .section-toggle { font-size: 18px; color: #999; transition: transform 0.2s; }
   .section-body { padding: 0 16px 16px; }
 
   /* Cart items */
@@ -855,7 +854,7 @@
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="startSSOConnect()">프록시 SSO 연동</button>
   <div class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.18</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.19</button>
     <span>Updated 2026-05-26</span>
   </div>
 </div>
@@ -1400,7 +1399,7 @@
       <div class="coupon-sheet-header">
         <div>
           <div class="coupon-sheet-title">Shipping Fee Estimator</div>
-          <div id="calc-subtitle" style="font-size:12px;color:#999;margin-top:2px;">Compare Paysable &amp; Kfriday rates at once</div>
+          <div id="calc-subtitle" style="font-size:12px;color:#999;margin-top:2px;">Compare Proxy Partner rates at once</div>
         </div>
         <button class="coupon-sheet-close" onclick="closeShippingCalc()">×</button>
       </div>
@@ -1434,7 +1433,7 @@
             <div style="font-size:13px;font-weight:700;color:#e65100;margin-bottom:2px;" data-spec="{Proxy Partner Name}">Delivered Korea</div>
             <div style="font-size:11px;color:#999;">Check shipping rates on DK's website</div>
           </div>
-          <span style="font-size:11px;color:#bbb;white-space:nowrap;">Not available</span>
+          <a href="#" onclick="event.preventDefault()" style="font-size:12px;font-weight:600;color:#e65100;background:#fce8e1;border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;" data-spec="Go to {Proxy Partner Name} ↗">Go to Delivered Korea ↗</a>
         </div>
 
         <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.6;text-align:center;">Service policies (returns, consolidation, fees) vary by Proxy Partner.</div>
@@ -1670,9 +1669,8 @@
 
     <!-- Order Summary -->
     <div class="section">
-      <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header">
         <span class="section-title" id="order-summary-title" data-spec="Order Summary ({Item Count})">Order Summary (2)</span>
-        <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div class="order-item-card" id="order-card-item1">
@@ -1711,8 +1709,8 @@
             <div class="request-panel" style="display:none;">
               <div style="font-size:12px;color:#888;margin-bottom:6px;">Message to Seller</div>
               <textarea class="request-textarea" placeholder="e.g. Could you provide additional photos?"></textarea>
-              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images</div>
-              <div class="request-upload" data-max="5">
+              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images <span class="upload-count" data-spec="({Image Count}/{Max})">(0/3)</span></div>
+              <div class="request-upload" data-max="3">
                 <div class="upload-box upload-add-btn" onclick="triggerImageUpload(this)">
                   <span class="upload-icon" style="font-size:20px;color:#bbb;">+</span>
                   <input type="file" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
@@ -1759,8 +1757,8 @@
             <div class="request-panel" style="display:none;">
               <div style="font-size:12px;color:#888;margin-bottom:6px;">Message to Seller</div>
               <textarea class="request-textarea" placeholder="e.g. Could you provide additional photos?"></textarea>
-              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images</div>
-              <div class="request-upload" data-max="5">
+              <div style="font-size:12px;color:#888;margin:10px 0 6px;">Additional Images <span class="upload-count" data-spec="({Image Count}/{Max})">(0/3)</span></div>
+              <div class="request-upload" data-max="3">
                 <div class="upload-box upload-add-btn" onclick="triggerImageUpload(this)">
                   <span class="upload-icon" style="font-size:20px;color:#bbb;">+</span>
                   <input type="file" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(this)">
@@ -1775,12 +1773,11 @@
 
     <!-- Shipping Method -->
     <div class="section">
-      <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header">
         <div>
           <span class="section-title">Proxy Partner</span>
           <div style="font-size:12px;color:#999;margin-top:3px;line-height:1.5;">A service that purchases items from Korean sellers on your behalf and ships them internationally. Service policies (returns, consolidation, fees) vary by Proxy Partner — check each Proxy Partner's page for details.</div>
         </div>
-        <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div id="proxy-connect-error" style="display:none;background:#fdecea;border:1.5px solid #e74c3c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;">
@@ -1795,43 +1792,10 @@
       </div>
     </div>
 
-    <!-- Shipping & Delivery -->
-    <div class="section">
-      <div class="section-header" onclick="toggleSection(this)">
-        <span class="section-title">Shipping &amp; Delivery</span>
-        <span class="section-toggle">^</span>
-      </div>
-      <div class="section-body">
-
-        <div style="border:1px solid #eee;border-radius:10px;padding:14px;">
-          <div style="font-size:13px;color:#333;line-height:1.6;margin-bottom:12px;">
-            <span data-spec="{Proxy Partner Name}" id="addr-proxy-intro" style="font-weight:700;color:#191919;">Delivered Korea</span> handles international shipping.
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;align-items:flex-start;gap:10px;">
-              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>
-              <span style="font-size:13px;color:#333;line-height:1.6;">Seller ships your item to <span data-spec="{Proxy Partner Name}" id="addr-step-1-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s Korean warehouse.</span>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:10px;">
-              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span>
-              <span style="font-size:13px;color:#333;line-height:1.6;">You enter your destination address on <span data-spec="{Proxy Partner Name}" id="addr-step-2-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span>'s site once items arrive.</span>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:10px;">
-              <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#191919;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span>
-              <span style="font-size:13px;color:#333;line-height:1.6;"><span data-spec="{Proxy Partner Name}" id="addr-step-3-proxy" style="font-weight:600;color:#191919;">Delivered Korea</span> ships internationally to you.</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
     <!-- Payment -->
     <div class="section">
-      <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header">
         <span class="section-title">Payment</span>
-        <span class="section-toggle">^</span>
       </div>
       <div class="section-body" style="padding-bottom:8px;">
 
@@ -1894,9 +1858,8 @@
 
     <!-- Price Details -->
     <div class="section">
-      <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header">
         <span class="section-title">Price Details</span>
-        <span class="section-toggle">^</span>
       </div>
       <div class="section-body">
         <div class="price-box">
@@ -4007,7 +3970,7 @@ function recalcTotal() {
 
   setUiText('checkout-subtotal-amount', `USD ${grossSubtotal.toFixed(2)}`);
   const shippingRow = document.getElementById('checkout-shipping-row');
-  if (shippingRow) shippingRow.style.display = additional ? 'none' : 'flex';
+  if (shippingRow) shippingRow.style.display = 'flex';
   setUiText('checkout-shipping-to-proxy-amount', `USD ${shipping.toFixed(2)}`);
   const promoRow = document.getElementById('checkout-promo-row');
   if (promoRow) {
@@ -4141,17 +4104,6 @@ function triggerScenario(type) {
   }, 100);
 }
 
-function toggleSection(headerEl) {
-  const section = headerEl.closest('.section');
-  if (!section) return;
-  const body = section.querySelector('.section-body');
-  const arrow = headerEl.querySelector('.section-toggle');
-  if (!body) return;
-  const willCollapse = body.style.display !== 'none';
-  body.style.display = willCollapse ? 'none' : '';
-  if (arrow) arrow.style.transform = willCollapse ? 'rotate(180deg)' : '';
-}
-
 function confirmPartialSoldout() {
   // Remove item1 from the order summary
   const card = document.getElementById('order-card-item1');
@@ -4181,13 +4133,13 @@ function confirmPartialSoldout() {
 // ─── Proxy Data & State ──────────────────────────
 const proxyData = {
   dk:       { name: 'Delivered Korea', icon: 'D', color: '#e65100', price: 23.75, rating: 4.8, reviews: 412, days: '10–15', badge: 'BEST',  calcType: 'external',
-              promo: '🎁 New members get a 10% off coupon on international shipping',
+              promo: 'New members get a 10% off coupon on international shipping',
               warehouse: { recipient: 'Delivered Korea Warehouse', line: '123 Mapo-daero, Mapo-gu, Seoul, 04144, Korea', suite: 'DK-018472' } },
   paysable: { name: 'Paysable',        icon: 'P', color: '#1565c0', price: 25.00, rating: 4.9, reviews: 588, days: '7–10',  badge: null,     calcType: 'modal',
-              promo: '🔥 Handling fee FREE this month',
+              promo: 'Handling fee FREE this month',
               warehouse: { recipient: 'Paysable Warehouse', line: '88 Gukjegeumyung-ro, Yeongdeungpo-gu, Seoul, 07327, Korea', suite: 'PSB-205914' } },
   kfriday:  { name: 'Kfriday',         icon: 'K', color: '#6a1b9a', price: 30.00, rating: 4.5, reviews: 203, days: '12–18', badge: null,     calcType: 'modal',
-              promo: '✨ Free consolidation for orders over $150',
+              promo: 'Free consolidation for orders over $150',
               warehouse: { recipient: 'Kfriday Warehouse', line: '36 Teheran-ro, Gangnam-gu, Seoul, 06234, Korea', suite: 'KF-770285' } },
 };
 const proxyOrder = ['dk', 'paysable', 'kfriday'];
@@ -4210,7 +4162,6 @@ function setProxyMode(mode) {
   _dkConnected = _proxyConnected[_selectedProxy];
   renderProxySection();
   applyProxyModeToShippingCalc();
-  updateShippingAddress();
   updateLinkedAccountsScreen();
 }
 
@@ -4239,7 +4190,7 @@ function applyProxyModeToShippingCalc() {
     if (pCard) pCard.style.display = '';
     if (kCard) kCard.style.display = '';
     if (dkCard) dkCard.style.display = 'none';
-    if (sub) sub.textContent = 'Compare Paysable & Kfriday rates at once';
+    if (sub) sub.textContent = 'Compare Proxy Partner rates at once';
     if (estProxy) {
       estProxy.textContent = 'Estimate';
       estProxy.onclick = () => openShippingCalc();
@@ -4329,23 +4280,7 @@ function selectProxy(id) {
   _dkConnected = _proxyConnected[id];
   renderProxySection();
   updateProxyToggleBtn();
-  updateShippingAddress();
   updateLinkedAccountsScreen();
-}
-
-function updateShippingAddress() {
-  const p = proxyData[_selectedProxy];
-  if (!p) return;
-  const setUi = (id, text) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.dataset.uiText !== undefined) el.dataset.uiText = text;
-    if (!document.body.classList.contains('spec-mode')) el.textContent = text;
-  };
-  setUi('addr-proxy-intro', p.name);
-  setUi('addr-step-1-proxy', p.name);
-  setUi('addr-step-2-proxy', p.name);
-  setUi('addr-step-3-proxy', p.name);
 }
 
 function toggleDKConnection() {
@@ -4876,7 +4811,7 @@ function triggerImageUpload(box) {
 
 function handleImageUpload(input) {
   const upload = input.closest('.request-upload');
-  const max = parseInt(upload.dataset.max) || 5;
+  const max = parseInt(upload.dataset.max) || 3;
   const existing = upload.querySelectorAll('.upload-thumb').length;
   const files = Array.from(input.files).slice(0, max - existing);
 
@@ -4898,6 +4833,7 @@ function handleImageUpload(input) {
       if (upload.querySelectorAll('.upload-thumb').length >= max) {
         addBtn.style.display = 'none';
       }
+      updateUploadCount(upload);
     };
     reader.readAsDataURL(file);
   });
@@ -4910,6 +4846,17 @@ function removeThumb(btn) {
   const upload = thumb.closest('.request-upload');
   thumb.remove();
   upload.querySelector('.upload-add-btn').style.display = 'flex';
+  updateUploadCount(upload);
+}
+
+function updateUploadCount(upload) {
+  const max = parseInt(upload.dataset.max) || 3;
+  const count = upload.querySelectorAll('.upload-thumb').length;
+  const label = upload.parentElement?.querySelector('.upload-count');
+  if (!label) return;
+  const text = `(${count}/${max})`;
+  if (label.dataset.uiText !== undefined) label.dataset.uiText = text;
+  if (!document.body.classList.contains('spec-mode')) label.textContent = text;
 }
 
 // ─── Info icon tooltip (click to open) ──────────
@@ -4951,6 +4898,18 @@ window.addEventListener('resize', closeAllInfoTooltips);
 
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
+  {
+    version: 'v1.19',
+    date: '2026-05-26',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      'Additional Payment 체크아웃에 Shipping to Proxy Partner 비용 노출 (item별 — Delivered Korea $5.00 / Paysable $2.50 / KFriday $2.00). 기존엔 부분 결제라 배송비가 빠져 있었음',
+      '체크아웃 "Shipping & Delivery" 섹션 제거 (Proxy Partner별 3단계 흐름 안내 블록)',
+      '체크아웃 모든 섹션 expand/collapse 토글 제거 — 항상 펼침 상태로 노출',
+      'Shipping Fee Estimator의 Delivered Korea도 다른 Proxy Partner와 동일하게 외부 사이트 이동 링크 버튼 제공',
+      'Add Request 이미지 첨부 안내: 동적 카운터 (0/3) 노출로 최대 3장 제한을 인지 가능',
+    ]
+  },
   {
     version: 'v1.18',
     date: '2026-05-26',
@@ -5221,7 +5180,6 @@ function enterAdditionalPaymentCheckout() {
   if (_lockedProxyId) {
     _selectedProxy = _lockedProxyId;
     _dkConnected = _proxyConnected[_lockedProxyId];
-    updateShippingAddress();
     updateLinkedAccountsScreen();
   }
   const card1 = document.getElementById('order-card-item1');
@@ -5241,7 +5199,9 @@ function enterAdditionalPaymentCheckout() {
     setUiText(title, 'Order Summary (1)');
   }
   const amount = parseFloat(item.amount.replace(/[^0-9.]/g, '')) || 0;
-  if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = amount;
+  const shippingAmount = parseFloat((item.shipping || 'USD 0').replace(/[^0-9.]/g, '')) || 0;
+  setUiText('checkout-shipping-to-proxy-amount', item.shipping || 'USD 0.00');
+  if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = amount + shippingAmount;
   _currentSubtotalNet = amount;
   _checkoutInAdditionalMode = true;
   renderProxySection();
@@ -5379,7 +5339,6 @@ function setSidebarError(val) {
 // Init
 renderProxySection();
 applyProxyModeToShippingCalc();
-updateShippingAddress();
 updateLinkedAccountsScreen();
 recalcTotal();
 
@@ -5527,19 +5486,19 @@ function setOrderDetailCase(cas) {
 
 const _addlPayItems = [
   {
-    amount: 'USD 50.45', name: 'Delivered Korea Payment Product', proxy: 'dk',
+    amount: 'USD 50.45', shipping: 'USD 5.00', name: 'Delivered Korea Payment Product', proxy: 'dk',
     cancelAmount: 'USD 34', cancelName: 'Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...',
     cancelReq: 'Buyer Request: Flower poca Please', cancelMsg: 'Shipping Agency MSG: Seller said 10$ needed',
     cancelReason: 'ITEM_SOLD_OUT — This item is no longer available. A full refund will be processed.'
   },
   {
-    amount: 'USD 12.30', name: 'NCT Wish Photocard Set', proxy: 'paysable',
+    amount: 'USD 12.30', shipping: 'USD 2.50', name: 'NCT Wish Photocard Set', proxy: 'paysable',
     cancelAmount: 'USD 10', cancelName: 'NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee',
     cancelReq: 'Buyer Request: Riku version please', cancelMsg: 'Shipping Agency MSG: Seller changed price',
     cancelReason: 'PRICE_DISCREPANCY — There was a price discrepancy with this item. A full refund will be processed.'
   },
   {
-    amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt', proxy: 'kfriday',
+    amount: 'USD 8.90', shipping: 'USD 2.00', name: 'BTS Map of the Soul T-shirt', proxy: 'kfriday',
     cancelAmount: 'USD 7', cancelName: 'BTS Map of the Soul T-shirt (White / M)',
     cancelReq: 'Buyer Request: Size M please', cancelMsg: 'Shipping Agency MSG: Out of stock, similar item available',
     cancelReason: 'SELLER_CANCELED_ETC — Your order has been canceled. A full refund will be processed. If you need more details, please contact your Proxy Partner.'
