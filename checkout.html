@@ -855,7 +855,7 @@
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="startSSOConnect()">프록시 SSO 연동</button>
   <div class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.17</button>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.18</button>
     <span>Updated 2026-05-26</span>
   </div>
 </div>
@@ -4196,6 +4196,7 @@ let _selectedProxy = 'dk';
 let _proxyConnected = { dk: false, paysable: false, kfriday: false };
 let _dkConnected = false;
 let _proxyMode = 'multi'; // 'multi' | 'single' (시뮬레이션용)
+let _lockedProxyId = null; // Set during Additional Payment flow — proxy fixed to the original order's partner
 
 function getActiveProxies() {
   return _proxyMode === 'single' ? ['dk'] : proxyOrder;
@@ -4253,26 +4254,34 @@ function applyProxyModeToShippingCalc() {
 function renderProxySection() {
   const container = document.getElementById('proxy-section-container');
   if (!container) return;
+  const isLocked = !!_lockedProxyId;
   const sel = _selectedProxy;
   const s = proxyData[sel];
   const connected = _proxyConnected[sel];
   const errEl = document.getElementById('proxy-connect-error');
   if (errEl && connected) errEl.style.display = 'none';
-  const badgeHTML = connected
-    ? `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:#2e7d32;background:#e8f5e9;white-space:nowrap;">Connected</span>`
-    : `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:#c62828;background:#fce4ec;white-space:nowrap;">Not Connected</span>`;
-  const calcLabel = s.calcType === 'external' ? `Check on ${s.name} →` : `Check shipping fee →`;
-  const calcOnclick = s.calcType === 'external'
-    ? `window.open('https://www.delivered.co.kr/en/calculator', '_blank')`
-    : `openShippingCalc('${sel}')`;
 
-  // All options as radio list — order fixed, selected one highlighted
-  const activeProxies = getActiveProxies();
-  const isSingleMode = _proxyMode === 'single';
+  // When locked (Additional Payment flow), force multi-card layout so the lock UX is visible.
+  const activeProxies = isLocked ? proxyOrder : getActiveProxies();
+  const isSingleMode = !isLocked && _proxyMode === 'single';
   let html = '';
+
+  if (isLocked) {
+    const lockedName = proxyData[_lockedProxyId].name;
+    html += `
+    <div style="background:#f8f8f8;border:1px solid #ececec;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:13px;">🔒</span>
+        <span style="font-size:12px;font-weight:700;color:#111;" data-spec="Locked to {Proxy Partner Name}">Locked to ${lockedName}</span>
+      </div>
+      <p style="font-size:12px;color:#666;line-height:1.45;margin:0;padding-left:21px;" data-spec="{Additional Payment Proxy Lock Notice}">Additional payments stay with your original Proxy Partner.</p>
+    </div>`;
+  }
+
   activeProxies.forEach(id => {
     const p = proxyData[id];
     const isSelected = id === sel;
+    const isDisabled = isLocked && id !== _lockedProxyId;
     const pConnected = _proxyConnected[id];
     const connDot = pConnected
       ? `<span style="color:#2e7d32;font-size:11px;">● Connected</span>`
@@ -4283,18 +4292,14 @@ function renderProxySection() {
       ? ''
       : `<div style="width:18px;height:18px;border-radius:50%;border:2px solid ${isSelected ? '#222' : '#ccc'};background:${isSelected ? '#222' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${isSelected ? '<div style="width:7px;height:7px;background:#fff;border-radius:50%;"></div>' : ''}</div>`;
 
-    const pCalcLabel = p.calcType === 'external' ? `Check on ${p.name} →` : `Compare shipping fees →`;
-    const pCalcOnclick = p.calcType === 'external'
-      ? `window.open('https://www.delivered.co.kr/en/calculator', '_blank')`
-      : `openShippingCalc()`;
-
-    const cardOnclick = isSingleMode ? '' : `onclick="selectProxy('${id}')"`;
-    const cardCursor = isSingleMode ? 'default' : 'pointer';
+    const cardOnclick = (isSingleMode || isDisabled) ? '' : `onclick="selectProxy('${id}')"`;
+    const cardCursor = (isSingleMode || isDisabled) ? 'default' : 'pointer';
     const cardBorder = isSingleMode ? '1px solid #eee' : (isSelected ? '1.5px solid #222' : '1px solid #eee');
     const cardBg = isSingleMode ? '#fff' : (isSelected ? '#fafafa' : '#fff');
+    const cardOpacity = isDisabled ? '0.45' : '1';
 
     html += `
-    <div ${cardOnclick} style="border:${cardBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:${cardCursor};background:${cardBg};">
+    <div ${cardOnclick} style="border:${cardBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:${cardCursor};background:${cardBg};opacity:${cardOpacity};">
       <div style="display:flex;align-items:flex-start;gap:12px;">
         ${radioDot}
         <div style="flex:1;min-width:0;">
@@ -4304,7 +4309,7 @@ function renderProxySection() {
           </div>
           ${p.promo ? `<div style="font-size:11px;color:#222;margin-top:4px;line-height:1.4;" data-spec="{Proxy's Promotional Message}">${p.promo}</div>` : ''}
           <div style="margin-top:6px;">${connDot}</div>
-          ${isSelected && !pConnected ? `
+          ${isSelected && !pConnected && !isDisabled ? `
           <div style="border-top:1px solid #f0f0f0;margin-top:12px;padding-top:10px;">
             <button onclick="event.stopPropagation();startSSOConnect()" style="font-size:12px;color:#222;background:none;border:none;cursor:pointer;padding:0;font-weight:600;text-decoration:underline;">Connect account →</button>
           </div>` : ''}
@@ -4319,6 +4324,7 @@ function renderProxySection() {
 }
 
 function selectProxy(id) {
+  if (_lockedProxyId && id !== _lockedProxyId) return;
   _selectedProxy = id;
   _dkConnected = _proxyConnected[id];
   renderProxySection();
@@ -4946,6 +4952,17 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.18',
+    date: '2026-05-26',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '내 주문 → Additional Payment 결제 진입 시 Proxy Partner를 원 주문에서 사용한 파트너로 고정. 다른 Proxy 카드는 비활성(opacity 0.45) 처리되고, 상단에 🔒 잠금 안내 카드 노출 ("Locked to {Proxy Partner Name}" / "Additional payments stay with your original Proxy Partner.")',
+      'Spec 토큰 신설: {Locked to {Proxy Partner Name}}, {Additional Payment Proxy Lock Notice}',
+      '_addlPayItems 각 케이스에 proxy 필드 추가 (dk / paysable / kfriday) — 캐러셀 이동 시 잠금 대상이 함께 갱신',
+      'Additional Payment 체크아웃에서 다른 화면으로 이탈 후 재진입 시 잠금 상태 자동 해제 (_resetCheckoutToDefaults에 정리 로직 추가)',
+    ]
+  },
+  {
     version: 'v1.17',
     date: '2026-05-26',
     author: 'hazel.k@bunjang.co.kr',
@@ -5190,6 +5207,8 @@ function _resetCheckoutToDefaults() {
   if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = INITIAL_BASE_TOTAL;
   _currentSubtotalNet = INITIAL_SUBTOTAL_NET;
   _checkoutInAdditionalMode = false;
+  _lockedProxyId = null;
+  renderProxySection();
   recalcTotal();
 }
 
@@ -5197,6 +5216,14 @@ function enterAdditionalPaymentCheckout() {
   showScreen('checkout');
   const item = _addlPayItems[_addlPayIdx] || _addlPayItems[0];
   clearAppliedCoupons();
+  // Lock proxy to the original order's partner; additional payments cannot switch Proxy.
+  _lockedProxyId = item.proxy || null;
+  if (_lockedProxyId) {
+    _selectedProxy = _lockedProxyId;
+    _dkConnected = _proxyConnected[_lockedProxyId];
+    updateShippingAddress();
+    updateLinkedAccountsScreen();
+  }
   const card1 = document.getElementById('order-card-item1');
   if (card1) {
     const cards = document.querySelectorAll('#screen-checkout .order-item-card');
@@ -5217,6 +5244,7 @@ function enterAdditionalPaymentCheckout() {
   if (typeof BASE_TOTAL !== 'undefined') BASE_TOTAL = amount;
   _currentSubtotalNet = amount;
   _checkoutInAdditionalMode = true;
+  renderProxySection();
   recalcTotal();
 }
 
@@ -5499,19 +5527,19 @@ function setOrderDetailCase(cas) {
 
 const _addlPayItems = [
   {
-    amount: 'USD 50.45', name: 'Delivered Korea Payment Product',
+    amount: 'USD 50.45', name: 'Delivered Korea Payment Product', proxy: 'dk',
     cancelAmount: 'USD 34', cancelName: 'Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...',
     cancelReq: 'Buyer Request: Flower poca Please', cancelMsg: 'Shipping Agency MSG: Seller said 10$ needed',
     cancelReason: 'ITEM_SOLD_OUT — This item is no longer available. A full refund will be processed.'
   },
   {
-    amount: 'USD 12.30', name: 'NCT Wish Photocard Set',
+    amount: 'USD 12.30', name: 'NCT Wish Photocard Set', proxy: 'paysable',
     cancelAmount: 'USD 10', cancelName: 'NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee',
     cancelReq: 'Buyer Request: Riku version please', cancelMsg: 'Shipping Agency MSG: Seller changed price',
     cancelReason: 'PRICE_DISCREPANCY — There was a price discrepancy with this item. A full refund will be processed.'
   },
   {
-    amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt',
+    amount: 'USD 8.90', name: 'BTS Map of the Soul T-shirt', proxy: 'kfriday',
     cancelAmount: 'USD 7', cancelName: 'BTS Map of the Soul T-shirt (White / M)',
     cancelReq: 'Buyer Request: Size M please', cancelMsg: 'Shipping Agency MSG: Out of stock, similar item available',
     cancelReason: 'SELLER_CANCELED_ETC — Your order has been canceled. A full refund will be processed. If you need more details, please contact your Proxy Partner.'
