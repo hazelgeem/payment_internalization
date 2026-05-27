@@ -854,8 +854,8 @@
   <button class="proto-nav-btn" onclick="showScreen('my-orders')">내 주문</button>
   <button class="proto-nav-btn" onclick="startSSOConnect()">프록시 SSO 연동</button>
   <div class="proto-nav-version">
-    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.19</button>
-    <span>Updated 2026-05-26</span>
+    <button class="proto-nav-version-tag" onclick="openChangelog()" title="View changelog">v1.20</button>
+    <span>Updated 2026-05-27</span>
   </div>
 </div>
 
@@ -2703,8 +2703,8 @@
         <div class="orders-cancel-info">
           <div class="orders-cancel-title" id="cancel-title" data-spec="{Product Name(EN)}">Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...</div>
           <ul class="orders-cancel-list">
-            <li id="cancel-req" data-spec="Buyer Request: {Buyer Request}">Buyer Request: Flower poca Please</li>
-            <li id="cancel-msg" data-spec="Shipping Agency MSG: {Agency Message}">Shipping Agency MSG: Seller said 10$ needed</li>
+            <li id="cancel-req" data-spec="Your Request: {Buyer Request}">Your Request: Flower poca Please</li>
+            <li id="cancel-msg" data-spec="Proxy Partner's Message: {Agency Message}">Proxy Partner's Message: Seller said 10$ needed</li>
           </ul>
           <div id="cancel-reason" class="orders-cancel-reason" data-spec="{Cancel Reason}">ITEM_SOLD_OUT — This item is no longer available. A full refund will be processed.</div>
         </div>
@@ -4899,6 +4899,14 @@ window.addEventListener('resize', closeAllInfoTooltips);
 // ─── Changelog ──────────────────────────────────
 const CHANGELOG = [
   {
+    version: 'v1.20',
+    date: '2026-05-27',
+    author: 'hazel.k@bunjang.co.kr',
+    changes: [
+      '내 주문 > 취소 내역 라벨 변경 — "Buyer Request" → "Your Request", "Shipping Agency MSG" → "Proxy Partner\'s Message"',
+    ]
+  },
+  {
     version: 'v1.19',
     date: '2026-05-26',
     author: 'hazel.k@bunjang.co.kr',
@@ -5488,19 +5496,19 @@ const _addlPayItems = [
   {
     amount: 'USD 50.45', shipping: 'USD 5.00', name: 'Delivered Korea Payment Product', proxy: 'dk',
     cancelAmount: 'USD 34', cancelName: 'Park Jihoon Poca Photocard Birthday 2026 Seasons Greetings...',
-    cancelReq: 'Buyer Request: Flower poca Please', cancelMsg: 'Shipping Agency MSG: Seller said 10$ needed',
+    cancelReq: 'Your Request: Flower poca Please', cancelMsg: "Proxy Partner's Message: Seller said 10$ needed",
     cancelReason: 'ITEM_SOLD_OUT — This item is no longer available. A full refund will be processed.'
   },
   {
     amount: 'USD 12.30', shipping: 'USD 2.50', name: 'NCT Wish Photocard Set', proxy: 'paysable',
     cancelAmount: 'USD 10', cancelName: 'NCT Wish Malang Pin Badge Ssion Riku Yuushi Jaehee',
-    cancelReq: 'Buyer Request: Riku version please', cancelMsg: 'Shipping Agency MSG: Seller changed price',
+    cancelReq: 'Your Request: Riku version please', cancelMsg: "Proxy Partner's Message: Seller changed price",
     cancelReason: 'PRICE_DISCREPANCY — There was a price discrepancy with this item. A full refund will be processed.'
   },
   {
     amount: 'USD 8.90', shipping: 'USD 2.00', name: 'BTS Map of the Soul T-shirt', proxy: 'kfriday',
     cancelAmount: 'USD 7', cancelName: 'BTS Map of the Soul T-shirt (White / M)',
-    cancelReq: 'Buyer Request: Size M please', cancelMsg: 'Shipping Agency MSG: Out of stock, similar item available',
+    cancelReq: 'Your Request: Size M please', cancelMsg: "Proxy Partner's Message: Out of stock, similar item available",
     cancelReason: 'SELLER_CANCELED_ETC — Your order has been canceled. A full refund will be processed. If you need more details, please contact your Proxy Partner.'
   }
 ];
